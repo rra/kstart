@@ -374,7 +374,7 @@ KEEP_ALIVE:
 				lifetime, pp);
   } else if ( fflag ) {  
     k_errno = krb_get_svc_in_tkt(aname , inst, realm,
-				 sname, realm, lifetime, srvtab);
+				 sname, sinst, lifetime, srvtab);
   } else { 
     k_errno = krb_get_pw_in_tkt(aname, inst, realm, sname, sinst,
 				lifetime, 0);
