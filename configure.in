@@ -21,7 +21,7 @@ fi
 AC_ARG_WITH(kerberos,
     [  --with-kerberos=DIR     Location of Kerberos headers and libraries],
     [kerberos=$withval
-     KRBLIBS="-L$withval/lib"
+     KRBLIBSDIR="-L$withval/lib"
      CPPFLAGS="$CPPFLAGS -I$withval/include"],
     [if test x"$prefix" = xNONE ; then
          kerberos=/usr/local
@@ -35,21 +35,26 @@ AC_SEARCH_LIBS(socket, socket, ,
 AC_SEARCH_LIBS(res_search, resolv)
 AC_SEARCH_LIBS(crypt, crypt)
 
+AC_CHECK_LIB(krb4, main,
+    [KRBLIBS="$KRBLIBSDIR -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"
+     CPPFLAGS="$CPPFLAGS -I$kerberos/include/kerberosIV"],
+    [KRBLIBS="$KRBLIBSDIR -lcrypto -lkrb"],
+     -ldes425 -lkrb5 -lk5crypto -lcom_err)
+
 AC_CHECK_LIB(k5crypto, main,
-    [AC_CHECK_LIB(krb4, main,
-        [KRBLIBS="$KRBLIBS -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"
-         CPPFLAGS="$CPPFLAGS -I$kerberos/include/kerberosIV"],
-        [KRBLIBS="$KRBLIBS -ldes -lkrb"],
-        -ldes425 -lkrb5 -lk5crypto -lcom_err)],
-    [KRBLIBS="$KRBLIBS -ldes -lkrb"])
+    [KRB5LIBS="$KRBLIBSDIR -lkrb5 -lk5crypto -lcom_err"],
+    [KRB5LIBS="$KRBLIBSDIR -lkrb5 -lcrypto -lasn -lroken -lcom_err"],
+    -lk5crypto -lcom_err)
 
 AC_ARG_ENABLE(static,
     [  --enable-static         Link against the static Kerberos libraries],
     [if test x"$enableval" = xyes ; then
          KRBLIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic"
+         KRB5LIBS="-Wl,-Bstatic $KRB5LIBS -Wl,-Bdynamic"
      fi])
 
 AC_SUBST(KRBLIBS)
+AC_SUBST(KRB5LIBS)
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
