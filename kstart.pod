@@ -13,8 +13,8 @@ B<kstart> [B<-nqstv>]
 [B<-k> I<ticket file>]
 [B<-l> I<minutes>]
 [B<-r> I<service realm>]
-[B<-u> I<client principal>]
 [B<-S> I<service name>]
+[B<-u> I<client principal>]
 [I<username>]
 
 =head1 DESCRIPTION
