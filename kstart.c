@@ -124,6 +124,7 @@ int main(argc, argv)
   char    sinst[INST_SZ];
   char    srvtab[MAXPATHLEN + 1] ; 
   char    ticket_file[MAXPATHLEN + 1] ; 
+  char    env_tkfile[MAXPATHLEN + 11] ; 
   char    buf[LEN];
   char   *username = NULL;
   int     iflag, rflag, vflag, lflag, lifetime, k_errno;
@@ -269,6 +270,9 @@ int main(argc, argv)
   /* Set ticket cache */ 
   if ( kflag ) { 
     krb_set_tkt_string(ticket_file); 
+    # put ticket_file into env. 
+    sprintf(env_tkfile,"KRBTKFILE=%s",ticket_file);
+    putenv(env_tkfile); 
   }
   if ( keep_ticket ) { 
     if ( ! vflag ) qflag++ ;
