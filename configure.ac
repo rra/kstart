@@ -65,6 +65,9 @@ AC_ARG_ENABLE([static],
         KRB5LIBS="-Wl,-Bstatic $KRB5LIBS -Wl,-Bdynamic"
      fi])
 
+dnl Checks for header files.
+AC_CHECK_HEADERS([kerberosIV/krb.h])
+
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
