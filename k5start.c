@@ -45,13 +45,7 @@ static char rcsid_kinit_c[] =
 #include <sys/resource.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#ifdef NEED_SYS_FCNTL_H
-#include <sys/fcntl.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
+#include <unistd.h>
 
 #ifndef ORGANIZATION
 #define ORGANIZATION "Stanford University (Leland)"
