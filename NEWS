@@ -1,11 +1,11 @@
                    User-Visible kstart/k5start Changes
 
-kstart/k5start release 2.1 (2002-12-29)
+kstart and k5start release 2.1 (2002-12-29)
 
     No code changes.  Added a README file with installation instructions
     and a license.
 
-kstart/k5start release 2.0 (2002-12-29)
+kstart and k5start release 2.0 (2002-12-29)
 
     First release that includes k5start, an equivalent version of kstart
     for Kerberos v5.
