@@ -65,7 +65,7 @@ maintclean: distclean
 	rm -f $(TARNAME).gz $(TARNAME).gz.md5
 	rm -f *.orig.tar.gz $(DEBNAME)* *_$(VERSION)-*.deb
 
-dist:
+dist: kstart.1 k5start.1
 	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
 	mkdir $(TARDIR)
 	rsync -C -a ./ $(TARDIR)/
