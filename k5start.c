@@ -461,7 +461,8 @@ KEEP_ALIVE:
     }
 
     if ( k5_errno ) { 
-	com_err(progname, k5_errno, "when getting initial creds"); 
+	com_err(progname, k5_errno, "when getting initial creds");
+        exit(1);
     } 
 
     if (k5_errno = krb5_cc_initialize(ctx, ccache, k5_me)) {
