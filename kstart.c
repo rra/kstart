@@ -270,7 +270,7 @@ int main(argc, argv)
   /* Set ticket cache */ 
   if ( kflag ) { 
     krb_set_tkt_string(ticket_file); 
-    # put ticket_file into env. 
+    /* put ticket_file into env so the_kinit_prog will see it. */  
     sprintf(env_tkfile,"KRBTKFILE=%s",ticket_file);
     putenv(env_tkfile); 
   }
