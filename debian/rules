@@ -42,12 +42,6 @@ clean:
 	dh_testroot
 	rm -f build-stamp
 	-$(MAKE) distclean
-ifneq "$(wildcard /usr/share/misc/config.sub)" ""
-	cp -f /usr/share/misc/config.sub tools/config.sub
-endif
-ifneq "$(wildcard /usr/share/misc/config.guess)" ""
-	cp -f /usr/share/misc/config.guess tools/config.guess
-endif
 	dh_clean
 
 install: build
