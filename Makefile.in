@@ -1,0 +1,21 @@
+# $Id$
+
+CC		= @CC@
+CFLAGS		= @CFLAGS@
+CPPFLAGS	= @CPPFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= -lkrb -ldes @LIBS@
+
+all: kstart
+
+kstart: kstart.o 
+	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS)
+
+clean:
+	rm -f *.o kstart
+
+distclean: clean
+	rm -f Makefile config.cache config.h config.log config.status
+
+maintclean: distclean
+	rm -f config.h.in configure
