@@ -344,7 +344,13 @@ int main(argc, argv)
 	if ( ! vflag ) qflag++ ;
     }
 
-
+    /* Add inst to username, should really just require full principal name on cmd line. */ 
+    if ( inst[0] != '\0' ) { 
+	i = strlen(inst) + strlen(username) + 5 ; 
+	cp = (char * ) malloc( i); 
+	snprintf(cp,i,"%s/%s",username,inst);
+	username = cp ; 
+    } 
     if (username &&
 	(k5_errno = krb5_parse_name(ctx, username,&k5_me))
 	!= 0) {
@@ -377,6 +383,7 @@ int main(argc, argv)
     if (!qflag) printf("%s (%s)\n", ORGANIZATION, buf);
 
     if (username && !qflag) {
+	/* There is a memory leak here if username was malloc'd in inst loop above */ 
 	if ((k5_errno = krb5_unparse_name(ctx,k5_me,&username))) { 
 	    com_err(progname, k5_errno, "when unparsing name %s",username);
 	    return 0;
@@ -417,6 +424,7 @@ int main(argc, argv)
 
     /* Need to init creds,service_name and options. */ 
 
+    krb5_get_init_creds_opt_set_tkt_life(&options, life_secs);
 KEEP_ALIVE: 
     starttime = 0 ; /* Might want to twiddle this later */ 
     if (sflag) { 
@@ -444,6 +452,11 @@ KEEP_ALIVE:
 					      starttime,service_name,&options);
 
     }
+
+    if ( k5_errno ) { 
+	com_err(progname, k5_errno, "when getting initial creds"); 
+    } 
+
     if (k5_errno = krb5_cc_initialize(ctx, ccache, k5_me)) {
 	com_err(progname, k5_errno, "when initializing cache");
 	goto cleanup;
@@ -503,49 +516,50 @@ ticket_expired(krb5_context ctx,
 	       krb5_principal k5_me,
 	       char *service,char *inst, char *realm, int check ) { 
     krb5_creds *v5creds = 0; 
-    krb5_creds increds, *outcreds ; 
+    krb5_creds increds, *outcreds = NULL ; 
     krb5_principal k5service ;
-    char service_name[MAXNAMELEN] ; /* 256 should be big enough */ 
+
     int rem = 1;
     int lifetime,len_rlm,len_sn ; 
     int now,then ; 
 
     memset((char *) &increds, 0, sizeof(increds));
     
-    len_sn = strlen(service) + strlen(inst) - 2 ; 
-    if ( len_sn < MAXNAMELEN ) { 
-	snprintf(service_name,sizeof(service_name),"%s/%s", service,inst); 
-    
-	len_rlm = strlen(realm)+1; 
-	if (rem = krb5_build_principal(ctx,
-				       &k5service, 
-				       len_rlm,
-				       realm,
-				       service,
-				       inst,
-				       NULL)) {
-	    com_err(progname, rem,
-		    "while creating service principal name");
-	    return rem ; 
-	}
 
-	increds.client = k5_me;
-	increds.server = k5service;
-    
-	rem = krb5_get_credentials(ctx,0,ccache, &increds,&outcreds);
-
-	now = time(0); 
-
-	if (rem == 0) {              
-	    then = outcreds->times.endtime ; 
-	    if ( then < ( now + 60*check )) { 
-		rem = KRB5KRB_AP_ERR_TKT_EXPIRED;
-	    }
-	}
-
-	krb5_free_principal(ctx,k5service); 
-	krb5_free_creds(ctx,outcreds); 
+    len_rlm = strlen(realm); 
+    if (rem = krb5_build_principal(ctx,
+				   &k5service, 
+				   len_rlm,
+				   realm,
+				   service,
+				   inst,
+				   NULL)) {
+	com_err(progname, rem,
+		"while creating service principal name");
+	return rem ; 
     }
+
+    increds.client = k5_me;
+    increds.server = k5service;
+    
+    rem = krb5_get_credentials(ctx,0,ccache, &increds,&outcreds);
+    
+    now = time(0); 
+    
+    if (rem == 0) {              
+	then = outcreds->times.endtime ; 
+	if ( then < ( now + 60*check )) { 
+	    rem = KRB5KRB_AP_ERR_TKT_EXPIRED;
+	}
+    }
+    
+    if ( k5service != NULL ) { 
+	krb5_free_principal(ctx,k5service);
+    } 
+    if ( outcreds != NULL ) { 
+	krb5_free_creds(ctx,outcreds);
+    }
+    
     return rem ; 
 
 } 
