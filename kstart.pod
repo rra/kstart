@@ -106,7 +106,10 @@ the instance portion as part of the argument to B<-S>.
 
 =item B<-s>
 	
-Read the password from standard input.
+Read the password from standard input.  This bypasses the normal password
+prompt, which means echo isn't suppressed and input isn't forced to be
+from the controlling terminal.  Most uses of this option are a security
+risk.  You normally want to use a srvtab and the B<-f> option intead.
 
 =item B<-t>
 	
