@@ -25,6 +25,8 @@
  *   -t[get AFS token]
  */
 
+#include "config.h"
+
 #ifndef	lint
 static char rcsid_kinit_c[] =
 "$Id$";
@@ -47,8 +49,8 @@ static char rcsid_kinit_c[] =
 #include <sys/fcntl.h>
 #endif
 
-#ifdef USE_UNISTD_H
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
 #endif
 
 #ifndef ORGANIZATION
@@ -79,9 +81,12 @@ static char rcsid_kinit_c[] =
 #endif
 
 #if defined(DO_AKLOG) && !defined(PATH_AKLOG)
-#include <sys/wait.h> 
 #define PATH_AKLOG	"/usr/pubsw/bin/aklog" 
-#define KSTART_CANT_ACCESS_PROG 7
+#endif
+
+#ifdef DO_AKLOG
+# include <sys/wait.h> 
+# define KSTART_CANT_ACCESS_PROG 7
 #endif
 
 #ifdef SHORT_LIFETIME
@@ -370,8 +375,11 @@ KEEP_ALIVE:
   }
 #ifdef DO_AKLOG
   if (tflag && !nflag) {
-    if (! access( the_kinit_prog, X_OK)) { 
-      prog_status = WEXITSTATUS( system(the_kinit_prog));
+    if (! access( the_kinit_prog, X_OK)) {
+      /* IRIX 6.5 doesn't like calling WEXITSTATUS() directly on the return
+         value of system(). */
+      prog_status = system(the_kinit_prog);
+      prog_status = WEXITSTATUS(prog_status);
       
       if ( vflag ) { 
 	printf("%s exited with status %d\n",the_kinit_prog,prog_status); 
