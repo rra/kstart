@@ -1,0 +1,148 @@
+=pod
+
+=over 4
+=head1 NAME
+	B<k5start> - Obtain and optionally keep active a kerberos V tgt.
+
+=head1 SYNOPSIS
+
+B<k5start> 
+   [-u client principal] 
+   [-i client instance]
+   [-S service name] 
+   [-I service instance] 
+   [-r service realm]
+   [-v]
+   [-l time string]
+   [-K minutes]
+   [-k ticket_file]  
+   [-H minutes]
+   [-s]  
+   [-f keytab] 
+   [-q]  
+   [-t]  
+   [-n]  [username] 
+ 
+=head1 DESCRIPTION
+
+B<k5start> obtains and caches an initial kerberos V ticket-granting ticket 
+for a principal. B<k5start> can be used as an alternative to kinit, but it
+is primarily intended to be used by programs that want to use a keytab
+to obtain kerberos credentials. An example of this is a web server
+that needs to authenticate to another service such as an ldap server.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-u> I<client principal> 
+	
+This option is mostly used when using a keytab to obtain credentials. It is
+the first part of the kerberos principal in the keytab. If not specified,
+the client principal defaults to the unix username in the default realm.
+
+=item B<-i> I<client instance> 
+	
+This is the instance part of the principal above, I<-i> requires I<-u>.
+	
+=item B<-S> I<service name> 
+	
+The is the first part of principal that B<k5start> is getting a service
+ticket for. The default is krbtgt and in general this option should
+not be used unless you only need access to a single service.
+
+=item B<-I> I<service instance>
+
+The instance part of the principal above. The default is the default
+realm of the machine.
+
+=item B<-r> I<service realm>
+
+The realm for the service principal. 
+
+=item B<-v>
+	
+Be verbose. 
+
+=item B<-l> I<time string>  
+
+The ticket lifetime in a string recognized by the underlying 
+krb5_string_to_deltat library call. Examples are 10m or 10h. ( 10 minutes
+or 10 hours.) 
+
+=item B<-k> I<ticket_file>  
+
+Use ticket_file as ticket cache.
+
+=item B<-H> I<minutes> 
+	
+Check for happy tgt, i.e. doesn't expire in less than n minutes, if
+Happy exit with status 0, otherwise try and get a tgt.
+
+=item B<-K> I<minutes> 
+	
+Run in daemon mode to keep a tgt alive indefinitely. The program
+reawakens after n minutes, checks if the ticket will expire before
+the next "wakeup" and gets a new tgt if needed. 
+
+=item B<-s>  
+	
+Read password from stdin rather than via specialized tty routines.
+
+=item B<-f> I<keytab> 
+	
+Read password from svrtab file.  
+
+=item B<-q>  
+	
+Quiet, don't print any status messages. 
+
+=item B<-t>  
+	
+This option will run an external program after getting a tgt.
+The default use of this is to run B<aklog> to get a token.
+If the environmental variable KINIT_PROG exists that is 
+used as the path to the executable. 
+
+=item B<-n>  
+	
+Don't run the KINIT_PROG program.
+
+=back
+
+=head1 EXAMPLES
+
+k5start -u host -i myhost.stanford.edu -k /tmp/service.tkt -f /etc/leland/krb5.keytab -K 10 -l 10h 
+
+This uses the /etc/leland/krb5.keytab to obtain a ticket granting
+ticket for the principal I<host/myhost.stanford.edu>. The lifetime is
+10 hrs and the program wakes up every 10 minutes to check if the
+tgt is about to expire.
+
+=head1 ENVIRONMENT
+
+If no ticket file is specified on the command line, B<k5start> will use
+the environment variable FOO? to determine the location of the 
+the ticket granting ticket.  
+
+=head1 FILES
+
+The default tgt file is determined by the underlying kerberos libraries.
+The default path for aklog is "/usr/pubsw/bin/aklog". 
+
+=head1 RETURN VALUES
+
+The program exits with status 0 if it successfully gets a tgt
+or has a happy ticket. If B<k5start> runs aklog or some other
+program B<k5start> returns the exit status of that program.
+
+=head1 SEE ALSO
+
+	k5start(1),kinit(1)
+
+=head1 AUTHORS
+
+B<k5start> was based on the kstart code written by Robert Morgan.
+It was ported to kerberos V by Booker C. Bense. 
+
+=cut
