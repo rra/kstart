@@ -5,6 +5,15 @@ kstart is only useful for people who are still running a native Kerberos
 v4 realm, something that you probably don't want to be doing.  Most sites
 will only use k5start.
 
+If you also use AFS, both kstart and k5start are compiled to run
+/usr/bin/aklog to obtain an AFS token if requested with the -t option.
+The openafs-krb5 and arla packages both provide this program.  If you want
+to use afslog from heimdal-clients or kafslog from kerberos4kth-clients
+instead, set the environment variable KINIT_PROG (named this for legacy
+reasons) to the full path to that program.  (You can also set that
+environment variable to the full path to any other local program you have
+for obtaining an AFS token from a Kerberos ticket.)
+
 libkrb53 as of 1.3.3-2 (and likely affecting all prior versions) has a bug
 (#262192) in the function that prompts for a Kerberos v4 password, for
 sites that are using a Kerberos v4 KDC with the AFS string to key
@@ -13,4 +22,4 @@ unable to obtain a ticket unless invoked with the -s option.  This bug
 doesn't affect kstart run with the -f option to use a srvtab, nor does it
 affect k5start.
 
- -- Russ Allbery <rra@stanford.edu>, Thu Jul 29 23:04:58 2004
+ -- Russ Allbery <rra@stanford.edu>, Fri Jul 30 00:01:09 2004
