@@ -232,11 +232,11 @@ main(int argc, char *argv[])
        taken to be the username if the -u option wasn't already given. */
     argc -= optind;
     argv += optind;
-    if (argc > 2)
+    if (argc > 1)
         usage(1);
-    if (argc == 2) {
+    if (argc == 1) {
         if (username == NULL)
-            username = argv[1];
+            username = argv[0];
         else
             die("username specified both with -u and as an argument");
     }
@@ -278,7 +278,6 @@ main(int argc, char *argv[])
             die("cannot allocate memory: %s", strerror(errno));
         sprintf(env, "KRBTKFILE=%s", cache);
         putenv(env);
-        free(env);
     }
 
     /* If either -K or -H were given, set quiet automatically unless verbose
@@ -290,7 +289,7 @@ main(int argc, char *argv[])
     if (username != NULL) {
         k_errno = kname_parse(aname, inst, realm, username);
         if (k_errno != KSUCCESS) {
-            fprintf(stderr, "kstart: %s", krb_err_txt[k_errno]);
+            fprintf(stderr, "kstart: parsing name: %s", krb_err_txt[k_errno]);
             username = NULL;
         }
     }
@@ -357,7 +356,8 @@ repeat:
                                     lifetime, buffer);
     }
     if (verbose) {
-        printf("Kerberos realm: %s\n", realm);
+        printf("Principal: %s.%s@%s\n", aname, inst, realm);
+        printf("Service principal: %s.%s@%s\n", sname, sinst, realm);
         printf("%s\n", krb_err_txt[k_errno]);
     }
     if (k_errno != KSUCCESS)
