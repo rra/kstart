@@ -78,9 +78,9 @@ static char rcsid_kinit_c[] =
 #define LEN 255
 #endif
 
-#if defined(DO_AKLOG) && !defined(AKLOG_PROGRAM)
+#if defined(DO_AKLOG) && !defined(PATH_AKLOG)
 #include <sys/wait.h> 
-#define AKLOG_PROGRAM	"/usr/pubsw/bin/aklog" 
+#define PATH_AKLOG	"/usr/pubsw/bin/aklog" 
 #define KSTART_CANT_ACCESS_PROG 7
 #endif
 
@@ -260,7 +260,7 @@ int main(argc, argv)
   the_kinit_prog =  (char *)getenv("KINIT_PROG");
 
   if (the_kinit_prog==NULL) {
-    the_kinit_prog = AKLOG_PROGRAM;
+    the_kinit_prog = PATH_AKLOG;
   } else {
     tflag=1;
   }
