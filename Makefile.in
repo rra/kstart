@@ -2,12 +2,15 @@
 
 CC		= @CC@
 CFLAGS		= @CFLAGS@
-CPPFLAGS	= @CPPFLAGS@
+CPPFLAGS	= -I. @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= -lkrb -ldes @LIBS@
 
 prefix		= /usr/local
 bindir		= $(prefix)/bin
+
+VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 all: kstart
 
