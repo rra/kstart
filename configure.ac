@@ -65,6 +65,14 @@ AC_ARG_ENABLE([static],
         KRB5LIBS="-Wl,-Bstatic $KRB5LIBS -Wl,-Bdynamic"
      fi])
 
+dnl Check to see if we need to use our local lifetime function.  All of this
+dnl machinery is annoying, but required because AC_REPLACE_FUNCS doesn't take
+dnl an argument for extra libraries to check.
+save_LIBS=$LIBS
+LIBS="$KRBLIBS $LIBS"
+AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+LIBS=$save_LIBS
+
 dnl Checks for header files.
 AC_CHECK_HEADERS([kerberosIV/krb.h])
 
