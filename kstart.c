@@ -48,9 +48,6 @@
    as the ticket is expiring. */
 #define EXPIRE_FUDGE 120
 
-/* This might get the Kerberos libraries to spit out more information. */
-extern int krb_debug;
-
 /* The usage message. */
 const char usage_message[] = "\
 Usage: kstart [options] [name]\n\
@@ -160,7 +157,6 @@ main(int argc, char *argv[])
     /* Parse command-line options. */
     while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
         switch (option) {
-        case 'd': ++krb_debug;          break;
         case 'k': cache = optarg;       break;
         case 'n': ++no_aklog;           break;
         case 'q': ++quiet;              break;
