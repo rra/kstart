@@ -16,7 +16,7 @@ CPPFLAGS	= -I. -I$(srcdir) @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 KRBLIBS		= @KRBLIBS@ $(LIBS)
-KRB5LIBS	= -lkrb5 -lk5crypto -lcom_err $(LIBS)
+KRB5LIBS	= @KRB5LIBS@ $(LIBS)
 
 INSTALL		= @INSTALL@
 INSTALL_DATA	= @INSTALL_DATA@
@@ -47,11 +47,11 @@ k5start: k5start.o
 	$(CC) $(LDFLAGS) -o k5start k5start.o $(KRB5LIBS)
 
 kstart.1: kstart.pod
-	pod2man --release=`awk '/Id: / { print $$3; exit }' kstart.c` \
+	pod2man --release=`awk '/Id: / { print $$3; exit }' $(srcdir)/kstart.c` \
 	    --center="User commands" $< > $@
 
 k5start.1: k5start.pod
-	pod2man --release=`awk '/Id: / { print $$3; exit }' k5start.c` \
+	pod2man --release=`awk '/Id: / { print $$3; exit }' $(srcdir)/k5start.c` \
 	    --center="User commands" $< > $@
 
 clean:
