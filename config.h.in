@@ -1,8 +1,0 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
-
-/* Define to support running aklog to get AFS tokens. */
-#undef DO_AKLOG
-
-/* Full path to aklog binary. */
-#undef PATH_AKLOG
-
