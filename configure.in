@@ -1,13 +1,75 @@
 AC_REVISION($Revision$)
 AC_INIT(kstart.c)
 AC_PROG_CC
-AC_ARG_WITH(kerberos,
-    [  --with-kerberos=PATH    Path to the Kerberos V4 libraries],
-    if test x"$withval" != xno ; then
-        LIBS="$LIBS -L$withval/lib"
-        CPPFLAGS="$CPPFLAGS -I$withval/include"
-    fi
-])
+
+
+AC_ARG_WITH(kerberos, --with-kerberos=DIR directory containing kerberos lib and includes ,
+	[ kdir=$withval],
+	[
+	if test "$prefix" = "NONE" ; then
+  		prefix=/usr/pubsw
+  	fi
+	kdir=$prefix
+	])
+
+
+LIBS="$LIBS -L$kdir/lib"	
+CFLAGS="$CFLAGS -I$kdir/include"
+
+dnl Separate into K4 and K5 libs. 
+
+dnl Need to put in checks for krb5 k4 stuff.
+AC_CHECK_LIB(k5crypto,main, 
+	[
+	K5LIBS="-lkrb5 -lk5crypto -lcom_err"
+	AC_CHECK_LIB(krb4,main,
+		[
+		 K4LIBS="$K4LIBS -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"
+	         CFLAGS="$CFLAGS -I$kdir/include/kerberosIV"
+		 ],
+dnl Traditional K4
+                [
+	 	AC_CHECK_LIB(krb,main,
+			[
+			K4LIBS="$K4LIBS -lkrb"	
+			]
+		)
+	 	AC_CHECK_LIB(des,main,
+			[
+			K4LIBS="$K4LIBS -ldes"	
+			]
+		)],
+		-ldes425 -lkrb5 -lk5crypto -lcom_err
+	)],
+dnl Traditional K4
+        [
+	AC_CHECK_LIB(krb,main,
+		[
+		K4LIBS="$K4LIBS -lkrb"	
+		AC_SUBST(HAVE_KRB4)
+		]
+	)
+	AC_CHECK_LIB(des,main,
+		[
+		K4LIBS="$K4LIBS -ldes"	
+		]
+	)
+	]
+) 
+
+dnl Check for crypt 
+AC_CHECK_FUNC(crypt)
+if test $ac_cv_func_crypt = no; then
+AC_CHECK_LIB(crypt,crypt,
+	[
+	K4LIBS="$K4LIBS -lcrypt"
+	]
+)
+fi
+
+AC_SUBST(K5LIBS)
+AC_SUBST(K4LIBS)
+
 AC_ARG_WITH(aklog,
     [  --with-aklog=PATH       Path to aklog or other AFS token program],
     if test x"$withval" != xno ; then
