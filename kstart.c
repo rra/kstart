@@ -20,7 +20,6 @@
 #include "config.h"
 
 #include <errno.h>
-#include <netdb.h>
 #include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -36,10 +35,6 @@
 # include <kerberosIV/krb.h>
 #else
 # include <krb.h>
-#endif
-
-#ifndef MAXHOSTNAMELEN
-# define MAXHOSTNAMELEN 255
 #endif
 
 /* We default to a ten hour ticket lifetime if the Kerberos headers don't
