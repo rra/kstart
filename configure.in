@@ -13,7 +13,8 @@ AC_ARG_WITH(kerberos, --with-kerberos=DIR directory containing kerberos lib and 
 	])
 
 
-LIBS="$LIBS -L$kdir/lib"	
+LIBS="$LIBS -L$kdir/lib"
+LDFLAGS=" -R$kdir/lib"	
 CFLAGS="$CFLAGS -I$kdir/include"
 
 dnl Separate into K4 and K5 libs. 
@@ -91,6 +92,7 @@ fi
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket, ,
     [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
+AC_SEARCH_LIBS(res_search,resolv)
 AC_CHECK_HEADERS(unistd.h)
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)

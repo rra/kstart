@@ -4,6 +4,10 @@ CC		= @CC@
 CFLAGS		= @CFLAGS@
 CPPFLAGS	= -I. @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
+# This is pretty Solaris-centric, when we need a static binary 
+# elsewhere I'll fix it. 
+LD_STATIC_FLAGS = -Xlinker -B -Xlinker static 
+LD_DYNAMIC_FLAGS = -Xlinker -B -Xlinker dynamic
 LIBS		= @LIBS@
 K5LIBS		= @K5LIBS@
 K4LIBS          = @K4LIBS@
@@ -23,9 +27,15 @@ kstart: kstart.o
 k5start: k5start.o
 	$(CC) $(LDFLAGS) -o k5start k5start.o $(LIBS) $(K5LIBS)
 
+k5start.static: k5start.o 
+	$(CC) $(LD_FLAGS) -o k5start.static k5start.o $(LD_STATIC_FLAGS) $(K5LIBS) $(LD_DYNAMIC_FLAGS) $(LIBS)
+
+kstart.static: kstart.o 
+	$(CC) $(LD_FLAGS) -o kstart.static kstart.o $(LD_STATIC_FLAGS) $(K4LIBS) 	$(LD_DYNAMIC_FLAGS) $(LIBS)
+
 install: kstart k5start
 	cp kstart $(bindir)/kstart
-	cp k5start $(bindir)/k5start
+	cp k5start $(bindir)/k5start 
 
 clean:
 	rm -f *.o kstart k5start
