@@ -1,9 +1,6 @@
 /* config.h.in.  Generated automatically from configure.in by autoheader.  */
 
-/* Define if you have the <unistd.h> header file.  */
-#undef HAVE_UNISTD_H
-
-/* Support running aklog to get AFS tokens? */
+/* Define to support running aklog to get AFS tokens. */
 #undef DO_AKLOG
 
 /* Full path to aklog binary. */

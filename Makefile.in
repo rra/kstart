@@ -1,58 +1,72 @@
+# Makefile for kstart
 # $Id$
+
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+
+bindir		= @bindir@
+mandir		= @mandir@
 
 CC		= @CC@
 CFLAGS		= @CFLAGS@
-CPPFLAGS	= -I. @CPPFLAGS@
+CPPFLAGS	= -I. -I$(srcdir) @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
-# This is pretty Solaris-centric, when we need a static binary 
-# elsewhere I'll fix it. 
-LD_STATIC_FLAGS = -Xlinker -B -Xlinker static 
-LD_DYNAMIC_FLAGS = -Xlinker -B -Xlinker dynamic
 LIBS		= @LIBS@
-K5LIBS		= @K5LIBS@
-K4LIBS          = @K4LIBS@
+KRBLIBS		= @KRBLIBS@ $(LIBS)
+KRB5LIBS	= -lkrb5 -lk5crypto -lcom_err $(LIBS)
 
-prefix		= /usr/local
-bindir		= $(prefix)/bin
+INSTALL		= @INSTALL@
+INSTALL_DATA	= @INSTALL_DATA@
+INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+##############################################################################
 
-POD2MAN		= pod2man
-POD_OPTS	= -c 'User Commands' -r 'January, 2002'
+SOURCE_FILES	= k5start.c kstart.c
 
-all: kstart k5start man
+EXTRA_FILES	= Makefile.in VERSION config.h.in configure configure.in \
+		  install-sh k5start.pod k5start.1 kstart.pod kstart.1
+
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
+
+all: kstart k5start kstart.1 k5start.1
+
+install: kstart k5start kstart.1 k5start.1
+	$(INSTALL_PROGRAM) kstart $(bindir)/kstart
+	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
+	$(INSTALL_DATA) $(srcdir)/kstart.1 $(mandir)/man1/kstart.1
+	$(INSTALL_DATA) $(srcdir)/k5start.1 $(mandir)/man1/k5start.1
 
 kstart: kstart.o 
-	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS) $(K4LIBS)
+	$(CC) $(LDFLAGS) -o kstart kstart.o $(KRBLIBS)
 
 k5start: k5start.o
-	$(CC) $(LDFLAGS) -o k5start k5start.o $(LIBS) $(K5LIBS)
-
-k5start.static: k5start.o 
-	$(CC) $(LD_FLAGS) -o k5start.static k5start.o $(LD_STATIC_FLAGS) $(K5LIBS) $(LD_DYNAMIC_FLAGS) $(LIBS)
-
-kstart.static: kstart.o 
-	$(CC) $(LD_FLAGS) -o kstart.static kstart.o $(LD_STATIC_FLAGS) $(K4LIBS) 	$(LD_DYNAMIC_FLAGS) $(LIBS)
-
-man: kstart.1 k5start.1
+	$(CC) $(LDFLAGS) -o k5start k5start.o $(KRB5LIBS)
 
 kstart.1: kstart.pod
-	$(POD2MAN) $(POD_OPTS) kstart.pod > kstart.1
+	pod2man --release=`awk '/Id: / { print $$3; exit }' kstart.c` \
+	    --center="User commands" $< > $@
 
 k5start.1: k5start.pod
-	$(POD2MAN) $(POD_OPTS) k5start.pod > k5start.1	
-
-
-install: kstart k5start
-	cp kstart $(bindir)/kstart
-	cp k5start $(bindir)/k5start 
+	pod2man --release=`awk '/Id: / { print $$3; exit }' k5start.c` \
+	    --center="User commands" $< > $@
 
 clean:
 	rm -f *.o kstart k5start
 
 distclean: clean
-	rm -f Makefile config.cache config.h config.log config.status
+	rm -f Makefile config.cache config.h config.log config.status kstart-*
 
 maintclean: distclean
-	rm -f config.h.in configure
+	rm -f config.h.in configure kstart.1 k5start.1
+
+dist: $(SOURCE_FILES) $(EXTRA_FILES)
+	mkdir kstart-`cat VERSION`
+	cp $(SOURCE_FILES) kstart-`cat VERSION`
+	cp $(EXTRA_FILES) kstart-`cat VERSION`
+	tar cf kstart-`cat VERSION`.tar kstart-`cat VERSION`
+	gzip -9 kstart-`cat VERSION`.tar
+	rm -rf kstart-`cat VERSION`

@@ -1,98 +1,55 @@
-AC_REVISION($Revision$)
 AC_INIT(kstart.c)
+AC_REVISION($Revision$)
+AC_PREREQ(2.13)
 AC_PROG_CC
-
-
-AC_ARG_WITH(kerberos, --with-kerberos=DIR directory containing kerberos lib and includes ,
-	[ kdir=$withval],
-	[
-	if test "$prefix" = "NONE" ; then
-  		prefix=/usr/pubsw
-  	fi
-	kdir=$prefix
-	])
-
-
-LIBS="$LIBS -L$kdir/lib"
-LDFLAGS=" -R$kdir/lib"	
-CFLAGS="$CFLAGS -I$kdir/include"
-
-dnl Separate into K4 and K5 libs. 
-
-dnl Need to put in checks for krb5 k4 stuff.
-AC_CHECK_LIB(k5crypto,main, 
-	[
-	K5LIBS="-lkrb5 -lk5crypto -lcom_err"
-	AC_CHECK_LIB(krb4,main,
-		[
-		 K4LIBS="$K4LIBS -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"
-	         CFLAGS="$CFLAGS -I$kdir/include/kerberosIV"
-		 ],
-dnl Traditional K4
-                [
-	 	AC_CHECK_LIB(krb,main,
-			[
-			K4LIBS="$K4LIBS -lkrb"	
-			]
-		)
-	 	AC_CHECK_LIB(des,main,
-			[
-			K4LIBS="$K4LIBS -ldes"	
-			]
-		)],
-		-ldes425 -lkrb5 -lk5crypto -lcom_err
-	)],
-dnl Traditional K4
-        [
-	AC_CHECK_LIB(krb,main,
-		[
-		K4LIBS="$K4LIBS -lkrb"	
-		AC_SUBST(HAVE_KRB4)
-		]
-	)
-	AC_CHECK_LIB(des,main,
-		[
-		K4LIBS="$K4LIBS -ldes"	
-		]
-	)
-	]
-) 
-
-dnl Check for crypt 
-AC_CHECK_FUNC(crypt)
-if test $ac_cv_func_crypt = no; then
-AC_CHECK_LIB(crypt,crypt,
-	[
-	K4LIBS="$K4LIBS -lcrypt"
-	]
-)
-fi
-
-AC_SUBST(K5LIBS)
-AC_SUBST(K4LIBS)
-
-dnl Check for shared KLIBS
-
-
+AC_PROG_INSTALL
 
 AC_ARG_WITH(aklog,
     [  --with-aklog=PATH       Path to aklog or other AFS token program],
-    if test x"$withval" != xno ; then
+    [if test x"$withval" != xno ; then
         PATH_AKLOG=$withval
-    fi
-)
-if test -z "$PATH_AKLOG" ; then
-    AC_PATH_PROG(PATH_AKLOG, aklog)
-fi
+    fi],
+    [AC_PATH_PROG(PATH_AKLOG, aklog)])
+
 if test -n "$PATH_AKLOG" ; then
-    AC_DEFINE(DO_AKLOG, 1, [Support running aklog to get AFS tokens?])
+    AC_DEFINE(DO_AKLOG, 1,
+        [Define to support running aklog to get AFS tokens.])
     AC_DEFINE_UNQUOTED(PATH_AKLOG, "$PATH_AKLOG",
         [Full path to aklog binary.])
 fi
+
+AC_ARG_WITH(kerberos,
+    [  --with-kerberos=DIR     Location of Kerberos headers and libraries],
+    [kerberos=$withval
+     KRBLIBS="-L$withval/lib"
+     CPPFLAGS="$CPPFLAGS -I$withval/include"],
+    [if test x"$prefix" = xNONE ; then
+         kerberos=/usr/local
+     else
+         kerberos=$prefix
+     fi])
+
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket, ,
     [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
-AC_SEARCH_LIBS(res_search,resolv)
-AC_CHECK_HEADERS(unistd.h)
+AC_SEARCH_LIBS(res_search, resolv)
+AC_SEARCH_LIBS(crypt, crypt)
+
+AC_CHECK_LIB(k5crypto, main,
+    [AC_CHECK_LIB(krb4, main,
+        [KRBLIBS="$KRBLIBS -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"
+         CPPFLAGS="$CPPFLAGS -I$kerberos/include/kerberosIV"],
+        [KRBLIBS="$KRBLIBS -ldes -lkrb"],
+        -ldes425 -lkrb5 -lk5crypto -lcom_err)],
+    [KRBLIBS="$KRBLIBS -ldes -lkrb"])
+
+AC_ARG_ENABLE(static,
+    [  --enable-static         Link against the static Kerberos libraries],
+    [if test x"$enableval" = xyes ; then
+         KRBLIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic"
+     fi])
+
+AC_SUBST(KRBLIBS)
+
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
