@@ -1,0 +1,19 @@
+Source: kstart
+Section: net
+Priority: optional
+Maintainer: Russ Allbery <rra@stanford.edu>
+Build-Depends: debhelper (>= 4.0.0), libkrb5-dev
+Standards-Version: 3.6.1
+
+Package: kstart
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: kinit replacement that supports ticket refreshing
+ k5start (for Kerberos v5) and kstart (for Kerberos v4) can be used
+ instead of kinit to obtain Kerberos tickets.  Both programs are included
+ in this package.  They are intended primarily for use with automated
+ processes and support some additional features useful for that purpose,
+ such as obtaining tickets from a srvtab for Kerberos v4 rather than from
+ a password, running as a daemon and refreshing the ticket periodically,
+ or checking to see if an existing ticket has expired.
+
