@@ -1,7 +1,7 @@
 # For solaris
-CFLAGS= -g -I/usr/leland/include -DDO_AKLOG -D__srv4__ -DUSE_UNISTD_H 
+CFLAGS= -g -I/usr/pubsw/include -DDO_AKLOG -D__srv4__ -DUSE_UNISTD_H 
 CC=gcc 
-LDFLAGS= -L/usr/leland/lib
+LDFLAGS= -L/usr/pubsw/lib
 # For solaris
 LIBS= -lsocket -lnsl -lkrb -ldes
 # For others
