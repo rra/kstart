@@ -140,14 +140,14 @@ The program exits with status 0 if it successfully gets a ticket or has a
 happy ticket (see B<-H>).  If B<kstart> runs aklog or some other program
 B<kstart> returns the exit status of that program.
 
-=head1 EXAMPLES
+=head1 EXAMPLE
 
-    kstart -k /tmp/service.tgt -f /etc/leland/srvtab -K 10 -l 600 \
+    kstart -k /tmp/service.tgt -f /etc/srvtab -K 10 -l 600 \
         rcmd.example
 
-This uses the /etc/leland/srvtab to obtain a ticket granting ticket for
+This uses the F</etc/srvtab> srvtab to obtain a ticket granting ticket for
 the principal rcmd.example.  The lifetime is 600 minutes and the program
-wakes up every 10 minutes to check if the tgt is about to expire.
+wakes up every 10 minutes to check if the ticket is about to expire.
 
 =head1 ENVIRONMENT
 
