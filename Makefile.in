@@ -18,8 +18,10 @@ bindir		= $(prefix)/bin
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-all: kstart k5start
+POD2MAN		= pod2man
+POD_OPTS	= -c 'User Commands' -r 'January, 2002'
 
+all: kstart k5start man
 
 kstart: kstart.o 
 	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS) $(K4LIBS)
@@ -32,6 +34,15 @@ k5start.static: k5start.o
 
 kstart.static: kstart.o 
 	$(CC) $(LD_FLAGS) -o kstart.static kstart.o $(LD_STATIC_FLAGS) $(K4LIBS) 	$(LD_DYNAMIC_FLAGS) $(LIBS)
+
+man: kstart.1 k5start.1
+
+kstart.1: kstart.pod
+	$(POD2MAN) $(POD_OPTS) kstart.pod > kstart.1
+
+k5start.1: k5start.pod
+	$(POD2MAN) $(POD_OPTS) k5start.pod > k5start.1	
+
 
 install: kstart k5start
 	cp kstart $(bindir)/kstart
