@@ -177,6 +177,6 @@ will have the current version of B<kstart> and B<k5start>.
 
 B<kstart> was originally written by Robert Morgan.  Modifications and
 additional features were added by Booker C. Bense.  Additional cleanup and
-current maintenance is done by Russ Allbery <rra@stanford.edu>.
+current maintenance are done by Russ Allbery <rra@stanford.edu>.
 
 =cut
