@@ -48,6 +48,12 @@
    as the ticket is expiring. */
 #define EXPIRE_FUDGE 120
 
+/* Make sure everything compiles even if no aklog program was found by
+   configure. */
+#ifndef PATH_AKLOG
+# define PATH_AKLOG NULL
+#endif
+
 /* The usage message. */
 const char usage_message[] = "\
 Usage: kstart [options] [name]\n\
@@ -363,8 +369,9 @@ repeat:
        broken and can't cope with being called directly on the return value of
        system().  If we can't execute the aklog program, set the exit status
        to an arbitrary but distinct value. */
-#ifdef DO_AKLOG
     if (run_aklog && !no_aklog) {
+        if (aklog == NULL)
+            die("set KINIT_PROG to specify the path to aklog");
         if (access(aklog, X_OK) == 0) {
             status = system(aklog);
             status = WEXITSTATUS(status);
@@ -376,7 +383,6 @@ repeat:
             status = 7;
         }
     }
-#endif
 
     /* Loop if we're running as a daemon. */
     if (keep_ticket > 0) {

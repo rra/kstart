@@ -21,8 +21,6 @@ AC_ARG_WITH([aklog],
     fi],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
 if test -n "$PATH_AKLOG" ; then
-    AC_DEFINE([DO_AKLOG], 1,
-        [Define to support running aklog to get AFS tokens.])
     AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
         [Full path to aklog binary.])
 fi
