@@ -142,8 +142,8 @@ B<kstart> returns the exit status of that program.
 
 =head1 EXAMPLES
 
-    kstart -u rcmd -i example -k /tmp/service.tgt -f /etc/leland/srvtab \
-        -K 10 -l 600
+    kstart -k /tmp/service.tgt -f /etc/leland/srvtab -K 10 -l 600 \
+        rcmd.example
 
 This uses the /etc/leland/srvtab to obtain a ticket granting ticket for
 the principal rcmd.example.  The lifetime is 600 minutes and the program
