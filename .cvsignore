@@ -1,6 +1,5 @@
-.filelist
-.history
 Makefile
+autom4te.cache
 config.cache
 config.h
 config.h.in
@@ -11,4 +10,4 @@ k5start
 k5start.1
 kstart
 kstart.1
-kstart-*.tar.gz
+kstart-*
