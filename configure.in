@@ -1,0 +1,30 @@
+AC_REVISION($Id$)
+AC_INIT(kstart.c)
+AC_PROG_CC
+AC_ARG_WITH(kerberos,
+    [  --with-kerberos=PATH    Path to the Kerberos V4 libraries],
+    if test x"$withval" != xno ; then
+        LIBS="$LIBS -L$withval/lib"
+        CPPFLAGS="$CPPFLAGS -I$withval/include"
+    fi
+])
+AC_ARG_WITH(aklog,
+    [  --with-aklog=PATH       Path to aklog or other AFS token program],
+    if test x"$withval" != xno ; then
+        PATH_AKLOG=$withval
+    fi
+)
+if test -z "$PATH_AKLOG" ; then
+    AC_PATH_PROG(PATH_AKLOG, aklog)
+fi
+if test -n "$PATH_AKLOG" ; then
+    AC_DEFINE(DO_AKLOG, 1, [Support running aklog to get AFS tokens?])
+    AC_DEFINE_UNQUOTED(PATH_AKLOG, "$PATH_AKLOG",
+        [Full path to aklog binary.])
+fi
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket, ,
+    [AC_CHECK_LIB(nsl, socket, LIBS="$LIBS -lsocket -lnsl", , -lsocket)])
+AC_CHECK_HEADERS(unistd.h)
+AC_CONFIG_HEADER(config.h)
+AC_OUTPUT(Makefile)
