@@ -57,11 +57,13 @@ clean:
 	rm -f *.o kstart k5start
 
 distclean: clean
-	rm -f Makefile config.cache config.h config.log config.status kstart-*
-	rm -rf autom4te.cache
+	rm -f Makefile config.cache config.h config.log config.status
+	rm -rf autom4te.cache $(TARDIR)
 
 maintclean: distclean
 	rm -f config.h.in configure kstart.1 k5start.1
+	rm -f $(TARNAME).gz $(TARNAME).gz.md5
+	rm -f *.orig.tar.gz $(DEBNAME)* *_$(VERSION)-*.deb
 
 dist:
 	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
