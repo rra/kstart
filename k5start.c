@@ -94,7 +94,7 @@ static char rcsid_kinit_c[] =
 #else
 #define LIFE    3600
 #endif
-#define FUDGE_FACTOR 311    /* To make sure ticket updates BEFORE it expires */ 
+#define FUDGE_FACTOR 113   /* To make sure ticket updates BEFORE it expires */ 
 
 #define SNAME "krbtgt"
 #define SINST realm

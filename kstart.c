@@ -94,7 +94,7 @@ static char rcsid_kinit_c[] =
 #else
 #define LIFE    141
 #endif
-#define FUDGE_FACTOR 311	/* Make sure you get a tgt before it expires */ 
+#define FUDGE_FACTOR 113	/* Make sure you get a tgt before it expires */ 
 
 #define SNAME "krbtgt"
 #define SINST realm
