@@ -337,7 +337,7 @@ usage()
     fprintf(stderr,"   -I <service instance> (default realm name)\n");
     fprintf(stderr,"   -r <service realm>\n");
     fprintf(stderr,"   -v[erbose]\n");
-    fprintf(stderr,"   -l n  (ticket lifetime in seconds)\n");
+    fprintf(stderr,"   -l n  (ticket lifetime in minutes)\n");
     fprintf(stderr,"   -s  read password from stdin\n");
     fprintf(stderr,"   -q  quiet\n");
 #ifdef DO_AKLOG
