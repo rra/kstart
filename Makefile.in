@@ -37,8 +37,8 @@ all: kstart k5start kstart.1 k5start.1
 install: kstart k5start kstart.1 k5start.1
 	$(INSTALL_PROGRAM) kstart $(bindir)/kstart
 	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
-	$(INSTALL_DATA) $(srcdir)/kstart.1 $(mandir)/man1/kstart.1
-	$(INSTALL_DATA) $(srcdir)/k5start.1 $(mandir)/man1/k5start.1
+	$(INSTALL_DATA) kstart.1 $(mandir)/man1/kstart.1
+	$(INSTALL_DATA) k5start.1 $(mandir)/man1/k5start.1
 
 kstart: kstart.o 
 	$(CC) $(LDFLAGS) -o kstart kstart.o $(KRBLIBS)
