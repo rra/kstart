@@ -419,11 +419,17 @@ KEEP_ALIVE:
 int 
 ticket_expired(char *service,char *inst, char *realm, int check ) { 
   CREDENTIALS cr;
-  int rem = KSUCCESS; 
+  int rem = KSUCCESS;
+  int lifetime ; 
   rem = krb_get_cred(service, inst, realm, &cr);
   if (rem == KSUCCESS
-              && ((cr.issue_date + ((unsigned char) cr.lifetime) * 5 * 60 )
-                  < ( time (0) + 60*check )))
+              && ((cr.issue_date +
+#ifdef SHORT_LIFETIME
+		((unsigned char) cr.lifetime)*5*60   
+#else 
+	   krb_life_to_time((unsigned char) cr.lifetime))
+#endif 
+      ) < ( time (0) + 60*check ))
     rem = RD_AP_EXP;
 
   return rem ; 
