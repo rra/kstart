@@ -6,10 +6,16 @@ CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= -lkrb -ldes @LIBS@
 
+prefix		= /usr/local
+bindir		= $(prefix)/bin
+
 all: kstart
 
 kstart: kstart.o 
 	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS)
+
+install: kstart
+	cp kstart $(bindir)/kstart
 
 clean:
 	rm -f *.o kstart
