@@ -168,7 +168,7 @@ int main(argc, argv)
 	if (strlen(optarg) < sizeof(srvtab)) {
 	  strcpy(srvtab, optarg);
 	} else {
-	  printf("%s: instance '%s' too long (%d max)\n",
+	  printf("%s: srvtab '%s' too long (%d max)\n",
 		 progname, optarg, sizeof(srvtab));
 	  usage;
 	}
@@ -343,6 +343,7 @@ usage()
     fprintf(stderr,"   -v[erbose]\n");
     fprintf(stderr,"   -l n  (ticket lifetime in minutes)\n");
     fprintf(stderr,"   -s  read password from stdin\n");
+    fprintf(stderr,"   -f <srvtab> read password from svrtab file\n");
     fprintf(stderr,"   -q  quiet\n");
 #ifdef DO_AKLOG
     fprintf(stderr,"   -t  get AFS token via aklog or KINIT_PROG\n");
