@@ -78,7 +78,7 @@ static char rcsid_kinit_c[] =
 #endif
 
 #if defined(DO_AKLOG) && !defined(AKLOG_PROGRAM)
-#define AKLOG_PROGRAM	"/usr/leland/bin/aklog" 
+#define AKLOG_PROGRAM	"/usr/pubsw/bin/aklog" 
 #endif
 
 #ifdef SHORT_LIFETIME
