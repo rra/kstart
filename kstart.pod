@@ -38,7 +38,7 @@ Unix username of the user running B<kstart> in the default local realm.
 
 =item B<-f> I<srvtab>
 	
-Read password from svrtab file.
+Authenticate using the srvtab I<srvtab> rather than asking for a password.
 
 =item B<-H> I<minutes>
 
