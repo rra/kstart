@@ -46,12 +46,12 @@ AC_ARG_WITH([kerberos],
 
 dnl Find the Kerberos libraries.  Supports both MIT and Heimdal.
 AC_CHECK_LIB([krb4], [main],
-    [KRBLIBS="$KRBLIBSDIR -lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"]
-    [KRBLIBS="$KRBLIBSDIR -lcrypto -lkrb"],
+    [KRBLIBS="-lkrb4 -ldes425 -lkrb5 -lk5crypto -lcom_err"],
+    [KRBLIBS="-lcrypto -lkrb"],
     [-ldes425 -lkrb5 -lk5crypto -lcom_err])
 AC_CHECK_LIB([k5crypto], [main],
-    [KRB5LIBS="$KRBLIBSDIR -lkrb5 -lk5crypto -lcom_err"],
-    [KRB5LIBS="$KRBLIBSDIR -lkrb5 -lcrypto -lasn -lroken -lcom_err"],
+    [KRB5LIBS="-lkrb5 -lk5crypto -lcom_err"],
+    [KRB5LIBS="-lkrb5 -lcrypto -lasn -lroken -lcom_err"],
     [-lk5crypto -lcom_err])
 AC_SUBST([KRBLIBS])
 AC_SUBST([KRB5LIBS])
