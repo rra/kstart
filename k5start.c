@@ -93,6 +93,11 @@ static char rcsid_kinit_c[] =
 #define SNAME "krbtgt"
 #define SINST realm
 
+/* Only Solaris and IRIX have this. */
+#ifndef MAXNAMELEN
+# define MAXNAMELEN 512
+#endif
+
 extern char *optarg;
 extern int optind,opterr;
 
