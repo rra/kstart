@@ -79,7 +79,9 @@ static char rcsid_kinit_c[] =
 #endif
 
 #if defined(DO_AKLOG) && !defined(AKLOG_PROGRAM)
+#include <sys/wait.h> 
 #define AKLOG_PROGRAM	"/usr/pubsw/bin/aklog" 
+#define KSTART_CANT_ACCESS_PROG 7
 #endif
 
 #ifdef SHORT_LIFETIME
@@ -136,6 +138,7 @@ int main(argc, argv)
   int     kflag; 
   int     keep_ticket; 
   char    *the_kinit_prog;
+  int     prog_status = 0 ; /* the status returned by system(the_kinit_prog) */ 
   int     c;
   register char *cp;
   register i;
@@ -367,8 +370,15 @@ KEEP_ALIVE:
   }
 #ifdef DO_AKLOG
   if (tflag && !nflag) {
-    if (! access( the_kinit_prog, X_OK)) 
-      (void) system(the_kinit_prog);
+    if (! access( the_kinit_prog, X_OK)) { 
+      prog_status = WEXITSTATUS( system(the_kinit_prog));
+      
+      if ( vflag ) { 
+	printf("%s exited with status %d\n",the_kinit_prog,prog_status); 
+      }
+    } else { 
+      prog_status = KSTART_CANT_ACCESS_PROG ; 
+    }
   }
 #endif
   if  ( keep_ticket > 0 ) { 
@@ -380,7 +390,7 @@ KEEP_ALIVE:
     }
 
   } else { 
-    return 0;
+    exit(prog_status);
   }
 }
 
