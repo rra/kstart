@@ -73,6 +73,10 @@ static char rcsid_kinit_c[] =
 #endif	/* defined(ultrix) || defined(sun) */
 #endif	/* BSD42 */
 
+#if !defined(LEN) 
+#define LEN 255
+#endif
+
 #if defined(DO_AKLOG) && !defined(AKLOG_PROGRAM)
 #define AKLOG_PROGRAM	"/usr/leland/bin/aklog" 
 #endif
