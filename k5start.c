@@ -94,6 +94,7 @@ static char rcsid_kinit_c[] =
 #else
 #define LIFE    3600
 #endif
+#define FUDGE_FACTOR 311    /* To make sure ticket updates BEFORE it expires */ 
 
 #define SNAME "krbtgt"
 #define SINST realm
@@ -548,7 +549,7 @@ ticket_expired(krb5_context ctx,
     
     if (rem == 0) {              
 	then = outcreds->times.endtime ; 
-	if ( then < ( now + 60*check )) { 
+	if ( then < ( now + 60*check + FUDGE_FACTOR)) { 
 	    rem = KRB5KRB_AP_ERR_TKT_EXPIRED;
 	}
     }

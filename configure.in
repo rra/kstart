@@ -70,6 +70,10 @@ fi
 AC_SUBST(K5LIBS)
 AC_SUBST(K4LIBS)
 
+dnl Check for shared KLIBS
+
+
+
 AC_ARG_WITH(aklog,
     [  --with-aklog=PATH       Path to aklog or other AFS token program],
     if test x"$withval" != xno ; then
