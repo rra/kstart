@@ -1,17 +1,16 @@
-                            kstart release 2.2
+                            kstart release 2.3
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
          Currently maintained by Russ Allbery <rra@stanford.edu>
 
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004 Board of
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of
   Trustees, Leland Stanford Jr. University.  This software is distributed
   under a BSD-style license.  Please see the section LICENSE below for
   terms of use and redistribution.
 
   Based on code copyright 1987, 1988 by the Massachusetts Institute of
   Technology.
-
 
 DESCRIPTION
 
@@ -34,7 +33,6 @@ DESCRIPTION
   conjunction with a program like aklog or afslog to maintain an AFS
   token.
 
-
 REQUIREMENTS
 
   As Kerberos programs, kstart and k5start require Kerberos libraries to
@@ -52,7 +50,6 @@ REQUIREMENTS
   your system with the --with-aklog option to configure; if that option is
   not given, the first of aklog or afslog that is found on your path will
   be used.
-
 
 INSTALLATION
 
@@ -94,10 +91,9 @@ INSTALLATION
   --enable-static option to configure.  This has been tested on Solaris
   and Linux.
 
-
 LICENSE
 
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004 Board of
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of
   Trustees, Leland Stanford Jr. University.  All rights reserved.
   
   Export of this software from the United States of America may require a

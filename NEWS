@@ -1,5 +1,14 @@
                    User-Visible kstart/k5start Changes
 
+kstart/k5start 2.3 (2005-02-22)
+
+    Fixed make install with a separate build directory.  The Makefile must
+    look for the man pages in the source directory.
+
+    Don't include Debian packaging rules in the standard distribution (per
+    recommended best practices for maintaining Debian packages with rules
+    in the upstream CVS).
+
 kstart/k5start 2.2 (2004-07-29)
 
     Removed the various Stanford-specific banners that these programs

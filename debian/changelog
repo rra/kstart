@@ -1,3 +1,11 @@
+kstart (2.3-1) unstable; urgency=low
+
+  * New upstream release.
+    - Upstream tarball no longer includes debian/ directory.
+  * Remove references to fixed bug #262192 in README.Debian.
+
+ -- Russ Allbery <rra@stanford.edu>  Tue, 22 Feb 2005 20:11:36 -0800
+
 kstart (2.2-1) unstable; urgency=low
 
   * Initial release.
