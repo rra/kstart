@@ -1,603 +1,454 @@
-/*
- * $Source$
- * $Author$ 
- *
- * Copyright 1987, 1988 by the Massachusetts Institute of Technology. 
- *
- * For copying and distribution information, please see the file
- * <mit-copyright.h>. 
- *
- * Routine to initialize user to Kerberos.  Prompts optionally for
- * user, instance and realm.  Authenticates user and gets a ticket
- * for the Kerberos ticket-granting service for future use. 
- *
- * Options are: 
- *
- *   -i[instance]
- *   -r[realm]
- *   -v[erbose]
- *   -l[ifetime]
- *   -p/-s get pw from stdin
- *   -u[ser]
- *   -f [keytab file] 
- *   -S[service name]
- *   -I[service instance]
- *   -t[get AFS token]
- */
+/*  $Id$
+**
+**  Kerberos v5 kinit replacement suitable for daemon authentication.
+**
+**  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004
+**      Board of Trustees, Leland Stanford Jr. University
+**
+**  For copying and distribution information, please see README.
+**
+**  This is a replacement for the standard Kerberos v5 kinit that is more
+**  suitable for use with programs.  It can run as a daemon and renew a ticket
+**  periodically and can check the expiration of a ticket and only prompt to
+**  renew if it's too old.
+**
+**  It is based very heavily on a modified Kerberos v4 kinit, changed to call
+**  the Kerberos v5 initialization functions instead.  k5start is not as
+**  useful for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit
+**  supports more useful options, but -K and -H are still unique to it.
+*/
 
 #include "config.h"
 
-#ifndef	lint
-static char rcsid_kinit_c[] =
-"$Id$";
-#endif	lint
-
-#include <mit-copyright.h>
-#include <stdio.h>
+#include <errno.h>
+#include <netdb.h>
 #include <pwd.h>
-#include <krb5.h>
-
-
-#include <sys/types.h>
-#include <sys/param.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
-#ifndef ORGANIZATION
-#define ORGANIZATION "Stanford University (Leland)"
-#endif /*ORGANIZATION*/
+#include <krb5.h>
 
-#ifdef	PC
-#define	LEN	64		/* just guessing */
-#endif /*	PC */
+/* The default ticket lifetime in minutes.  Default to 10 hours. */
+#define DEFAULT_LIFETIME (10 * 60)
 
-#ifdef __svr4__
-/* just to get MAXHOSTNAMELEN */
-#include <netdb.h>
-#endif
-#ifdef	BSD42
-#include <string.h>
-#include <sys/param.h>
-#if 	defined(ultrix) || defined(sun) || defined(__SCO__)
-#define LEN	64
-#else
-#define	LEN	MAXHOSTNAMELEN
-#endif	/* defined(ultrix) || defined(sun) */
-#endif	/* BSD42 */
-/* Solaris 2.5.x groks this */ 
-#include <string.h> 
-#if !defined(LEN) 
-#define LEN 255
-#endif
+/* The number of seconds of fudge to add to the check for whether we need to
+   obtain a new ticket.  This is here to make sure that we don't wake up just
+   as the ticket is expiring. */
+#define EXPIRE_FUDGE 120
 
-#if defined(DO_AKLOG) && !defined(PATH_AKLOG)
-#define PATH_AKLOG	"/usr/pubsw/bin/aklog" 
-#endif
+/* The usage message. */
+const char usage_message[] = "\
+Usage: k5start [options] [name]\n\
+   -u <client principal>        (default: local username)\n\
+   -i <client instance>         (default: null)\n\
+   -S <service name>            (default: krbtgt)\n\
+   -I <service instance>        (default: realm name)\n\
+   -r <service realm>           (default: local realm)\n\
+\n\
+   -f <keytab>          Use <keytab> for authentication rather than password\n\
+   -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
+                        less than <limit> minutes, and exit 0 if it's okay,\n\
+                        otherwise obtain a ticket\n\
+   -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
+                        (implies -q unless -v is given)\n\
+   -k <file>            Use <file> as the ticket cache\n\
+   -l <lifetime>        Ticket lifetime in minutes\n\
+   -n                   Don't run aklog or KINIT_PROG\n\
+   -q                   Don't output any unnecessary text\n\
+   -s                   Read password on standard input\n\
+   -t                   Get AFS token via aklog or KINIT_PROG\n\
+   -v                   Verbose\n\
+\n\
+If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
+then this program will be executed when requested by the -t flag, rather\n\
+than whatever aklog program was compiled into k5start.\n";
 
-#ifdef DO_AKLOG
-# include <sys/wait.h> 
-# define KSTART_CANT_ACCESS_PROG 7
-#endif
 
-#ifdef SHORT_LIFETIME
-#define	LIFE	DEFAULT_TKT_LIFE	/* lifetime of ticket in 5-minute units */
-#else
-#define LIFE    3600
-#endif
-#define FUDGE_FACTOR 113   /* To make sure ticket updates BEFORE it expires */ 
-
-#define SNAME "krbtgt"
-#define SINST realm
-
-/* Only Solaris and IRIX have this. */
-#ifndef MAXNAMELEN
-# define MAXNAMELEN 512
-#endif
-
-extern char *optarg;
-extern int optind,opterr;
-
-int kstart_debug = 0 ; 
-
-char   *progname;
-
-void usage() ; 
-
-void
-get_input(s, size, stream)
-char *s;
-int size;
-FILE *stream;
+/*
+**  Report an error message to standard error and then exit.
+*/
+static void
+die(const char *format, ...)
 {
-	char *p;
+    va_list args;
 
-	if (fgets(s, size, stream) == NULL)
-	  exit(1);
-	if ( (p = (char *)strchr(s, '\n')) != NULL)
-		*p = '\0';
-}
-
-krb5_error_code
-KRB5_CALLCONV
-kinit_prompter(
-    krb5_context ctx,
-    void *data,
-    const char *name,
-    const char *banner,
-    int num_prompts,
-    krb5_prompt prompts[]
-    )
-{
-    int i;
-    krb5_prompt_type *types;
-    krb5_error_code rc =
-	krb5_prompter_posix(ctx, data, name, banner, num_prompts, prompts);
-    return rc;
-}
-
-
-int main(argc, argv)
-    int     argc;
-    char   *argv[];
-{
-    /* Should really fix these to be more K5 like */ 
-    char    aname[MAXNAMELEN]; /* Got to pick something */ 
-    char    inst[MAXNAMELEN];
-    char    realm[MAXNAMELEN];
-    char    sname[MAXNAMELEN];
-    char    sinst[MAXNAMELEN];
-    char    service_name[MAXNAMELEN]; 
-    char    keytab[MAXPATHLEN + 1] ; 
-    char    ticket_file[MAXPATHLEN + 1] ; 
-    char    env_tkfile[MAXPATHLEN + 11] ; 
-    char    buf[LEN];
-    char   *username = NULL;
-    int     iflag, rflag, vflag, lflag, lifetime, k5_errno;
-    int     tflag;
-    int     sflag;
-    int     qflag;
-    int     nflag;
-    int     fflag;
-    int     kflag; 
-    int     keep_ticket;
-    int     happy_ticket; 
-    char    *the_kinit_prog;
-    int     prog_status = 0 ; /* the status returned by system(the_kinit_prog) */ 
-    int     c;
-    register char *cp;
-    register i;
-  
-    krb5_context ctx; 
-    krb5_ccache  ccache; 
-    krb5_principal k5_me; 
-    krb5_creds my_creds; 
-    krb5_get_init_creds_opt options; 
-    krb5_keytab k5_keytab ; 
-    krb5_deltat    life_secs,starttime ; 
-    
-    keytab[0] = '\0' ; 
-    *inst = *realm = *sname = *sinst = '\0';
-    iflag = rflag = vflag = lflag = 0;
-    tflag = 0;
-    sflag = 0;
-    qflag = 0;
-    nflag = 0;
-    fflag = 0; 
-    kflag = 0; 
-    keep_ticket = 0 ; 
-    happy_ticket = 0 ; 
-    the_kinit_prog = NULL;
-    lifetime = LIFE;
-    progname = (cp = (char *)strrchr(*argv, '/')) ? cp + 1 : *argv;
-
-    opterr=1;
-
-    while ((c = getopt(argc,argv,"dspqtnvu:i:r:S:I:l:f:K:k:H:")) != EOF) 
-	switch (c) {
-	case 'l':     /* Lifetime */ 
-
-	    k5_errno = krb5_string_to_deltat(optarg, &life_secs);
-	    if (k5_errno != 0 || life_secs == 0) {
-		com_err(progname,k5_errno, "Bad lifetime value %s: Use 10h 10m format\n", optarg);
-		usage();
-	    }
-	    lifetime = life_secs/60 ; 
-	    break;
-	case 'p':
-	case 's': 
-	    ++sflag; 
-	    if ( fflag != 0 ) { 
-		printf("%s: cannot use both -s and -f flags\n",
-		       progname);
-		usage;
-	    }
-	    break;
-	case 'q': ++qflag;                                   break;
-	case 't': ++tflag;                                   break;
-	case 'v': ++vflag;                                   break;
-	case 'n': ++nflag;                                   break;
-	case 'd': ++kstart_debug;                               break;
-	case 'u': username = optarg;                         break;
-	    /*Stayin' Alive, uh, uh, uh, stayin' aliveeeee ! */ 
-	case 'K': keep_ticket = atoi(optarg);                break;
-	    /* Like -K but checks at beginning and exits if okay */ 
-	case 'H': happy_ticket = atoi(optarg);               break; 
-	case 'k': 
-	    ++kflag ;
-	    if (strlen(optarg) < sizeof(ticket_file)) {
-		strcpy(ticket_file, optarg);
-	    } else {
-		printf("%s: ticket file '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(ticket_file));
-		usage;
-	    }
-	    break ; 
-	case 'f': 
-	    ++fflag ;
-	    if (strlen(optarg) < sizeof(keytab)) {
-		strcpy(keytab, optarg);
-	    } else {
-		printf("%s: keytab '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(keytab));
-		usage;
-	    }
-	    if ( sflag != 0 ) { 
-		printf("%s: cannot use both -s and -f flags\n",
-		       progname);
-		usage;
-	    } 
-	    break;
-	case 'i': 
-	    if (strlen(optarg) < sizeof(inst)) {
-		strcpy(inst, optarg);
-	    } else {
-		printf("%s: instance '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(inst));
-		usage;
-	    }
-	    break;
-	case 'r':
-	    if (strlen(optarg) < sizeof(realm)) {
-		strcpy(realm, optarg);
-	    } else {
-		printf("%s: realm '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(realm));
-		usage;
-	    }
-	    break;
-	case 'S':
-	    if (strlen(optarg) < sizeof(sname)) {
-		strcpy(sname, optarg);
-	    } else {
-		printf("%s: service name '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(sname));
-		usage;
-	    }
-	    break;
-	case 'I':
-	    if (strlen(optarg) < sizeof(sinst)) {
-		strcpy(sinst, optarg);
-	    } else {
-		printf("%s: service instance '%s' too long (%d max)\n",
-		       progname, optarg, sizeof(sinst));
-		usage;
-	    }
-	    break;
-	default: usage();
-	}
-    argv = &argv[optind];
-    if (*argv) {
-	if (username) {
-	    usage();
-	} else {
-	    username = *argv;
-	}
-    }
-    if ( keep_ticket > 0 && fflag == 0 ) { 
-	printf("%s: Keep ticket option -K requires -f option\n",progname) ; 
-	usage; 
-    }
-    if ( keep_ticket > lifetime ) { 
-	printf("%s: keep_ticket %d > lifetime %d\n",progname,keep_ticket,lifetime); 
-	usage; 
-    }
-    the_kinit_prog =  (char *)getenv("KINIT_PROG");
-
-    if (the_kinit_prog==NULL) {
-	the_kinit_prog = PATH_AKLOG;
-    } 
-/* This is probably the wrong thing to do in k5start. */
-/* We should not run the_kinit_prog unless told to    */  
-/*     else { */
-/* 	tflag=1; */
-/*     } */
-
-    if (username==NULL) {
-	struct passwd *pw;
-	pw = getpwuid(getuid());
-	if (pw) { username = pw->pw_name; }
-    }
-    /* Get K5 context */ 
-
-  
-    if (k5_errno = krb5_init_context(&ctx)) {
-	com_err(progname, k5_errno, "while initializing Kerberos 5 library");
-	return 0;
-    }
-
-
-
-    /* Set ticket cache */ 
-    if ( kflag ) { 
-	k5_errno = krb5_cc_resolve(ctx,ticket_file,&ccache); 
-	/* put ticket_file into env so the_kinit_prog will see it. */  
-	sprintf(env_tkfile,"KRB5CCACHE=%s",ticket_file);
-	putenv(env_tkfile); 
-    } else { 
-	if ((k5_errno = krb5_cc_default(ctx, &ccache))) {
-	    com_err(progname, k5_errno, "while getting default ccache");
-	    return 0;
-	}
-    }
-    if ( keep_ticket || happy_ticket) { 
-	if ( ! vflag ) qflag++ ;
-    }
-
-    /* Add inst to username, should really just require full principal name on cmd line. */ 
-    if ( inst[0] != '\0' ) { 
-	i = strlen(inst) + strlen(username) + 5 ; 
-	cp = (char * ) malloc( i); 
-	sprintf(cp,"%s/%s",username,inst);
-	username = cp ; 
-    } 
-    if (username &&
-	(k5_errno = krb5_parse_name(ctx, username,&k5_me))
-	!= 0) {
-	com_err( progname, k5_errno, "when parsing %s", username);
-	iflag = rflag = 1;
-	username = NULL;
-    }
-
-    if ( gethostname(buf, LEN)) {
-	fprintf(stderr, "%s: gethostname failed\n", progname);
-	exit(1);
-    }
-
-    if (!qflag) {
-	char *s=(char *)getenv("SESSION_ENCRYPTED"); 
-	char *w=(char *)getenv("SESSION_CHECK");
-	if (s==NULL) {
-	    if(w) {
-		if (strcmp(w,"warn")== 0 ) {
-		    fprintf(stderr,"warning: session may not be encrypted\n");
-		} else if (strcmp(w,"error")== 0) {
-		    fprintf(stderr,"error: session is not encrypted!\n");
-		    exit(0);
-		}
-	    }
-	} else {
-	    fprintf(stderr,"session is encrypted with %s\n",s);
-	}
-    }
-    if (!qflag) printf("%s (%s)\n", ORGANIZATION, buf);
-
-    if (username && !qflag) {
-	/* There is a memory leak here if username was malloc'd in inst loop above */ 
-	if ((k5_errno = krb5_unparse_name(ctx,k5_me,&username))) { 
-	    com_err(progname, k5_errno, "when unparsing name %s",username);
-	    return 0;
-	}
-	printf("Kerberos Initialization for \"%s", username);
-    
-	printf("\"");
-	if (*sname) {
-	    printf(" for service \"%s", sname);
-	    if (*sinst)
-		printf(".%s", sinst);
-	    printf("\"");
-	}
-	printf("\n");
-    }
-
-
-    if (!*realm ) {
-	strncpy(realm,krb5_princ_realm(ctx,k5_me)->data,sizeof(realm));
-	if ( realm == NULL ) { 
-	    fprintf(stderr, "%s: krb5_princ_lrealm failed\n", progname);
-	    exit(1);
-	}
-    }
-    if (!*sname)
-	strcpy(sname, "krbtgt");
-    if (!*sinst)
-	strcpy(sinst, realm);
-    if (strlen(sname) + strlen(sinst) + 2 > sizeof(service_name)) {
-        fprintf(stderr, "%s: principal name too long\n", progname);
-        exit(1);
-    }
-    sprintf(service_name,"%s/%s",sname,sinst); 
-    service_name[MAXNAMELEN-1] = '\0';
-
-    /* if we have a valid service ticket exit */ 
-    if ( happy_ticket ) { 
-	if ( ! ticket_expired(ctx,ccache,k5_me,sname,sinst,realm,happy_ticket) ) {
-	    exit(0); 
-	}
-    }
-
-    /* Need to init creds,service_name and options. */ 
-    life_secs = lifetime* 60; 
-    krb5_get_init_creds_opt_set_tkt_life(&options, life_secs);
-KEEP_ALIVE: 
-    starttime = 0 ; /* Might want to twiddle this later */ 
-    if (sflag) { 
-	char pp[132];
-	if (! qflag ) printf("Password: "); 
-	get_input(pp,sizeof(pp), stdin);
-	k5_errno = krb5_get_init_creds_password(ctx,&my_creds,k5_me,
-					       pp,kinit_prompter,0,
-					       starttime,service_name,&options);
-    } else if ( fflag ) {  
-
-	k5_errno = krb5_kt_resolve(ctx, keytab, &k5_keytab);
-	if (k5_errno != 0) {
-	    com_err(progname, k5_errno, "resolving keytab %s", 
-		    keytab);
-	    exit(1);
-	}
-	k5_errno = krb5_get_init_creds_keytab(ctx,&my_creds,k5_me,
-					     k5_keytab,
-					     starttime,service_name,&options);
-
-    } else { 
-	k5_errno = krb5_get_init_creds_password(ctx,&my_creds,k5_me,
-					      0,kinit_prompter,0,
-					      starttime,service_name,&options);
-
-    }
-
-    if ( k5_errno ) { 
-	com_err(progname, k5_errno, "when getting initial creds");
-        exit(1);
-    } 
-
-    if (k5_errno = krb5_cc_initialize(ctx, ccache, k5_me)) {
-	com_err(progname, k5_errno, "when initializing cache");
-	goto cleanup;
-    }
-
-    if (k5_errno = krb5_cc_store_cred(ctx, ccache, &my_creds)) {
-	com_err(progname, k5_errno, "while storing credentials");
-	goto cleanup;
-    }
-
-
-cleanup:
-    if (my_creds.client == k5_me) {
-	my_creds.client = 0;
-    }
-
-    krb5_free_cred_contents(ctx, &my_creds);
-    if (keytab[0] && k5_keytab != NULL )
-	krb5_kt_close(ctx, k5_keytab);
-    if ( k5_errno ) { 
-	exit(k5_errno); 
-    }
-
-#ifdef DO_AKLOG
-    if (tflag && !nflag) {
-	if (! access( the_kinit_prog, X_OK)) {
-	    /* IRIX 6.5 doesn't like calling WEXITSTATUS() directly on the return
-	       value of system(). */
-	    prog_status = system(the_kinit_prog);
-	    prog_status = WEXITSTATUS(prog_status);
-      
-	    if ( vflag ) { 
-		printf("%s exited with status %d\n",the_kinit_prog,prog_status); 
-	    }
-	} else { 
-	    prog_status = KSTART_CANT_ACCESS_PROG ; 
-	}
-    }
-#endif
-    if  ( keep_ticket > 0 ) { 
-	for(;;) { 
-	    sleep(keep_ticket*60) ; 
-	    if ( ticket_expired(ctx,ccache,k5_me,sname,sinst,realm,keep_ticket) ) { 
-		goto KEEP_ALIVE ; 
-	    }
-	}
-
-    } else { 
-	exit(prog_status);
-    }
-}
-
-/* Stolen from appl/bsd/rlogin.c */ 
-int 
-ticket_expired(krb5_context ctx, 
-	       krb5_ccache ccache,
-	       krb5_principal k5_me,
-	       char *service,char *inst, char *realm, int check ) { 
-    krb5_creds *v5creds = 0; 
-    krb5_creds increds, *outcreds = NULL ; 
-    krb5_principal k5service ;
-
-    int rem = 1;
-    int lifetime,len_rlm,len_sn ; 
-    int now,then ; 
-
-    memset((char *) &increds, 0, sizeof(increds));
-    
-
-    len_rlm = strlen(realm); 
-    if (rem = krb5_build_principal(ctx,
-				   &k5service, 
-				   len_rlm,
-				   realm,
-				   service,
-				   inst,
-				   NULL)) {
-	com_err(progname, rem,
-		"while creating service principal name");
-	return rem ; 
-    }
-
-    increds.client = k5_me;
-    increds.server = k5service;
-    
-    rem = krb5_get_credentials(ctx,0,ccache, &increds,&outcreds);
-    
-    now = time(0); 
-    
-    if (rem == 0) {              
-	then = outcreds->times.endtime ; 
-	if ( then < ( now + 60*check + FUDGE_FACTOR)) { 
-	    rem = KRB5KRB_AP_ERR_TKT_EXPIRED;
-	}
-    }
-    
-    if ( k5service != NULL ) { 
-	krb5_free_principal(ctx,k5service);
-    } 
-    if ( outcreds != NULL ) { 
-	krb5_free_creds(ctx,outcreds);
-    }
-    
-    return rem ; 
-
-} 
-
-void
-usage()
-{
-    fprintf(stderr, "Usage: %s [options] [name]\n", progname);
-    fprintf(stderr,"   -u <client principal> (default local username)\n");
-    fprintf(stderr,"   -i <client instance> (default null)\n");
-    fprintf(stderr,"   -S <service name> (default krbtgt)\n");
-    fprintf(stderr,"   -I <service instance> (default realm name)\n");
-    fprintf(stderr,"   -r <service realm>\n");
-    fprintf(stderr,"   -v[erbose]\n");
-    fprintf(stderr,"   -l lifetime (i.e. 10 hours)\n");
-    fprintf(stderr,"   -K n  (check and renew tgt every n minutes, implies -q unless -v)\n"); 
-    fprintf(stderr,"   -k <ticket_file>  use ticket_file as ticket cache\n"); 
-    fprintf(stderr,"   -H n (Check for happy tgt, i.e. doesn't expire in less than n minutes, if Happy exit with status 0, otherwise try and get a tgt)\n"); 
-    fprintf(stderr,"   -s  read password from stdin\n");
-    fprintf(stderr,"   -f <keytab> read password from svrtab file\n");
-    fprintf(stderr,"   -q  quiet\n");
-#ifdef DO_AKLOG
-    fprintf(stderr,"   -t  get AFS token via aklog or KINIT_PROG\n");
-    fprintf(stderr,"   -n  don't run KINIT_PROG\n");
-    fprintf(stderr,"\n");
- fprintf(stderr,"  If the environment variable KINIT_PROG is set to a program (such as aklog)\n");
- fprintf(stderr,"  then this program will automatically be executed after the ticket granting\n");
- fprintf(stderr,"  ticket has been retrieved.\n");
-    fprintf(stderr,"\n");
-
-#endif
+    fprintf(stderr, "kstart: ");
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fprintf(stderr, "\n");
     exit(1);
+}
+
+
+/*
+**  Print out the usage message and then exit with the status given as the
+**  only argument.  If status is zero, the message is printed to standard
+**  output; otherwise, it is sent to standard error.
+*/
+static void
+usage(int status)
+{
+    fprintf((status == 0) ? stdout : stderr, usage_message);
+    exit(status);
+}
+
+
+/*
+**  Check whether a ticket will expire within the given number of seconds.
+**  Takes the context, ticket cache, and principal, and then the service,
+**  instance, and realm of a service for which to get a ticket and the minimum
+**  number of seconds of lifetime that it must have.  Returns a Kerberos
+**  status code.
+*/
+static krb5_error_code
+ticket_expired(krb5_context ctx, krb5_ccache ccache, krb5_principal princ,
+               const char *service, const char *inst, const char *realm,
+               int minimum)
+{
+    krb5_creds increds, *outcreds = NULL;
+    krb5_principal sprinc = NULL;
+    time_t now, then;
+    int status;
+
+    /* Obtain the ticket. */
+    memset(&increds, 0, sizeof(increds));
+    status = krb5_build_principal(ctx, &sprinc, strlen(realm), realm,
+                                  service, inst, (const char *) NULL);
+    if (status != 0) {
+        com_err("k5start", status, "while creating service principal name");
+        return status;
+    }
+    increds.client = princ;
+    increds.server = sprinc;
+    status = krb5_get_credentials(ctx, 0, ccache, &increds, &outcreds);
+
+    /* Check the expiration time. */
+    if (status == 0) {
+        now = time(NULL);
+        then = outcreds->times.endtime;
+        if (then < now + 60 * minimum + EXPIRE_FUDGE)
+            status = KRB5KRB_AP_ERR_TKT_EXPIRED;
+    }
+
+    /* Free memory. */
+    if (sprinc != NULL)
+        krb5_free_principal(ctx, sprinc);
+    if (outcreds != NULL)
+        krb5_free_creds(ctx, outcreds);
+
+    return status;
+}
+
+
+int
+main(int argc, char *argv[])
+{
+    int k5_errno, option;
+    size_t length;
+    const char *inst = NULL;
+    const char *realm = NULL;
+    const char *sname = NULL;
+    const char *sinst = NULL;
+    const char *aklog = NULL;
+    const char *cache = NULL;
+    const char *keytab = NULL;
+    char *username = NULL;
+    char *service;
+    int lifetime = DEFAULT_LIFETIME;
+    int status = 0;
+    int happy_ticket = 0;
+    int keep_ticket = 0;
+    int quiet = 0;
+    int run_aklog = 0;
+    int stdin_passwd = 0;
+    int verbose = 0;
+
+    krb5_context ctx;
+    krb5_ccache ccache;
+    krb5_principal princ;
+    krb5_creds creds;
+    krb5_get_init_creds_opt options;
+    krb5_keytab k5_keytab = NULL;
+    krb5_deltat life_secs;
+    krb5_data *data;
+
+    /* Parse command-line options. */
+    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
+        switch (option) {
+        case 'd': /* Ignored */         break;
+        case 'I': sinst = optarg;       break;
+        case 'i': inst = optarg;        break;
+        case 'k': cache = optarg;       break;
+        case 'n': /* Ignored */         break;
+        case 'q': ++quiet;              break;
+        case 'r': realm = optarg;       break;
+        case 'S': sname = optarg;       break;
+        case 't': ++run_aklog;          break;
+        case 'v': ++verbose;            break;
+        case 'u': username = optarg;    break;
+
+        case 'f':
+            keytab = optarg;
+            if (stdin_passwd)
+                die("cannot use both -s and -f flags");
+            break;
+        case 'H':
+            happy_ticket = atoi(optarg);
+            if (happy_ticket <= 0)
+                die("-H limit argument %s out of range", optarg);
+            break;
+        case 'K':
+            keep_ticket = atoi(optarg);
+            if (keep_ticket <= 0)
+                die("-K interval argument %s out of range", optarg);
+            break;
+        case 'l':
+            k5_errno = krb5_string_to_deltat(optarg, &life_secs);
+            if (k5_errno != 0 || life_secs == 0)
+                die("bad lifetime value %s, use 10h 10m format", optarg);
+            lifetime = life_secs / 60;
+            break;
+        case 'p':
+        case 's':
+            stdin_passwd = 1;
+            if (keytab != NULL)
+                die("cannot use both -s and -f flags");
+            break;
+
+        default:
+            usage(1);
+            break;
+        }
+
+    /* Parse arguments.  There must be at most one argument, which will be
+       taken to be the username if the -u option wasn't already given. */
+    argc -= optind;
+    argv += optind;
+    if (argc > 1)
+        usage(1);
+    if (argc == 1) {
+        if (username == NULL)
+            username = argv[0];
+        else
+            die("username specified both with -u and as an argument");
+    }
+
+    /* Check the arguments for consistency. */
+    if (keep_ticket > 0 && keytab == NULL)
+        die("-K option requires a keytab be specified with -f");
+    if (lifetime > 0 && keep_ticket > lifetime)
+        die("-K limit %d must be smaller than lifetime %d", keep_ticket,
+            lifetime);
+
+    /* Set aklog from KINIT_PROG or the compiled-in default. */
+    aklog = getenv("KINIT_PROG");
+    if (aklog == NULL)
+        aklog = PATH_AKLOG;
+
+    /* The default username is the name of the local user. */
+    if (username == NULL) {
+        struct passwd *pwd;
+
+        pwd = getpwuid(getuid());
+        if (pwd == NULL)
+            die("no username given and unable to obtain default value");
+        username = pwd->pw_name;
+    }
+
+    /* Establish a K5 context. */
+    k5_errno = krb5_init_context(&ctx);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while initializing Kerberos 5 library");
+        exit(1);
+    }
+
+    /* If requested, set a ticket cache.  Also put it into the environment in
+       case we're going to run aklog.  Either way, set up the cache in the
+       Kerberos libraries. */
+    if (cache == NULL)
+        k5_errno = krb5_cc_default(ctx, &ccache);
+    else {
+        char *env;
+
+        env = malloc(strlen(cache) + 12);
+        if (env == NULL)
+            die("cannot allocate memory: %s", strerror(errno));
+        sprintf(env, "KRB5CCACHE=%s", cache);
+        putenv(env);
+        free(env);
+        k5_errno = krb5_cc_resolve(ctx, cache, &ccache);
+    }
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while initializing ticket cache");
+        exit(1);
+    }
+
+    /* If either -K or -H were given, set quiet automatically unless verbose
+       was set. */
+    if ((keep_ticket > 0 || happy_ticket > 0) && !verbose)
+        quiet = 1;
+
+    /* The easiest thing for us is if the user just specifies the full
+       principal on the command line.  For backward compatibility, though,
+       support the -u and -i flags being used independently by tacking the
+       instance onto the end of the username. */
+    if (inst != NULL) {
+        size_t len;
+        char *p;
+
+        len = strlen(username) + 1 + strlen(inst) + 1;
+        p = malloc(len);
+        if (p == NULL)
+            die("unable to allocate memory: %s", strerror(errno));
+        sprintf(p, "%s/%s", username, inst);
+        username = p;
+    }
+    if (username != NULL) {
+        k5_errno = krb5_parse_name(ctx, username, &princ);
+        if (k5_errno != 0) {
+            com_err("k5start", k5_errno, "when parsing %s", username);
+            username = NULL;
+        }
+    }
+
+    /* Display the identity that we're obtaining Kerberos tickets for.  We do
+       this by unparsing the principal rather than using username and inst
+       since that way we get the default realm appended by K5.  This is a
+       memory leak if the username was allocated above to append the instance,
+       but since it isn't in a loop, we don't care. */
+    if (username != NULL && !quiet) {
+        k5_errno = krb5_unparse_name(ctx, princ, &username);
+        if (k5_errno != 0) {
+            com_err("k5start", k5_errno, "when unparsing name %s", username);
+            exit(1);
+        }
+        printf("Kerberos initialization for %s", username);
+        if (sname != NULL) {
+            printf(" for service %s", sname);
+            if (sinst != NULL)
+                printf("/%s", sinst);
+        }
+        printf("\n");
+    }
+
+    /* Flesh out the name of the service ticket that we're obtaining. */
+    if (realm == NULL) {
+        data = krb5_princ_realm(ctx, princ);
+        if (data == NULL)
+            die("cannot get local Kerberos realm");
+        realm = data->data;
+    }
+    if (sname == NULL)
+        sname = "krbtgt";
+    if (sinst == NULL)
+        sinst = realm;
+    length = strlen(sname) + 1 + strlen(sinst) + 1;
+    service = malloc(length);
+    if (service == NULL)
+        die("unable to allocate memory: %s", strerror(errno));
+    sprintf(service, "%s/%s", sname, sinst);
+
+    /* If we're just checking the service ticket, do that and exit if okay. */
+    if (happy_ticket > 0)
+        if (!ticket_expired(ctx, ccache, princ, sname, sinst, realm,
+                            happy_ticket))
+            exit(0);
+
+    /* Figure out our ticket lifetime and initialize the options. */
+    life_secs = lifetime * 60;
+    krb5_get_init_creds_opt_init(&options);
+    krb5_get_init_creds_opt_set_tkt_life(&options, life_secs);
+
+    /* Now, the actual authentication part.  This is where we loop back to if
+       we're running as a daemon (with the -K option). */
+repeat:
+    if (keytab != NULL) {
+        k5_errno = krb5_kt_resolve(ctx, keytab, &k5_keytab);
+        if (k5_errno != 0) {
+            com_err("k5start", k5_errno, "resolving keytab %s", keytab);
+            exit(1);
+        }
+        k5_errno = krb5_get_init_creds_keytab(ctx, &creds, princ, k5_keytab,
+                                              0, service, &options);
+    } else if (!stdin_passwd) {
+        k5_errno = krb5_get_init_creds_password(ctx, &creds, princ, NULL,
+                                                krb5_prompter_posix, NULL,
+                                                0, service, &options);
+    } else {
+        char *p, buffer[BUFSIZ];
+
+        if (!quiet)
+            printf("Password: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        p = strchr(buffer, '\n');
+        if (p != NULL)
+            *p = '\0';
+        else
+            die("password too long");
+        k5_errno = krb5_get_init_creds_password(ctx, &creds, princ, buffer,
+                                                krb5_prompter_posix, NULL,
+                                                0, service, &options);
+    }
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while getting initial credentials");
+        exit(1);
+    }
+    k5_errno = krb5_cc_initialize(ctx, ccache, princ);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while initializing ticket cache");
+        exit(1);
+    }
+    k5_errno = krb5_cc_store_cred(ctx, ccache, &creds);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while storing credentials");
+        exit(1);
+    }
+
+    /* Make sure that we don't free princ; we use it later. */
+    if (creds.client == princ)
+        creds.client = NULL;
+    krb5_free_cred_contents(ctx, &creds);
+    if (k5_keytab != NULL)
+        krb5_kt_close(ctx, k5_keytab);
+
+    /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
+       broken and can't cope with being called directly on the return value of
+       system().  If we can't execute the aklog program, set the exit status
+       to an arbitrary but distinct value. */
+#ifdef DO_AKLOG
+    if (run_aklog) {
+        if (access(aklog, X_OK) == 0) {
+            status = system(aklog);
+            status = WEXITSTATUS(status);
+            if (verbose)
+                printf("%s exited with status %d", aklog, status);
+        } else {
+            if (verbose)
+                printf("no execute access to %s", aklog);
+            status = 7;
+        }
+    }
+#endif
+
+    /* Loop if we're running as a daemon. */
+    if (keep_ticket > 0) {
+        while (1) {
+            sleep(keep_ticket * 60);
+            if (ticket_expired(ctx, ccache, princ, sname, sinst, realm,
+                               keep_ticket))
+                goto repeat;
+        }
+    }
+
+    /* Otherwise, just exit. */
+    exit(status);
 }
