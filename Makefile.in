@@ -21,7 +21,7 @@ CFLAGS		= @CFLAGS@
 CPPFLAGS	= -I. -I$(srcdir) @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
-LIBOBJ		= @LIBOBJ@
+LIBOBJS		= @LIBOBJS@
 KRBLIBS		= @KRBLIBS@ $(LIBS)
 KRB5LIBS	= @KRB5LIBS@ $(LIBS)
 
@@ -41,8 +41,8 @@ install: kstart k5start kstart.1 k5start.1
 	$(INSTALL_DATA) kstart.1 $(mandir)/man1/kstart.1
 	$(INSTALL_DATA) k5start.1 $(mandir)/man1/k5start.1
 
-kstart: kstart.o $(LIBOBJ)
-	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBOBJ) $(KRBLIBS)
+kstart: kstart.o $(LIBOBJS)
+	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBOBJS) $(KRBLIBS)
 
 k5start: k5start.o
 	$(CC) $(LDFLAGS) -o k5start k5start.o $(KRB5LIBS)
