@@ -117,10 +117,9 @@ flag is given).
 
 =item B<-u> I<client principal>
 
-Used when using a srvtab to obtain credentials, this specifies the
-principal to obtain credentials as.  The entire principal may be specified
-here, or alternatively just the first portion may be specified with this
-flag and the instance specified with B<-i>.
+This specifies the principal to obtain credentials as.  The entire
+principal may be specified here, or alternatively just the first portion
+may be specified with this flag and the instance specified with B<-i>.
 
 Note that there's normally no reason to use this flag rather than simply
 giving the principal on the command line as the first regular argument.
