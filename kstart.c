@@ -141,7 +141,8 @@ int main(argc, argv)
   int     nflag;
   int     fflag;
   int     kflag; 
-  int     keep_ticket; 
+  int     keep_ticket;
+  int     happy_ticket; 
   char    *the_kinit_prog;
   int     prog_status = 0 ; /* the status returned by system(the_kinit_prog) */ 
   int     c;
@@ -157,13 +158,14 @@ int main(argc, argv)
   fflag = 0; 
   kflag = 0; 
   keep_ticket = 0 ; 
+  happy_ticket = 0 ; 
   the_kinit_prog = NULL;
   lifetime = LIFE;
   progname = (cp = (char *)strrchr(*argv, '/')) ? cp + 1 : *argv;
 
   opterr=1;
 
-  while ((c = getopt(argc,argv,"dspqtnvu:i:r:S:I:l:f:K:k:")) != EOF) 
+  while ((c = getopt(argc,argv,"dspqtnvu:i:r:S:I:l:f:K:k:H:")) != EOF) 
     switch (c) {
     case 'l': if ( (lifetime=atoi(optarg)) <0) usage();  break;
     case 'p':
@@ -183,6 +185,8 @@ int main(argc, argv)
     case 'u': username = optarg;                         break;
       /*Stayin' Alive, uh, uh, uh, stayin' aliveeeee ! */ 
     case 'K': keep_ticket = atoi(optarg);                break;
+      /* Like -K but checks at beginning and exits if okay */ 
+    case 'H': happy_ticket = atoi(optarg);               break; 
     case 'k': 
       ++kflag ;
       if (strlen(optarg) < sizeof(ticket_file)) {
@@ -282,9 +286,10 @@ int main(argc, argv)
     sprintf(env_tkfile,"KRBTKFILE=%s",ticket_file);
     putenv(env_tkfile); 
   }
-  if ( keep_ticket ) { 
+  if ( keep_ticket || happy_ticket) { 
     if ( ! vflag ) qflag++ ;
   }
+
 
   if (username &&
       (k_errno = kname_parse(aname, inst, realm, username))
@@ -352,6 +357,14 @@ int main(argc, argv)
     strcpy(sname, "krbtgt");
   if (!*sinst)
     strcpy(sinst, realm);
+
+  /* if we have a valid service ticket exit */ 
+  if ( happy_ticket ) { 
+    if ( ! ticket_expired(sname,sinst,realm,happy_ticket) ) {
+      exit(0); 
+    }
+  }
+
 KEEP_ALIVE: 
   if (sflag) { 
     char pp[132];
@@ -430,6 +443,7 @@ usage()
     fprintf(stderr,"   -l n  (ticket lifetime in minutes)\n");
     fprintf(stderr,"   -K n  (check and renew tgt every n minutes, implies -q unless -v)\n"); 
     fprintf(stderr,"   -k <ticket_file>  use ticket_file as ticket cache\n"); 
+    fprintf(stderr,"   -H n (Check for happy tgt, i.e. doesn't expire in less than n minutes, if Happy exit with status 0, otherwise try and get a tgt)\n"); 
     fprintf(stderr,"   -s  read password from stdin\n");
     fprintf(stderr,"   -f <srvtab> read password from svrtab file\n");
     fprintf(stderr,"   -q  quiet\n");
