@@ -421,17 +421,22 @@ ticket_expired(char *service,char *inst, char *realm, int check ) {
   CREDENTIALS cr;
   int rem = KSUCCESS;
   int lifetime ; 
+  int now,then ; 
+  
   rem = krb_get_cred(service, inst, realm, &cr);
-  if (rem == KSUCCESS
-              && ((cr.issue_date +
-#ifdef SHORT_LIFETIME
-		((unsigned char) cr.lifetime)*5*60   
-#else 
-	   krb_life_to_time((unsigned char) cr.lifetime))
-#endif 
-      ) < ( time (0) + 60*check ))
-    rem = RD_AP_EXP;
 
+  now = time(0); 
+
+  if (rem == KSUCCESS ) { 
+             
+#ifdef SHORT_LIFETIME
+      then = cr.issue_date + ((unsigned char) cr.lifetime)*5*60 ;   
+#else 
+      then = krb_life_to_time(cr.issue_date, (unsigned char) cr.lifetime); 
+#endif 
+      if ( then < ( now + 60*check ))
+	  rem = RD_AP_EXP;
+  }
   return rem ; 
 
 } 
