@@ -4,6 +4,12 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+PACKAGE		= @PACKAGE_TARNAME@
+VERSION		= @PACKAGE_VERSION@
+TARDIR		= $(PACKAGE)-$(VERSION)
+DEBNAME		= $(PACKAGE)_$(VERSION)
+TARNAME		= $(TARDIR).tar
+
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 
@@ -22,19 +28,13 @@ INSTALL		= @INSTALL@
 INSTALL_DATA	= @INSTALL_DATA@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 
-##############################################################################
-
-SOURCE_FILES	= k5start.c kstart.c
-
-EXTRA_FILES	= Makefile.in VERSION config.h.in configure configure.in \
-		  install-sh k5start.pod k5start.1 kstart.pod kstart.1
-
 .c.o:
 	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
 
 all: kstart k5start kstart.1 k5start.1
 
 install: kstart k5start kstart.1 k5start.1
+	$(INSTALL) -d $(bindir) $(mandir)/man1
 	$(INSTALL_PROGRAM) kstart $(bindir)/kstart
 	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
 	$(INSTALL_DATA) kstart.1 $(mandir)/man1/kstart.1
@@ -47,26 +47,35 @@ k5start: k5start.o
 	$(CC) $(LDFLAGS) -o k5start k5start.o $(KRB5LIBS)
 
 kstart.1: kstart.pod
-	pod2man --release=`awk '/Id: / { print $$3; exit }' $(srcdir)/kstart.c` \
-	    --center="User commands" $< > $@
+	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
 k5start.1: k5start.pod
-	pod2man --release=`awk '/Id: / { print $$3; exit }' $(srcdir)/k5start.c` \
-	    --center="User commands" $< > $@
+	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
 clean:
 	rm -f *.o kstart k5start
 
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status kstart-*
+	rm -rf autom4te.cache
 
 maintclean: distclean
 	rm -f config.h.in configure kstart.1 k5start.1
 
-dist: $(SOURCE_FILES) $(EXTRA_FILES)
-	mkdir kstart-`cat VERSION`
-	cp $(SOURCE_FILES) kstart-`cat VERSION`
-	cp $(EXTRA_FILES) kstart-`cat VERSION`
-	tar cf kstart-`cat VERSION`.tar kstart-`cat VERSION`
-	gzip -9 kstart-`cat VERSION`.tar
-	rm -rf kstart-`cat VERSION`
+dist:
+	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
+	mkdir $(TARDIR)
+	rsync -C -a ./ $(TARDIR)/
+	rsync -a kstart.1 k5start.1 $(TARDIR)/
+	cd $(TARDIR) && autoconf && autoheader && rm -rf autom4te.cache
+	tar cf $(TARNAME) $(TARDIR)
+	gzip -9 $(TARNAME)
+	md5sum $(TARNAME).gz > $(TARNAME).gz.md5
+
+# Prepare to make a Debian package.  This doesn't do the actual work of
+# creating the package; there are too many different flags we might want to
+# use.  It just copies things around so that the Debian packaging will work
+# properly.
+deb-prep: dist
+	rm -f *.orig.tar.gz $(DEBNAME)* *_$(VERSION)-*.deb
+	cp $(TARNAME).gz $(PACKAGE)_$(VERSION).orig.tar.gz
