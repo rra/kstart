@@ -1,4 +1,4 @@
-AC_REVISION($Id$)
+AC_REVISION($Revision$)
 AC_INIT(kstart.c)
 AC_PROG_CC
 AC_ARG_WITH(kerberos,
