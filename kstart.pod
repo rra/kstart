@@ -25,9 +25,12 @@ is primarily intended to be used by programs that want to use a srvtab to
 obtain kerberos credentials, such as a web server that needs to
 authenticate to another service such as an LDAP server or to AFS.
 
-If no username is given as either the first argument or the argument to
-the B<-u> option, the client principal defaults to the Unix username of
-the user running B<kstart> in the default local realm.
+Normally, the principal for which to give tickets should be specified as
+the first argument.  The B<-u> and B<-i> options can be used as an
+alternative mechanism for specifying the principal, but generally aren't
+as convenient.  If no username is given as either the first argument or
+the argument to the B<-u> option, the client principal defaults to the
+Unix username of the user running B<kstart> in the default local realm.
 
 =head1 OPTIONS
 
