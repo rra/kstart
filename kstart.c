@@ -94,6 +94,7 @@ static char rcsid_kinit_c[] =
 #else
 #define LIFE    141
 #endif
+#define FUDGE_FACTOR 311	/* Make sure you get a tgt before it expires */ 
 
 #define SNAME "krbtgt"
 #define SINST realm
@@ -434,7 +435,7 @@ ticket_expired(char *service,char *inst, char *realm, int check ) {
 #else 
       then = krb_life_to_time(cr.issue_date, (unsigned char) cr.lifetime); 
 #endif 
-      if ( then < ( now + 60*check ))
+      if ( then < ( now + 60*check + FUDGE_FACTOR ))
 	  rem = RD_AP_EXP;
   }
   return rem ; 
