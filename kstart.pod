@@ -4,114 +4,136 @@ kstart - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<kstart>
-[B<-u> I<client principal>]
-[B<-i> I<client instance>]
-[B<-S> I<service name>]
+B<kstart> [B<-nqstv>]
+[B<-f> I<srvtab>]
+[B<-H> I<minutes>]
 [B<-I> I<service instance>]
-[B<-r> I<service realm>]
-[B<-v>]
-[B<-l> I<minutes>]
+[B<-i> I<client instance>]
 [B<-K> I<minutes>]
 [B<-k> I<ticket file>]
-[B<-H> I<minutes>]
-[B<-s>]
-[B<-f> I<srvtab>]
-[B<-q>]
-[B<-t>]
-[B<-n>] [I<username>]
+[B<-l> I<minutes>]
+[B<-r> I<service realm>]
+[B<-u> I<client principal>]
+[B<-S> I<service name>]
+[I<username>]
 
 =head1 DESCRIPTION
 
 B<kstart> obtains and caches an initial Kerberos v4 ticket-granting ticket
 for a principal.  B<kstart> can be used as an alternative to kinit, but it
 is primarily intended to be used by programs that want to use a srvtab to
-obtain kerberos credentials.  An example of this is a web server that
-needs to authenticate to another service such as an LDAP server.
+obtain kerberos credentials, such as a web server that needs to
+authenticate to another service such as an LDAP server or to AFS.
+
+If no username is given as either the first argument or the argument to
+the B<-u> option, the client principal defaults to the Unix username of
+the user running B<kstart> in the default local realm.
 
 =head1 OPTIONS
 
 =over 4
 
-=item B<-u> I<client principal>
-	
-This option is mostly used when using a srvtab to obtain credentials.  It
-is the first part of the kerberos principal in the srvtab.  If not
-specified, the client principal defaults to the unix username in the
-default realm.
-
-=item B<-i> I<client instance>
-	
-This is the instance part of the principal above, I<-i> requires I<-u>.
-	
-=item B<-S> I<service name>
-	
-The is the first part of principal that B<kstart> is getting a service
-ticket for.  The default is krbtgt and in general this option should not
-be used unless you only need access to a single service.
-
-=item B<-I> I<service instance>
-
-The instance part of the principal above.  The default is the default
-realm of the machine.
-
-=item B<-r> I<service realm>
-
-The realm for the service principal.
-
-=item B<-v>
-	
-Be verbose.
-
-=item B<-l> I<minutes>
-
-The ticket lifetime in minutes.
-
-=item B<-k> I<ticket file>
-
-Use I<ticket file> as ticket cache.
-
-=item B<-H> I<minutes>
-	
-Check for happy TGT, i.e. doesn't expire in less than n minutes, if
-Happy exit with status 0, otherwise try and get a tgt.
-
-=item B<-K> I<minutes>
-	
-Run in daemon mode to keep a tgt alive indefinitely.  The program
-reawakens after n minutes, checks if the ticket will expire before the
-next "wakeup" and gets a new TGT if needed.
-
-=item B<-s>
-	
-Read password from stdin rather than via specialized tty routines.
-
 =item B<-f> I<srvtab>
 	
 Read password from svrtab file.
 
-=item B<-q>
-	
-Quiet, don't print any status messages.
+=item B<-H> I<minutes>
 
-=item B<-t>
+Check for a happy ticket, one that has a remaining lifetime of at least
+I<minutes> minutes.  If such a ticket is found, exit immediately with
+status 0.  Otherwise, try to obtain a new ticket.
+
+=item B<-I> I<service instance>
+
+The instance portion of the service principal.  The default is the default
+realm of the machine.  Note that unlike the client principal, a
+non-default service principal must be specified with B<-I> and B<-S>; one
+cannot provide the instance portion as part of the argument to B<-S>.
+
+=item B<-i> I<client instance>
+
+Specifies the instance portion of the principal.  This option doesn't make
+sense except in combination with B<-u>.  Note that the instance can be
+specified as part of I<username> through the normal convention of
+appending a period and then the instance, so one never has to use this
+option.
+
+=item B<-K> I<minutes>
 	
-This option will run an external program after getting a TGT.  The default
-use of this is to run B<aklog> to get a token.  If the environmental
-variable I<KINIT_PROG> is set the program is run regardless of the B<-t>
-flag.
+Run in daemon mode to keep a ticket alive indefinitely.  The program
+reawakens after I<minutes> minutes, checks if the ticket will expire
+before the next wakeup, and gets a new ticket if needed.
+
+=item B<-k> I<ticket file>
+
+Use I<ticket file> as the ticket cache rather than the contents of the
+environment variable KRBTKFILE or the library default.
+
+=item B<-l> I<minutes>
+
+Set the ticket lifetime in minutes.  Note that if the ticket lifetime will
+only be accurate to within five minutes, may be approximate if the ticket
+lifetime is over ten hours, and cannot be more than about 21 hours unless
+your Kerberos libraries support long ticket lifetimes.
 
 =item B<-n>
 	
-Regardless of the setting of I<KINIT_PROG> don't run the program.
+Regardless of the setting of the environment variable KINIT_PROG, don't
+run the program.
+
+=item B<-q>
+	
+Quiet.  Suppresses the printing of the initial banner message saying what
+Kerberos principal tickets are being obtained for, and also suppresses the
+password prompt when the B<-s> option is given.
+
+=item B<-r> I<service realm>
+
+The realm for the service principal.  This defaults to the default local
+realm.
+
+=item B<-S> I<service name>
+
+Specifies the principal for which B<kstart> is getting a service ticket.
+The default value is C<krbtgt>, to obtain a ticket-granting ticket.  This
+option (along with B<-I>) may be used if one only needs access to a single
+service.  Note that unlike the client principal, a non-default service
+principal must be specified with both B<-S> and B<-I>; one cannot provide
+the instance portion as part of the argument to B<-S>.
+
+=item B<-s>
+	
+Read the password from standard input.
+
+=item B<-t>
+	
+Run an external program after getting a TGT.  The default use of this is
+to run B<aklog> to get a token.  If the environment variable KINIT_PROG is
+set, the program is run regardless of the B<-t> flag (unless the B<-n>
+flag is given).
+
+=item B<-u> I<client principal>
+
+Used when using a srvtab to obtain credentials, this specifies the
+principal to obtain credentials as.  The entire principal may be specified
+here, or alternatively just the first portion may be specified with this
+flag and the instance specified with B<-i>.
+
+Note that there's normally no reason to use this flag rather than simply
+giving the principal on the command line as the first regular argument.
+
+=item B<-v>
+	
+Be verbose.  This will print out a bit of additional information about
+what is being attempted and what the results are.
 
 =back
 
 =head1 RETURN VALUES
 
-The program exits with status 0 if it successfully gets a tgt or has a
-happy ticket.  If B<kstart> runs aklog or some other program B<kstart>
-returns the exit status of that program.
+The program exits with status 0 if it successfully gets a ticket or has a
+happy ticket (see B<-H>).  If B<kstart> runs aklog or some other program
+B<kstart> returns the exit status of that program.
 
 =head1 EXAMPLES
 
@@ -134,16 +156,22 @@ ticket granting ticket.
 
 =head1 FILES
 
-The default TGT file is determined by the underlying kerberos libraries.
-The default path for aklog is F</usr/pubsw/bin/aklog>.
+The default ticket cache is determined by the underlying kerberos
+libraries.  The default path for aklog is determined at build time, and
+will normally be whichever of B<aklog> or B<afslog> is found in the user's
+path.
 
 =head1 SEE ALSO
 
 k5start(1), kinit(1)
 
+The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
+will have the current version of B<kstart> and B<k5start>.
+
 =head1 AUTHORS
 
 B<kstart> was originally written by Robert Morgan.  Modifications and
-additional features were added by Booker C. Bense.
+additional features were added by Booker C. Bense.  Additional cleanup and
+current maintenance is done by Russ Allbery <rra@stanford.edu>.
 
 =cut
