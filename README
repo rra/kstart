@@ -1,0 +1,115 @@
+                            kstart release 2.1
+               (kinit daemon that uses srvtabs or keytabs)
+
+         Originally written by Robert Morgan and Booker C. Bense
+         Currently maintained by Russ Allbery <rra@stanford.edu>
+
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002 Board of Trustees,
+  Leland Stanford Jr. University.  This software is distributed under a
+  BSD-style license.  Please see the section LICENSE below for terms of
+  use and redistribution.
+
+  Based on code copyright 1987, 1988 by the Massachusetts Institute of
+  Technology.
+
+
+DESCRIPTION
+
+  kstart (for Kerberos v4) and k5start (for Kerberos v5) are modified
+  versions of kinit.  They can be used as a substitute for kinit (with
+  better command-line handling than the old Kerberos v4 kinit), but they
+  can also obtain credentials automatically from a v4 srvtab or a v5
+  keytab.  They can run as a daemon, waking up periodically to refresh
+  credentials using that srvtab or keytab, and can also check for the
+  validity of tickets and only refresh if they're no longer valid.
+
+  Some of these capabilities have been included in Kerberos v5's kinit,
+  but the ability to maintain tickets while running as a daemon has not
+  and is useful for servers that need to use Kerberos.  Using kstart
+  allows the ticket handling to be moved out of the server into a separate
+  process dedicated just to that purpose.
+
+  kstart and k5start can optionally run an external program whenever the
+  ticket is refreshed to obtain an AFS token, and therefore can be used in
+  conjunction with a program like aklog or afslog to maintain an AFS
+  token.
+
+
+REQUIREMENTS
+
+  As Kerberos programs, kstart and k5start require Kerberos libraries to
+  link against.  They have only been tested with the MIT Kerberos
+  libraries, but there is no reason why they could not also be made to
+  work with Heimdall and KTH Kerberos v4.  This may, however, require some
+  porting.  If you do this work, patches are welcome.  k5start, when
+  compiled by itself, requires only Kerberos v5 libraries.
+
+  Other than that, all you should need is a suitable C compiler.  Neither
+  program has been tested on non-Unix systems.
+
+
+INSTALLATION
+
+  Basic installation is simple.  Just run:
+
+      ./configure
+      make
+      make install
+
+  This will build kstart and k5start and install them in /usr/local/bin
+  with man pages in /usr/local/man/man1.  You may need to be root to run
+  make install.  To install in a different location, specify a different
+  location with the --prefix option to configure, as in:
+
+      ./configure --prefix=/opt/sw
+
+  Binaries would then be installed in /opt/sw/bin and man pages in
+  /opt/sw/man/man1.  Alternately, --bindir and --mandir can be given to
+  change the installation locations of the binaries and manual pages
+  separately.
+
+  If your Kerberos libraries aren't installed in a location found by your
+  compiler by default, use the --with-kerberos=PATH option to configure.
+  The Kerberos libraries will then be expected in PATH/lib and the headers
+  in PATH/include.
+
+  If you are using aklog, afslog, or some other program to obtain AFS
+  tokens, give its path to configure with the --with-aklog option, as in:
+
+      ./configure --with-aklog=/usr/local/bin/aklog
+
+  This program will be run when the -t option is given to kstart or
+  k5start.
+
+  Finally, to link statically against the Kerberos libraries rather than
+  dynamically (so that the binaries can be used on systems without
+  Kerberos libraries installed, for example, or so that they're
+  independent of shared libraries installed in AFS or NFS), give the
+  --enable-static option to configure.  This has been tested on Solaris
+  and Linux.
+
+
+LICENSE
+
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002 Board of Trustees,
+  Leland Stanford Jr. University.  All rights reserved.
+  
+  Export of this software from the United States of America may require a
+  specific license from the United States Government.  It is the
+  responsibility of any person or organization contemplating export to
+  obtain such a license before exporting.
+
+  WITHIN THAT CONSTRAINT, permission to use, copy, modify, and distribute
+  this software and its documentation for any purpose and without fee is
+  hereby granted, provided that the above copyright notice appear in all
+  copies and that both that copyright notice and this permission notice
+  appear in supporting documentation, and that the name of Stanford
+  University not be used in advertising or publicity pertaining to
+  distribution of the software without specific, written prior permission.
+  Stanford University makes no representations about the suitability of
+  this software for any purpose.  It is provided "as is" without express
+  or implied warranty.
+
+  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
