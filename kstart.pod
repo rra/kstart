@@ -22,7 +22,7 @@ B<kstart> [B<-nqstv>]
 B<kstart> obtains and caches an initial Kerberos v4 ticket-granting ticket
 for a principal.  B<kstart> can be used as an alternative to kinit, but it
 is primarily intended to be used by programs that want to use a srvtab to
-obtain kerberos credentials, such as a web server that needs to
+obtain Kerberos credentials, such as a web server that needs to
 authenticate to another service such as an LDAP server or to AFS.
 
 Normally, the principal for which to give tickets should be specified as
@@ -161,7 +161,7 @@ ticket granting ticket.
 
 =head1 FILES
 
-The default ticket cache is determined by the underlying kerberos
+The default ticket cache is determined by the underlying Kerberos
 libraries.  The default path for aklog is determined at build time, and
 will normally be whichever of B<aklog> or B<afslog> is found in the user's
 path.
