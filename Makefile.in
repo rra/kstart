@@ -4,7 +4,9 @@ CC		= @CC@
 CFLAGS		= @CFLAGS@
 CPPFLAGS	= -I. @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
-LIBS		= -lkrb -ldes @LIBS@
+LIBS		= @LIBS@
+K5LIBS		= @K5LIBS@
+K4LIBS          = @K4LIBS@
 
 prefix		= /usr/local
 bindir		= $(prefix)/bin
@@ -12,16 +14,21 @@ bindir		= $(prefix)/bin
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-all: kstart
+all: kstart k5start
+
 
 kstart: kstart.o 
-	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS)
+	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBS) $(K4LIBS)
 
-install: kstart
+k5start: k5start.o
+	$(CC) $(LDFLAGS) -o k5start k5start.o $(LIBS) $(K5LIBS)
+
+install: kstart k5start
 	cp kstart $(bindir)/kstart
+	cp k5start $(bindir)/k5start
 
 clean:
-	rm -f *.o kstart
+	rm -f *.o kstart k5start
 
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status
