@@ -147,7 +147,7 @@ int main(argc, argv)
       case 'l': if ( (lifetime=atoi(optarg)) <0) usage();  break;
       case 'p':
       case 's': 
-	++sflag; ++qflag; 
+	++sflag; 
 	if ( fflag != 0 ) { 
 	  printf("%s: cannot use both -s and -f flags\n",
 		 progname);
