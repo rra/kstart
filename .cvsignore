@@ -5,5 +5,7 @@ config.cache
 config.h
 config.log
 config.status
-configure
+k5start
+k5start.1
 kstart
+kstart.1
