@@ -301,6 +301,7 @@ int main(argc, argv)
 	  strcpy(sinst, realm);
 	if (sflag) { 
 	  char pp[132];
+	  if (! qflag ) printf("Password: "); 
 	  get_input(pp,sizeof(pp), stdin);
 	  k_errno = krb_get_pw_in_tkt(aname, inst, realm, sname, sinst,
 				      lifetime, pp);
