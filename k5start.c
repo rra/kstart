@@ -310,9 +310,12 @@ int main(argc, argv)
 
     if (the_kinit_prog==NULL) {
 	the_kinit_prog = PATH_AKLOG;
-    } else {
-	tflag=1;
-    }
+    } 
+/* This is probably the wrong thing to do in k5start. */
+/* We should not run the_kinit_prog unless told to    */  
+/*     else { */
+/* 	tflag=1; */
+/*     } */
 
     if (username==NULL) {
 	struct passwd *pw;
@@ -424,7 +427,7 @@ int main(argc, argv)
     }
 
     /* Need to init creds,service_name and options. */ 
-
+    life_secs = lifetime* 60; 
     krb5_get_init_creds_opt_set_tkt_life(&options, life_secs);
 KEEP_ALIVE: 
     starttime = 0 ; /* Might want to twiddle this later */ 
