@@ -351,7 +351,7 @@ int main(argc, argv)
     if ( inst[0] != '\0' ) { 
 	i = strlen(inst) + strlen(username) + 5 ; 
 	cp = (char * ) malloc( i); 
-	snprintf(cp,i,"%s/%s",username,inst);
+	sprintf(cp,"%s/%s",username,inst);
 	username = cp ; 
     } 
     if (username &&
@@ -415,7 +415,11 @@ int main(argc, argv)
 	strcpy(sname, "krbtgt");
     if (!*sinst)
 	strcpy(sinst, realm);
-    snprintf(service_name,sizeof(service_name),"%s/%s",sname,sinst); 
+    if (strlen(sname) + strlen(sinst) + 2 > sizeof(service_name)) {
+        fprintf(stderr, "%s: principal name too long\n", progname);
+        exit(1);
+    }
+    sprintf(service_name,"%s/%s",sname,sinst); 
     service_name[MAXNAMELEN-1] = '\0';
 
     /* if we have a valid service ticket exit */ 
