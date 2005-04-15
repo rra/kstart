@@ -1,3 +1,11 @@
+kstart (2.3-2) unstable; urgency=low
+
+  * Uploaded to Debian.  (Closes: #304745)
+  * Reword the short description to mention Kerberos and add a homepage
+    link to the long description.
+
+ -- Russ Allbery <rra@stanford.edu>  Fri, 15 Apr 2005 00:17:15 -0700
+
 kstart (2.3-1) unstable; urgency=low
 
   * New upstream release.
