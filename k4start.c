@@ -56,7 +56,7 @@
 
 /* The usage message. */
 const char usage_message[] = "\
-Usage: kstart [options] [name]\n\
+Usage: k4start [options] [name]\n\
    -u <client principal>        (default: local username)\n\
    -i <client instance>         (default: null)\n\
    -S <service name>            (default: krbtgt)\n\
@@ -91,7 +91,7 @@ die(const char *format, ...)
 {
     va_list args;
 
-    fprintf(stderr, "kstart: ");
+    fprintf(stderr, "k4start: ");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
@@ -291,7 +291,7 @@ main(int argc, char *argv[])
     if (username != NULL) {
         k_errno = kname_parse(aname, inst, realm, username);
         if (k_errno != KSUCCESS) {
-            fprintf(stderr, "kstart: parsing name: %s", krb_err_txt[k_errno]);
+            fprintf(stderr, "k4start: parsing name: %s", krb_err_txt[k_errno]);
             username = NULL;
         }
     }

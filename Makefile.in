@@ -7,7 +7,6 @@ VPATH		= @srcdir@
 PACKAGE		= @PACKAGE_TARNAME@
 VERSION		= @PACKAGE_VERSION@
 TARDIR		= $(PACKAGE)-$(VERSION)
-DEBNAME		= $(PACKAGE)_$(VERSION)
 TARNAME		= $(TARDIR).tar
 
 prefix		= @prefix@
@@ -32,44 +31,44 @@ INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 .c.o:
 	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
 
-all: kstart k5start kstart.1 k5start.1
+all: k4start k5start k4start.1 k5start.1
 
-install: kstart k5start $(srcdir)/kstart.1 $(srcdir)/k5start.1
+install: k4start k5start $(srcdir)/k4start.1 $(srcdir)/k5start.1
 	$(INSTALL) -d $(bindir) $(mandir)/man1
-	$(INSTALL_PROGRAM) kstart $(bindir)/kstart
+	$(INSTALL_PROGRAM) k4start $(bindir)/k4start
 	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
-	$(INSTALL_DATA) $(srcdir)/kstart.1 $(mandir)/man1/kstart.1
+	$(INSTALL_DATA) $(srcdir)/k4start.1 $(mandir)/man1/k4start.1
 	$(INSTALL_DATA) $(srcdir)/k5start.1 $(mandir)/man1/k5start.1
 
-kstart: kstart.o $(LIBOBJS)
-	$(CC) $(LDFLAGS) -o kstart kstart.o $(LIBOBJS) $(KRBLIBS)
+k4start: k4start.o $(LIBOBJS)
+	$(CC) $(LDFLAGS) -o k4start k4start.o $(LIBOBJS) $(KRBLIBS)
 
 k5start: k5start.o
 	$(CC) $(LDFLAGS) -o k5start k5start.o $(KRB5LIBS)
 
-$(srcdir)/kstart.1: $(srcdir)/kstart.pod
+$(srcdir)/k4start.1: $(srcdir)/k4start.pod
 	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
 $(srcdir)/k5start.1: $(srcdir)/k5start.pod
 	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
 clean:
-	rm -f *.o kstart k5start
+	rm -f *.o k4start k5start
 
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status
 	rm -rf autom4te.cache $(TARDIR)
 
 maintclean: distclean
-	rm -f config.h.in configure kstart.1 k5start.1
+	rm -f config.h.in configure k4start.1 k5start.1
 	rm -f $(TARNAME).gz $(TARNAME).gz.md5
-	rm -f *.orig.tar.gz $(DEBNAME)* *_$(VERSION)-*.deb
+	rm -f *.orig.tar.gz
 
-dist: $(srcdir)/kstart.1 $(srcdir)/k5start.1
+dist: $(srcdir)/k4start.1 $(srcdir)/k5start.1
 	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
 	mkdir $(TARDIR)
 	rsync -C --exclude /debian/ -a $(srcdir)/ $(TARDIR)/
-	rsync -a $(srcdir)/kstart.1 $(srcdir)/k5start.1 $(TARDIR)/
+	rsync -a $(srcdir)/k4start.1 $(srcdir)/k5start.1 $(TARDIR)/
 	cd $(TARDIR) && autoconf && autoheader && rm -rf autom4te.cache
 	tar cf $(TARNAME) $(TARDIR)
 	gzip -9 $(TARNAME)

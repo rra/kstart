@@ -1,10 +1,10 @@
 =head1 NAME
 
-kstart - Obtain and optionally keep active a Kerberos v4 ticket
+k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<kstart> [B<-nqstv>]
+B<k4start> [B<-nqstv>]
 [B<-f> I<srvtab>]
 [B<-H> I<minutes>]
 [B<-I> I<service instance>]
@@ -19,18 +19,18 @@ B<kstart> [B<-nqstv>]
 
 =head1 DESCRIPTION
 
-B<kstart> obtains and caches an initial Kerberos v4 ticket-granting ticket
-for a principal.  B<kstart> can be used as an alternative to kinit, but it
-is primarily intended to be used by programs that want to use a srvtab to
-obtain Kerberos credentials, such as a web server that needs to
-authenticate to another service such as an LDAP server or to AFS.
+B<k4start> obtains and caches an initial Kerberos v4 ticket-granting
+ticket for a principal.  B<k4start> can be used as an alternative to
+kinit, but it is primarily intended to be used by programs that want to
+use a srvtab to obtain Kerberos credentials, such as a web server that
+needs to authenticate to another service such as an LDAP server or to AFS.
 
 Normally, the principal for which to give tickets should be specified as
 the first argument.  The B<-u> and B<-i> options can be used as an
 alternative mechanism for specifying the principal, but generally aren't
 as convenient.  If no username is given as either the first argument or
 the argument to the B<-u> option, the client principal defaults to the
-Unix username of the user running B<kstart> in the default local realm.
+Unix username of the user running B<k4start> in the default local realm.
 
 =head1 OPTIONS
 
@@ -97,7 +97,7 @@ realm.
 
 =item B<-S> I<service name>
 
-Specifies the principal for which B<kstart> is getting a service ticket.
+Specifies the principal for which B<k4start> is getting a service ticket.
 The default value is C<krbtgt>, to obtain a ticket-granting ticket.  This
 option (along with B<-I>) may be used if one only needs access to a single
 service.  Note that unlike the client principal, a non-default service
@@ -137,12 +137,12 @@ what is being attempted and what the results are.
 =head1 RETURN VALUES
 
 The program exits with status 0 if it successfully gets a ticket or has a
-happy ticket (see B<-H>).  If B<kstart> runs aklog or some other program
-B<kstart> returns the exit status of that program.
+happy ticket (see B<-H>).  If B<k4start> runs aklog or some other program
+B<k4start> returns the exit status of that program.
 
 =head1 EXAMPLE
 
-    kstart -k /tmp/service.tgt -f /etc/srvtab -K 10 -l 600 \
+    k4start -k /tmp/service.tgt -f /etc/srvtab -K 10 -l 600 \
         rcmd.example
 
 This uses the F</etc/srvtab> srvtab to obtain a ticket granting ticket for
@@ -155,7 +155,7 @@ If the environment variable KINIT_PROG is set to a program (such as aklog)
 then this program will automatically be executed after the ticket granting
 ticket has been retrieved.
 
-If no ticket file is specified on the command line, B<kstart> will use the
+If no ticket file is specified on the command line, B<k4start> will use the
 environment variable KRBTKTFILE to determine the location of the the
 ticket granting ticket.
 
@@ -171,11 +171,11 @@ path.
 k5start(1), kinit(1)
 
 The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<kstart> and B<k5start>.
+will have the current version of B<k4start> and B<k5start>.
 
 =head1 AUTHORS
 
-B<kstart> was originally written by Robert Morgan.  Modifications and
+B<k4start> was originally written by Robert Morgan.  Modifications and
 additional features were added by Booker C. Bense.  Additional cleanup and
 current maintenance are done by Russ Allbery <rra@stanford.edu>.
 

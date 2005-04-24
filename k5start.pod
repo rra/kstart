@@ -32,7 +32,7 @@ The B<-u> and B<-i> options can be used as an alternative mechanism for
 specifying the principal, but generally aren't as convenient.  If no
 username is given as either the first argument or the argument to the
 B<-u> option, the client principal defaults to the Unix username of the
-user running B<kstart> in the default local realm.
+user running B<k5start> in the default local realm.
 
 =head1 OPTIONS
 
@@ -84,7 +84,7 @@ more information, see kinit(1).
 
 =item B<-n>
 	
-Ignored, present for option compatibility with B<kstart>.
+Ignored, present for option compatibility with B<k4start>.
 
 =item B<-q>
 	
@@ -166,11 +166,11 @@ path.
 
 =head1 SEE ALSO
 
-kstart(1), kinit(1)
+k4start(1), kinit(1)
 
 =head1 AUTHORS
 
-B<k5start> was based on the kstart code written by Robert Morgan.  It was
+B<k5start> was based on the k4start code written by Robert Morgan.  It was
 ported to Kerberos v5 by Booker C. Bense.  Additional cleanup and current
 maintenance are done by Russ Allbery <rra@stanford.edu>.
 

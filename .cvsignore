@@ -6,9 +6,9 @@ config.h.in
 config.log
 config.status
 configure
+k4start
+k4start.1
 k5start
 k5start.1
-kstart
-kstart.1
 kstart_*
 kstart-*

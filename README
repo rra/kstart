@@ -14,7 +14,7 @@
 
 DESCRIPTION
 
-  kstart (for Kerberos v4) and k5start (for Kerberos v5) are modified
+  k4start (for Kerberos v4) and k5start (for Kerberos v5) are modified
   versions of kinit.  They can be used as a substitute for kinit (with
   better command-line handling than the old Kerberos v4 kinit), but they
   can also obtain credentials automatically from a v4 srvtab or a v5
@@ -28,14 +28,14 @@ DESCRIPTION
   allows the ticket handling to be moved out of the server into a separate
   process dedicated just to that purpose.
 
-  kstart and k5start can optionally run an external program whenever the
+  k4start and k5start can optionally run an external program whenever the
   ticket is refreshed to obtain an AFS token, and therefore can be used in
   conjunction with a program like aklog or afslog to maintain an AFS
   token.
 
 REQUIREMENTS
 
-  As Kerberos programs, kstart and k5start require Kerberos libraries to
+  As Kerberos programs, k4start and k5start require Kerberos libraries to
   link against.  They have only been tested with the MIT Kerberos
   libraries, but there is no reason why they could not also be made to
   work with Heimdall and KTH Kerberos v4.  This may, however, require some
@@ -59,7 +59,7 @@ INSTALLATION
       make
       make install
 
-  This will build kstart and k5start and install them in /usr/local/bin
+  This will build k4start and k5start and install them in /usr/local/bin
   with man pages in /usr/local/man/man1.  You may need to be root to run
   make install.  To install in a different location, specify a different
   location with the --prefix option to configure, as in:
@@ -81,7 +81,7 @@ INSTALLATION
 
       ./configure --with-aklog=/usr/local/bin/aklog
 
-  This program will be run when the -t option is given to kstart or
+  This program will be run when the -t option is given to k4start or
   k5start.
 
   Finally, to link statically against the Kerberos libraries rather than
