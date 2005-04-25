@@ -20,6 +20,7 @@
 */
 
 #include "config.h"
+#include "command.h"
 
 #include <errno.h>
 #include <netdb.h>
@@ -30,7 +31,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -174,6 +174,18 @@ authenticate(krb5_context ctx, struct options *options)
     krb5_keytab k5_keytab = NULL;
     krb5_creds creds;
 
+    if (options->verbose) {
+        char *p;
+
+        k5_errno = krb5_unparse_name(ctx, options->kprinc, &p);
+        if (k5_errno != 0)
+            com_err("k5start", k5_errno, "when unparsing name");
+        else {
+            printf("Principal: %s\n", p);
+            free(p);
+        }
+        printf("Service principal: %s\n", options->service);
+    }
     if (options->keytab != NULL) {
         k5_errno = krb5_kt_resolve(ctx, options->keytab, &k5_keytab);
         if (k5_errno != 0) {
@@ -234,18 +246,8 @@ authenticate(krb5_context ctx, struct options *options)
        broken and can't cope with being called directly on the return value of
        system().  If we can't execute the aklog program, set the exit status
        to an arbitrary but distinct value. */
-    if (options->run_aklog) {
-        if (access(options->aklog, X_OK) == 0) {
-            status = system(options->aklog);
-            status = WEXITSTATUS(status);
-            if (options->verbose)
-                printf("%s exited with status %d\n", options->aklog, status);
-        } else {
-            if (options->verbose)
-                printf("no execute access to %s\n", options->aklog);
-            status = 7;
-        }
-    }
+    if (options->run_aklog)
+        status = run_aklog(options->aklog, options->verbose);
     return status;
 }
 
@@ -254,7 +256,7 @@ int
 main(int argc, char *argv[])
 {
     struct options options;
-    int k5_errno, option, status;
+    int k5_errno, option, result;
     size_t length;
     const char *inst = NULL;
     const char *sname = NULL;
@@ -262,10 +264,13 @@ main(int argc, char *argv[])
     const char *srealm = NULL;
     const char *cache = NULL;
     char *principal = NULL;
+    char **command = NULL;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
     krb5_data *data;
+    int status = 0;
+    pid_t child = 0;
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
@@ -319,14 +324,14 @@ main(int argc, char *argv[])
        taken to be the username if the -u option wasn't already given. */
     argc -= optind;
     argv += optind;
-    if (argc > 1)
-        usage(1);
-    if (argc == 1) {
+    if (argc >= 1) {
         if (principal == NULL)
             principal = argv[0];
         else
             die("username specified both with -u and as an argument");
     }
+    if (argc > 1)
+        command = argv + 1;
 
     /* Check the arguments for consistency. */
     if (options.keep_ticket > 0 && options.keytab == NULL)
@@ -466,11 +471,33 @@ main(int argc, char *argv[])
 
     /* Now, the actual authentication part. */
     status = authenticate(ctx, &options);
+    if (command != NULL) {
+        child = start_command(command[0], command);
+        if (child < 0)
+            die("unable to run command %s: %s", command[0], strerror(errno));
+        if (options.keep_ticket == 0) {
+            options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
+            if (options.keep_ticket <= 0)
+                options.keep_ticket = 1;
+        }
+    }
 
     /* Loop if we're running as a daemon. */
     if (options.keep_ticket > 0) {
+        struct timeval timeout;
+
         while (1) {
-            sleep(options.keep_ticket * 60);
+            timeout.tv_sec = options.keep_ticket * 60;
+            timeout.tv_usec = 0;
+            select(0, NULL, NULL, NULL, &timeout);
+            if (command != NULL) {
+                result = finish_command(child, &status);
+                if (result < 0)
+                    die("waitpid for %lu failed: %s", (unsigned long) child,
+                        strerror(errno));
+                if (result > 0)
+                    exit(status);
+            }
             if (ticket_expired(ctx, &options))
                 status = authenticate(ctx, &options);
         }

@@ -18,6 +18,7 @@
 */
 
 #include "config.h"
+#include "command.h"
 
 #include <errno.h>
 #include <pwd.h>
@@ -26,8 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -207,24 +208,9 @@ authenticate(struct options *options, const char *aklog)
             die("Kerberos error: %s", krb_err_txt[k_errno]);
     }
 
-    /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
-       broken and can't cope with being called directly on the return value of
-       system().  If we can't execute the aklog program, set the exit status
-       to an arbitrary but distinct value. */
-    if (options->run_aklog && !options->no_aklog) {
-        if (aklog == NULL)
-            die("set KINIT_PROG to specify the path to aklog");
-        if (access(aklog, X_OK) == 0) {
-            status = system(aklog);
-            status = WEXITSTATUS(status);
-            if (options->verbose)
-                printf("%s exited with status %d\n", aklog, status);
-        } else {
-            if (options->verbose)
-                printf("no execute access to %s\n", aklog);
-            status = 7;
-        }
-    }
+    /* If requested, run the aklog program. */
+    if (options->run_aklog && !options->no_aklog)
+        status = run_aklog(aklog, options->verbose);
     return status;
 }
 
@@ -233,9 +219,12 @@ int
 main(int argc, char *argv[])
 {
     struct options options;
-    int k_errno, option;
+    int k_errno, option, result;
     char *username = NULL;
     char *aklog = NULL;
+    char **command = NULL;
+    int lifetime = DEFAULT_TKT_LIFE;
+    pid_t child = 0;
     int status = 0;
 
     /* Parse command-line options. */
@@ -279,8 +268,8 @@ main(int argc, char *argv[])
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'l':
-            options.lifetime = atoi(optarg);
-            if (options.lifetime <= 0)
+            lifetime = atoi(optarg);
+            if (lifetime <= 0)
                 die("-l lifetime argument %s out of range", optarg);
             break;
         case 'r':
@@ -313,19 +302,19 @@ main(int argc, char *argv[])
        taken to be the username if the -u option wasn't already given. */
     argc -= optind;
     argv += optind;
-    if (argc > 1)
-        usage(1);
-    if (argc == 1) {
+    if (argc >= 1) {
         if (username == NULL)
             username = argv[0];
         else
             die("username specified both with -u and as an argument");
     }
+    if (argc > 1)
+        command = argv + 1;
 
     /* Check the arguments for consistency. */
     if (options.keep_ticket > 0 && options.srvtab == NULL)
         die("-K option requires a srvtab be specified with -f");
-    if (options.lifetime > 0 && options.keep_ticket > options.lifetime)
+    if (lifetime > 0 && options.keep_ticket > lifetime)
         die("-K limit %d must be smaller than lifetime %d",
             options.keep_ticket, options.lifetime);
 
@@ -337,6 +326,8 @@ main(int argc, char *argv[])
         aklog = PATH_AKLOG;
     else
         options.run_aklog = 1;
+    if (aklog == NULL && options.run_aklog && !options.no_aklog)
+        die("set KINIT_PROG to specify the path to aklog");
 
     /* The default username is the name of the local user. */
     if (username == NULL) {
@@ -391,10 +382,10 @@ main(int argc, char *argv[])
     /* Set the ticket lifetime.  The lifetime given on the command line will
        be in minutes, and we need to convert that to the Kerberos v4 lifetime
        code. */
-    if (options.lifetime < 5)
+    if (lifetime < 5)
         options.lifetime = 1;
     else
-        options.lifetime = krb_time_to_life(0, options.lifetime * 60);
+        options.lifetime = krb_time_to_life(0, lifetime * 60);
     if (options.lifetime > 255)
         options.lifetime = 255;
 
@@ -412,15 +403,38 @@ main(int argc, char *argv[])
         if (!ticket_expired(&options))
             exit(0);
 
-    /* Now, do the actual authentication. */
-    authenticate(&options, aklog);
+    /* Now, do the actual authentication and then run our child command, if
+       one was specified. */
+    status = authenticate(&options, aklog);
+    if (command != NULL) {
+        child = start_command(command[0], command);
+        if (child < 0)
+            die("unable to run command %s: %s", command[0], strerror(errno));
+        if (options.keep_ticket == 0) {
+            options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
+            if (options.keep_ticket <= 0)
+                options.keep_ticket = 1;
+        }
+    }
 
     /* Loop if we're running as a daemon. */
     if (options.keep_ticket > 0) {
+        struct timeval timeout;
+
         while (1) {
-            sleep(options.keep_ticket * 60);
+            timeout.tv_sec = options.keep_ticket * 60;
+            timeout.tv_usec = 0;
+            select(0, NULL, NULL, NULL, &timeout);
+            if (command != NULL) {
+                result = finish_command(child, &status);
+                if (result < 0)
+                    die("waitpid for %lu failed: %s", (unsigned long) child,
+                        strerror(errno));
+                if (result > 0)
+                    exit(status);
+            }
             if (ticket_expired(&options))
-                authenticate(&options, aklog);
+                status = authenticate(&options, aklog);
         }
     }
 

@@ -15,7 +15,7 @@ B<k5start> [B<-nqstv>]
 [B<-r> I<service realm>]
 [B<-S> I<service name>]
 [B<-u> I<client principal>]
-[I<username>]
+[I<username> [I<command> ...]]
 
 =head1 DESCRIPTION
 
@@ -33,6 +33,21 @@ specifying the principal, but generally aren't as convenient.  If no
 username is given as either the first argument or the argument to the
 B<-u> option, the client principal defaults to the Unix username of the
 user running B<k5start> in the default local realm.
+
+Optionally, a command may be given on the command line of B<k5start>.  If
+so, that command is run after Kerberos authentication (and running
+B<aklog> if desired), with the appropriate environment variables set to
+point it to the right ticket cache.  B<k5start> will then continue
+running, waking up periodically to refresh credentials slightly before
+they would expire, until the command completes.  (The frequency with which
+it wakes up to refresh credentials can still be controlled with the B<-K>
+option.)  To run in this mode, the principal must be specified as a
+regular command-line argument rather than using the B<-u> and B<-i>
+options.
+
+The command will not be run using the shell, so if you want to use shell
+metacharacters in the command with their special meaning, give C<sh -c
+I<command>> as the command to run and quote I<command>.
 
 =head1 OPTIONS
 
@@ -143,19 +158,32 @@ B<k5start> returns the exit status of that program.
 
 =head1 EXAMPLE
 
-    k5start -k /tmp/service.tkt -f /etc/krb5.keytab -K 10 -l 10h \
-        host/example.stanford.edu
+Use the F</etc/krb5.keytab> keytab to obtain a ticket granting ticket for
+the principal host/example.com, putting the ticket cache in
+F</tmp/service.tkt>.  The lifetime is 10 hours and the program wakes up
+every 10 minutes to check if the ticket is about to expire.
 
-This uses the F</etc/krb5.keytab> keytab to obtain a ticket granting
-ticket for the principal host/example.stanford.edu.  The lifetime is 10
-hours and the program wakes up every 10 minutes to check if the ticket is
-about to expire.
+    k5start -k /tmp/service.tkt -f /etc/krb5.keytab -K 10 -l 10h \
+        host/example.com
+
+Do the same, but using the default ticket cache and run the command
+/usr/local/bin/auth-backup.  B<k4start> will continue running until the
+command finishes.
+
+    k5start -f /etc/krb5.keytab -K 10 -l 10h host/example.com \
+        /usr/local/bin/auth-backup
 
 =head1 ENVIRONMENT
 
+If the environment variable KINIT_PROG is set to a program (such as
+B<aklog>) then this path will be used for the program to run with B<-t>
+rather than the default compiled into B<k5start>.
+
 If no ticket file is specified on the command line, B<k5start> will use
 the environment variable KRB5CCNAME to determine the location of the the
-ticket granting ticket.
+ticket granting ticket.  If the B<-k> option is used, KRB5CCNAME will be
+set to point to that file before running the B<aklog> program or any
+command given on the command line.
 
 =head1 FILES
 
