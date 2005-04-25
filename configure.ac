@@ -3,7 +3,7 @@ dnl $Id$
 
 AC_REVISION($Revision$)
 AC_PREREQ(2.57)
-AC_INIT([kstart], [2.3], [rra@stanford.edu])
+AC_INIT([kstart], [2.4], [rra@stanford.edu])
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -61,6 +61,22 @@ AC_ARG_ENABLE([static],
     [if test x"$enableval" = xyes ; then
         KRBLIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic"
         KRB5LIBS="-Wl,-Bstatic $KRB5LIBS -Wl,-Bdynamic"
+     fi])
+
+dnl See if AFS setpag support is desired.
+AC_ARG_WITH([afs-setpag],
+    AC_HELP_STRING([--with-afs-setpag=DIR],
+        [Enable AFS setpag support, libraries at DIR]),
+    [if test x"$withval" != xno ; then
+        if test x"$withval" != xyes ; then
+            LDFLAGS="-L$withval/lib $LDFLAGS"
+        fi
+        AC_CHECK_LIB([afsauthent], [setpag],
+            [LIBS="-lafsauthent -lafsrpc -lpthread $LIBS"
+             AC_DEFINE([HAVE_SETPAG], 1,
+                [Define to 1 if you have the AFS setpag function.])],
+            [AC_MSG_ERROR([setpag function not found])],
+            [-lafsrpc -lpthread])
      fi])
 
 dnl Check to see if we need to use our local lifetime function.  All of this

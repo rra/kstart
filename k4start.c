@@ -38,6 +38,11 @@
 # include <krb.h>
 #endif
 
+/* The AFS headers don't prototype this. */
+#ifdef HAVE_SETPAG
+int setpag(void);
+#endif
+
 /* We default to a ten hour ticket lifetime if the Kerberos headers don't
    provide a value. */
 #ifndef DEFAULT_TKT_LIFE
@@ -405,6 +410,14 @@ main(int argc, char *argv[])
         if (!ticket_expired(&options))
             exit(0);
 
+    /* If built with setpag support and we're running a command, create the
+       new PAG now before the first authentication. */
+#ifdef HAVE_SETPAG
+    if (command != NULL)
+        if (setpag() < 0)
+            die("unable to create PAG: %s", strerror(errno));
+#endif
+
     /* Now, do the actual authentication and then run our child command, if
        one was specified. */
     status = authenticate(&options, aklog);
@@ -424,9 +437,6 @@ main(int argc, char *argv[])
         struct timeval timeout;
 
         while (1) {
-            timeout.tv_sec = options.keep_ticket * 60;
-            timeout.tv_usec = 0;
-            select(0, NULL, NULL, NULL, &timeout);
             if (command != NULL) {
                 result = finish_command(child, &status);
                 if (result < 0)
@@ -435,6 +445,9 @@ main(int argc, char *argv[])
                 if (result > 0)
                     exit(status);
             }
+            timeout.tv_sec = options.keep_ticket * 60;
+            timeout.tv_usec = 0;
+            select(0, NULL, NULL, NULL, &timeout);
             if (ticket_expired(&options))
                 status = authenticate(&options, aklog);
         }

@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -48,6 +49,18 @@ run_aklog(const char *aklog, int verbose)
 
 
 /*
+**  We need a signal handler for SIGCHLD to be received, but it doesn't do
+**  anything.  We just want the signal to be caught so that select will be
+**  interrupted.
+*/
+static void
+child_handler(int signal)
+{
+    /* Do nothing. */
+}
+
+
+/*
 **  Start a command, returning its PID.  Takes the command to run, which will
 **  be searched for on the path if not fully-qualified, and then the arguments
 **  to pass to it.  If execution fails for some reason, returns -1.
@@ -57,6 +70,7 @@ start_command(const char *command, char **argv)
 {
     pid_t child;
 
+    signal(SIGCHLD, child_handler);
     child = fork();
     if (child < 0)
         return -1;

@@ -36,6 +36,11 @@
 
 #include <krb5.h>
 
+/* The AFS headers don't prototype this. */
+#ifdef HAVE_SETPAG
+int setpag(void);
+#endif
+
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)
 
@@ -471,6 +476,14 @@ main(int argc, char *argv[])
         if (!ticket_expired(ctx, &options))
             exit(0);
 
+    /* If built with setpag support and we're running a command, create the
+       new PAG now before the first authentication. */
+#ifdef HAVE_SETPAG
+    if (command != NULL)
+        if (setpag() < 0)
+            die("unable to create PAG: %s", strerror(errno));
+#endif
+
     /* Now, the actual authentication part. */
     status = authenticate(ctx, &options);
     if (command != NULL) {
@@ -489,9 +502,6 @@ main(int argc, char *argv[])
         struct timeval timeout;
 
         while (1) {
-            timeout.tv_sec = options.keep_ticket * 60;
-            timeout.tv_usec = 0;
-            select(0, NULL, NULL, NULL, &timeout);
             if (command != NULL) {
                 result = finish_command(child, &status);
                 if (result < 0)
@@ -500,6 +510,9 @@ main(int argc, char *argv[])
                 if (result > 0)
                     exit(status);
             }
+            timeout.tv_sec = options.keep_ticket * 60;
+            timeout.tv_usec = 0;
+            select(0, NULL, NULL, NULL, &timeout);
             if (ticket_expired(ctx, &options))
                 status = authenticate(ctx, &options);
         }
