@@ -1,9 +1,21 @@
                        User-Visible kstart Changes
 
-kstart 2.4 (2005-04-23)
+kstart 2.4 (2005-04-25)
 
     Rename kstart to k4start to avoid a conflict with a KDE program.  This
     is more symmetric with k5start anyway.
+
+    Added support to both k4start and k5start for running a program after
+    obtaining Kerberos credentials and optionally AFS tokens.  This mode
+    is like the -K mode, except that k4start or k5start will exit when the
+    program it ran exits.  Added preliminary support for creating a PAG
+    for the command to run in.
+
+    Minor cleanups and bug fixes to both programs.  Exit earlier if unable
+    to determine the principal, add newlines to the end of some verbose
+    trace messages, and fix error reporting after Ctrl-C in k4start.
+
+    Internal code refactoring, reorganization, and cleanup.
 
 kstart 2.3 (2005-02-22)
 
