@@ -41,7 +41,7 @@ they would expire, until the command completes.  (The frequency with which
 it wakes up to refresh credentials can still be controlled with the B<-K>
 option.)  To run in this mode, the principal must be specified as a
 regular command-line argument rather than using the B<-u> and B<-i>
-options.
+options and a srvtab must be specified with B<-f>.
 
 The command will not be run using the shell, so if you want to use shell
 metacharacters in the command with their special meaning, give C<sh -c

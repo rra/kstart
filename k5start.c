@@ -336,6 +336,8 @@ main(int argc, char *argv[])
     /* Check the arguments for consistency. */
     if (options.keep_ticket > 0 && options.keytab == NULL)
         die("-K option requires a keytab be specified with -f");
+    if (command != NULL && options.keytab == NULL)
+        die("running a command requires a keytab be specified with -f");
     if (lifetime > 0 && options.keep_ticket > lifetime)
         die("-K limit %d must be smaller than lifetime %d",
             options.keep_ticket, lifetime);
