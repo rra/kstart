@@ -3,7 +3,7 @@
 **  Kerberos v4 kinit replacement suitable for daemon authentication.
 **
 **  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005
 **      Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.
@@ -53,6 +53,26 @@
 #ifndef PATH_AKLOG
 # define PATH_AKLOG NULL
 #endif
+
+/* Holds the various command-line options for passing to functions. */
+struct options {
+    char aname[ANAME_SZ];
+    char inst[INST_SZ];
+    char realm[REALM_SZ];
+    char sname[SNAME_SZ];
+    char sinst[INST_SZ];
+    const char *aklog;
+    const char *cache;
+    const char *srvtab;
+    int lifetime;
+    int happy_ticket;
+    int keep_ticket;
+    int quiet;
+    int no_aklog;
+    int run_aklog;
+    int stdin_passwd;
+    int verbose;
+};
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -115,23 +135,95 @@ usage(int status)
 
 /*
 **  Check whether a ticket will expire within the given number of seconds.
-**  Takes the service, instance, and realm of a service for which to get a
-**  ticket and the minimum number of seconds of lifetime that it must have.
-**  Returns a Kerberos status code.
+**  Takes the options struct and looks at the service, instance, and realm of
+**  a service for which to get a ticket and the minimum number of seconds of
+**  lifetime that it must have.  Returns a Kerberos status code.
 */
 static int
-ticket_expired(char *service, char *inst, char *realm, int minimum)
+ticket_expired(struct options *options)
 {
     CREDENTIALS cr;
     int status;
     time_t now, then;
 
-    status = krb_get_cred(service, inst, realm, &cr);
+    status = krb_get_cred(options->sname, options->sinst, options->realm, &cr);
     if (status == KSUCCESS) {
         now = time(NULL);
         then = krb_life_to_time(cr.issue_date, cr.lifetime);
-        if (then < now + 60 * minimum + EXPIRE_FUDGE)
+        if (then < now + 60 * options->keep_ticket + EXPIRE_FUDGE)
             status = RD_AP_EXP;
+    }
+    return status;
+}
+
+
+/*
+**  Authenticate, given a set of options.  Also handles running aklog if
+**  requested.  Normally dies on failure, but if authentication succeeds and
+**  aklog just failed, return the exit status of aklog instead (or 7 if it
+**  couldn't be run).
+*/
+static int
+authenticate(struct options *options, const char *aklog)
+{
+    int k_errno;
+    int status = 0;
+
+    if (options->verbose) {
+        printf("Principal: %s.%s@%s\n", options->aname, options->inst,
+               options->realm);
+        printf("Service principal: %s.%s@%s\n", options->sname,
+               options->sinst, options->realm);
+    }
+    if (options->srvtab != NULL)
+        k_errno = krb_get_svc_in_tkt(options->aname, options->inst,
+                                     options->realm, options->sname,
+                                     options->sinst, options->lifetime,
+                                     (char *) options->srvtab);
+    else if (!options->stdin_passwd)
+        k_errno = krb_get_pw_in_tkt(options->aname, options->inst,
+                                    options->realm, options->sname,
+                                    options->sinst, options->lifetime, NULL);
+    else {
+        char *p, buffer[BUFSIZ];
+
+        if (!options->quiet)
+            printf("Password: ");
+        fgets(buffer, sizeof(buffer), stdin);
+        p = strchr(buffer, '\n');
+        if (p != NULL)
+            *p = '\0';
+        else
+            die("password too long");
+        k_errno = krb_get_pw_in_tkt(options->aname, options->inst,
+                                    options->realm, options->sname,
+                                    options->sinst, options->lifetime,
+                                    buffer);
+    }
+    if (k_errno != KSUCCESS) {
+        if (k_errno < 0 || k_errno > MAX_KRB_ERRORS)
+            die("unknown Kerberos error");
+        else
+            die("Kerberos error: %s", krb_err_txt[k_errno]);
+    }
+
+    /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
+       broken and can't cope with being called directly on the return value of
+       system().  If we can't execute the aklog program, set the exit status
+       to an arbitrary but distinct value. */
+    if (options->run_aklog && !options->no_aklog) {
+        if (aklog == NULL)
+            die("set KINIT_PROG to specify the path to aklog");
+        if (access(aklog, X_OK) == 0) {
+            status = system(aklog);
+            status = WEXITSTATUS(status);
+            if (options->verbose)
+                printf("%s exited with status %d\n", aklog, status);
+        } else {
+            if (options->verbose)
+                printf("no execute access to %s\n", aklog);
+            status = 7;
+        }
     }
     return status;
 }
@@ -140,88 +232,75 @@ ticket_expired(char *service, char *inst, char *realm, int minimum)
 int
 main(int argc, char *argv[])
 {
+    struct options options;
     int k_errno, option;
-    char aname[ANAME_SZ] = "";
-    char inst[INST_SZ] = "";
-    char realm[REALM_SZ] = "";
-    char sname[SNAME_SZ] = "";
-    char sinst[INST_SZ] = "";
-    const char *aklog = NULL;
-    const char *cache = NULL;
-    const char *srvtab = NULL;
     char *username = NULL;
-    int lifetime = 0;
+    char *aklog = NULL;
     int status = 0;
-    int happy_ticket = 0;
-    int keep_ticket = 0;
-    int quiet = 0;
-    int no_aklog = 0;
-    int run_aklog = 0;
-    int stdin_passwd = 0;
-    int verbose = 0;
 
     /* Parse command-line options. */
+    memset(&options, 0, sizeof(options));
     while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
         switch (option) {
-        case 'k': cache = optarg;       break;
-        case 'n': ++no_aklog;           break;
-        case 'q': ++quiet;              break;
-        case 't': ++run_aklog;          break;
-        case 'v': ++verbose;            break;
-        case 'u': username = optarg;    break;
+        case 'k': options.cache = optarg;       break;
+        case 'n': options.no_aklog = 1;         break;
+        case 'q': options.quiet = 1;            break;
+        case 't': options.run_aklog = 1;        break;
+        case 'v': options.verbose = 1;          break;
+        case 'u': username = optarg;            break;
 
         case 'f':
-            srvtab = optarg;
-            if (stdin_passwd)
+            options.srvtab = optarg;
+            if (options.stdin_passwd)
                 die("cannot use both -s and -f flags");
             break;
         case 'H':
-            happy_ticket = atoi(optarg);
-            if (happy_ticket <= 0)
+            options.happy_ticket = atoi(optarg);
+            if (options.happy_ticket <= 0)
                 die("-H limit argument %s out of range", optarg);
             break;
         case 'I':
-            if (strlen(optarg) < sizeof(sinst))
-                strcpy(sinst, optarg);
+            if (strlen(optarg) < sizeof(options.sinst))
+                strcpy(options.sinst, optarg);
             else
                 die("service instance %s too long (%lu max)", optarg,
-                    (unsigned long) sizeof(sinst));
+                    (unsigned long) sizeof(options.sinst));
             break;
         case 'i':
-            if (strlen(optarg) < sizeof(inst))
-                strcpy(inst, optarg);
+            if (strlen(optarg) < sizeof(options.inst))
+                strcpy(options.inst, optarg);
             else
                 die("instance %s too long (%lu max)", optarg,
-                    (unsigned long) sizeof(inst));
+                    (unsigned long) sizeof(options.inst));
             break;
         case 'K':
-            keep_ticket = atoi(optarg);
-            if (keep_ticket <= 0)
+            options.keep_ticket = atoi(optarg);
+            if (options.keep_ticket <= 0)
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'l':
-            lifetime = atoi(optarg);
-            if (lifetime <= 0)
+            options.lifetime = atoi(optarg);
+            if (options.lifetime <= 0)
                 die("-l lifetime argument %s out of range", optarg);
             break;
         case 'r':
-            if (strlen(optarg) < sizeof(realm))
-                strcpy(realm, optarg);
+            if (strlen(optarg) < sizeof(options.realm))
+                strcpy(options.realm, optarg);
             else
                 die("realm %s too long (%lu max)", optarg,
-                    (unsigned long) sizeof(realm));
+                    (unsigned long) sizeof(options.realm));
             break;
         case 'S':
-            if (strlen(optarg) < sizeof(sname))
-                strcpy(sname, optarg);
+            if (strlen(optarg) < sizeof(options.sname))
+                strcpy(options.sname, optarg);
             else
                 die("service name %s too long (%lu max)", optarg,
-                    (unsigned long) sizeof(sname));
+                    (unsigned long) sizeof(options.sname));
             break;
         case 'p':
         case 's':
-            stdin_passwd = 1;
-            if (srvtab != NULL)
+            options.stdin_passwd = 1;
+            if (options.srvtab != NULL)
                 die("cannot use both -s and -f flags");
             break;
 
@@ -244,11 +323,11 @@ main(int argc, char *argv[])
     }
 
     /* Check the arguments for consistency. */
-    if (keep_ticket > 0 && srvtab == NULL)
+    if (options.keep_ticket > 0 && options.srvtab == NULL)
         die("-K option requires a srvtab be specified with -f");
-    if (lifetime > 0 && keep_ticket > lifetime)
-        die("-K limit %d must be smaller than lifetime %d", keep_ticket,
-            lifetime);
+    if (options.lifetime > 0 && options.keep_ticket > options.lifetime)
+        die("-K limit %d must be smaller than lifetime %d",
+            options.keep_ticket, options.lifetime);
 
     /* Check to see if KINIT_PROG is set.  If it is, and no_aklog is not set,
        set run_aklog, since setting that environment variable changes the
@@ -257,7 +336,7 @@ main(int argc, char *argv[])
     if (aklog == NULL)
         aklog = PATH_AKLOG;
     else
-        run_aklog = 1;
+        options.run_aklog = 1;
 
     /* The default username is the name of the local user. */
     if (username == NULL) {
@@ -270,43 +349,41 @@ main(int argc, char *argv[])
     }
 
     /* If requested, set a ticket cache.  Also put it into the environment in
-       case we're going to run aklog. */
-    if (cache != NULL) {
+       case we're going to run aklog or a command. */
+    if (options.cache != NULL) {
         char *env;
 
-        krb_set_tkt_string(cache);
-        env = malloc(strlen(cache) + 11);
+        krb_set_tkt_string(options.cache);
+        env = malloc(strlen(options.cache) + 11);
         if (env == NULL)
             die("cannot allocate memory: %s", strerror(errno));
-        sprintf(env, "KRBTKFILE=%s", cache);
+        sprintf(env, "KRBTKFILE=%s", options.cache);
         putenv(env);
     }
 
     /* If either -K or -H were given, set quiet automatically unless verbose
        was set. */
-    if ((keep_ticket > 0 || happy_ticket > 0) && !verbose)
-        quiet = 1;
+    if (options.keep_ticket > 0 || options.happy_ticket > 0)
+        if (!options.verbose)
+            options.quiet = 1;
 
     /* Parse the username into its components. */
-    if (username != NULL) {
-        k_errno = kname_parse(aname, inst, realm, username);
-        if (k_errno != KSUCCESS) {
-            fprintf(stderr, "k4start: parsing name: %s", krb_err_txt[k_errno]);
-            username = NULL;
-        }
-    }
+    k_errno = kname_parse(options.aname, options.inst, options.realm,
+                          username);
+    if (k_errno != KSUCCESS)
+        die("parsing name: %s", krb_err_txt[k_errno]);
 
     /* Print out the initialization banner. */
-    if (username != NULL && !quiet) {
-        printf("Kerberos initialization for %s", aname);
-        if (*inst != '\0')
-            printf(".%s", inst);
-        if (*realm != '\0')
-            printf("@%s", realm);
-        if (*sname != '\0') {
-            printf(" for service %s", sname);
-            if (*sinst != '\0')
-                printf(".%s", sinst);
+    if (!options.quiet) {
+        printf("Kerberos initialization for %s", options.aname);
+        if (*options.inst != '\0')
+            printf(".%s", options.inst);
+        if (*options.realm != '\0')
+            printf("@%s", options.realm);
+        if (*options.sname != '\0') {
+            printf(" for service %s", options.sname);
+            if (*options.sinst != '\0')
+                printf(".%s", options.sinst);
         }
         printf("\n");
     }
@@ -314,82 +391,36 @@ main(int argc, char *argv[])
     /* Set the ticket lifetime.  The lifetime given on the command line will
        be in minutes, and we need to convert that to the Kerberos v4 lifetime
        code. */
-    if (lifetime < 5)
-        lifetime = 1;
+    if (options.lifetime < 5)
+        options.lifetime = 1;
     else
-        lifetime = krb_time_to_life(0, lifetime * 60);
-    if (lifetime > 255)
-        lifetime = 255;
+        options.lifetime = krb_time_to_life(0, options.lifetime * 60);
+    if (options.lifetime > 255)
+        options.lifetime = 255;
 
     /* Flesh out the name of the service ticket that we're obtaining. */
-    if (*realm == '\0' && krb_get_lrealm(realm, 1) != KSUCCESS)
+    if (*options.realm == '\0' && krb_get_lrealm(options.realm, 1) != KSUCCESS)
         die("cannot get local Kerberos realm");
-    if (*sname == '\0')
-        strcpy(sname, "krbtgt");
-    if (*sinst == '\0')
-        strcpy(sinst, realm);
+    if (*options.sname == '\0') {
+        strcpy(options.sname, "krbtgt");
+        if (*options.sinst == '\0')
+            strcpy(options.sinst, options.realm);
+    }
 
     /* If we're just checking the service ticket, do that and exit if okay. */
-    if (happy_ticket > 0)
-        if (!ticket_expired(sname, sinst, realm, happy_ticket))
+    if (options.happy_ticket > 0)
+        if (!ticket_expired(&options))
             exit(0);
 
-    /* Now, the actual authentication part.  This is where we loop back to if
-       we're running as a daemon (with the -K option). */
-repeat:
-    if (srvtab != NULL)
-        k_errno = krb_get_svc_in_tkt(aname, inst, realm, sname, sinst,
-                                     lifetime, (char *) srvtab);
-    else if (!stdin_passwd)
-        k_errno = krb_get_pw_in_tkt(aname, inst, realm, sname, sinst,
-                                    lifetime, NULL);
-    else {
-        char *p, buffer[BUFSIZ];
-
-        if (!quiet)
-            printf("Password: ");
-        fgets(buffer, sizeof(buffer), stdin);
-        p = strchr(buffer, '\n');
-        if (p != NULL)
-            *p = '\0';
-        else
-            die("password too long");
-        k_errno = krb_get_pw_in_tkt(aname, inst, realm, sname, sinst,
-                                    lifetime, buffer);
-    }
-    if (verbose) {
-        printf("Principal: %s.%s@%s\n", aname, inst, realm);
-        printf("Service principal: %s.%s@%s\n", sname, sinst, realm);
-        printf("%s\n", krb_err_txt[k_errno]);
-    }
-    if (k_errno != KSUCCESS)
-        die("Kerberos error: %s", krb_err_txt[k_errno]);
-
-    /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
-       broken and can't cope with being called directly on the return value of
-       system().  If we can't execute the aklog program, set the exit status
-       to an arbitrary but distinct value. */
-    if (run_aklog && !no_aklog) {
-        if (aklog == NULL)
-            die("set KINIT_PROG to specify the path to aklog");
-        if (access(aklog, X_OK) == 0) {
-            status = system(aklog);
-            status = WEXITSTATUS(status);
-            if (verbose)
-                printf("%s exited with status %d", aklog, status);
-        } else {
-            if (verbose)
-                printf("no execute access to %s", aklog);
-            status = 7;
-        }
-    }
+    /* Now, do the actual authentication. */
+    authenticate(&options, aklog);
 
     /* Loop if we're running as a daemon. */
-    if (keep_ticket > 0) {
+    if (options.keep_ticket > 0) {
         while (1) {
-            sleep(keep_ticket * 60);
-            if (ticket_expired(sname, sinst, realm, keep_ticket))
-                goto repeat;
+            sleep(options.keep_ticket * 60);
+            if (ticket_expired(&options))
+                authenticate(&options, aklog);
         }
     }
 
