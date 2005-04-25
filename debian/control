@@ -9,7 +9,7 @@ Package: kstart
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: Kerberos kinit variant supporting ticket refreshing
- k5start (for Kerberos v5) and kstart (for Kerberos v4) can be used
+ k5start (for Kerberos v5) and k4start (for Kerberos v4) can be used
  instead of kinit to obtain Kerberos tickets.  Both programs are included
  in this package.  They are intended primarily for use with automated
  processes and support some additional features useful for that purpose,
