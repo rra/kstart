@@ -1,3 +1,13 @@
+kstart (2.4-1) unstable; urgency=low
+
+  * New upstream release.
+    - Renamed kstart to k4start.  (Closes: #305512)
+    - Added support for maintaining credentials for a command.
+    - Added preliminary support for running a command in a PAG.
+    - Removed unnecessary export clause in license.  (Closes: #305516)
+
+ -- Russ Allbery <rra@stanford.edu>  Sun, 24 Apr 2005 23:44:48 -0700
+
 kstart (2.3-2) unstable; urgency=low
 
   * Uploaded to Debian.  (Closes: #304745)
