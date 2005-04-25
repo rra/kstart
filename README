@@ -31,7 +31,9 @@ DESCRIPTION
   k4start and k5start can optionally run an external program whenever the
   ticket is refreshed to obtain an AFS token, and therefore can be used in
   conjunction with a program like aklog or afslog to maintain an AFS
-  token.
+  token.  When built with the (currently somewhat experimental) support
+  for AFS PAGs, they can also put the program in its own PAG so that its
+  authentication doesn't affect any other programs.
 
 REQUIREMENTS
 
@@ -48,8 +50,18 @@ REQUIREMENTS
   If you want the -t option to work, you need a program to obtain AFS
   tokens from Kerberos tickets.  You can specify the program to use on
   your system with the --with-aklog option to configure; if that option is
-  not given, the first of aklog or afslog that is found on your path will
-  be used.
+  not given, the first of aklog or afslog that is found on your path at
+  configure time will be used.
+
+  To enable the somewhat experimental support for AFS PAGs, pass the
+  --with-afs-setpag flag to configure.  It is not enabled by default.
+  Currently, this support requires the newer OpenAFS libraries
+  (libafsauthent and libafsrpc) and pthreads (because those libraries
+  require pthreads).  If your AFS libraries aren't in your standard search
+  path, give the root of your AFS tree to --with-afs-setpag as an
+  argument.  When enabled, k4start and k5start will always create a new
+  PAG before authentication when running a specific command and when aklog
+  is being run.
 
 INSTALLATION
 
@@ -83,6 +95,12 @@ INSTALLATION
 
   This program will be run when the -t option is given to k4start or
   k5start.
+
+  To enable the AFS PAG support, pass --with-afs-setpag to configure.  You
+  may need to specify the root of your AFS client tree if the AFS
+  libraries aren't in the standard search path, such as with:
+
+      ./configure --with-afs-setpag=/usr/afsws
 
   Finally, to link statically against the Kerberos libraries rather than
   dynamically (so that the binaries can be used on systems without
