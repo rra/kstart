@@ -413,7 +413,7 @@ main(int argc, char *argv[])
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */
 #ifdef HAVE_SETPAG
-    if (command != NULL)
+    if (command != NULL && options.run_aklog && !options.no_aklog)
         if (setpag() < 0)
             die("unable to create PAG: %s", strerror(errno));
 #endif
