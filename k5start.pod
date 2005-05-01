@@ -196,6 +196,9 @@ path.
 
 k4start(1), kinit(1)
 
+The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
+will have the current version of B<k4start> and B<k5start>.
+
 =head1 AUTHORS
 
 B<k5start> was based on the k4start code written by Robert Morgan.  It was
