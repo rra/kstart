@@ -1,9 +1,27 @@
                        User-Visible kstart Changes
 
+kstart 2.5 (2005-05-01)
+
+    Unless -k is given, k4start and k5start both now create a temporary
+    ticket cache file with mkstemp and delete it on exit when running a
+    command, to not interfere with other ticket caches owned by the same
+    user.
+
+    k5start now correctly sets KRB5CCNAME when running aklog or a
+    command.
+
+    Ported to Heimdal and KTH Kerberos, somewhat.  Error handling in
+    k5start still won't produce good error messages because the
+    differences between MIT and Heimdal are more profound than I can
+    easily adjust for.
+
+    Documentation improvements, particularly in the area of specifying
+    commands to run.
+
 kstart 2.4 (2005-04-25)
 
-    Rename kstart to k4start to avoid a conflict with a KDE program.  This
-    is more symmetric with k5start anyway.
+    Renamed kstart to k4start to avoid a conflict with a KDE program.
+    This is more symmetric with k5start anyway.
 
     Added support to both k4start and k5start for running a program after
     obtaining Kerberos credentials and optionally AFS tokens.  This mode
