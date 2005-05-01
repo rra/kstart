@@ -136,6 +136,31 @@ usage(int status)
 
 
 /*
+**  Given a context and a principal, get the realm.  This works differently in
+**  MIT Kerberos and Heimdal, unfortunately.
+*/
+static char *
+get_realm(krb5_context ctx, krb5_principal princ)
+{
+#ifdef HAVE_KRB5_REALM
+    krb5_realm *realm;
+
+    realm = krb5_princ_realm(ctx, princ);
+    if (realm == NULL)
+        die("cannot get local Kerberos realm");
+    return krb5_realm_data(*realm);
+#else
+    krb5_data *data;
+
+    data = krb5_princ_realm(ctx, options.kprinc);
+    if (data == NULL)
+        die("cannot get local Kerberos realm");
+    return data->data;
+#endif
+}
+
+
+/*
 **  Check whether a ticket will expire within the given number of seconds.
 **  Takes the context and the options.  Returns a Kerberos status code.
 */
@@ -277,7 +302,6 @@ main(int argc, char *argv[])
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
-    krb5_data *data;
     int status = 0;
     pid_t child = 0;
     int clean_cache = 0;
@@ -462,12 +486,8 @@ main(int argc, char *argv[])
     }
 
     /* Flesh out the name of the service ticket that we're obtaining. */
-    if (srealm == NULL) {
-        data = krb5_princ_realm(ctx, options.kprinc);
-        if (data == NULL)
-            die("cannot get local Kerberos realm");
-        srealm = data->data;
-    }
+    if (srealm == NULL)
+        srealm = get_realm(ctx, options.kprinc);
     if (sname == NULL)
         sname = "krbtgt";
     if (sinst == NULL)

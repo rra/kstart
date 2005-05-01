@@ -3,7 +3,7 @@ dnl $Id$
 
 AC_REVISION($Revision$)
 AC_PREREQ(2.57)
-AC_INIT([kstart], [2.4], [rra@stanford.edu])
+AC_INIT([kstart], [2.5], [rra@stanford.edu])
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -49,7 +49,7 @@ AC_CHECK_LIB([krb4], [main],
     [-ldes425 -lkrb5 -lk5crypto -lcom_err])
 AC_CHECK_LIB([k5crypto], [main],
     [KRB5LIBS="-lkrb5 -lk5crypto -lcom_err"],
-    [KRB5LIBS="-lkrb5 -lcrypto -lasn -lroken -lcom_err"],
+    [KRB5LIBS="-lkrb5 -lcrypto -lasn1 -lroken -lcom_err"],
     [-lk5crypto -lcom_err])
 AC_SUBST([KRBLIBS])
 AC_SUBST([KRB5LIBS])
@@ -92,6 +92,7 @@ AC_CHECK_HEADERS([kerberosIV/krb.h])
 
 dnl Checks for types.
 AC_CHECK_TYPES([long long])
+AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 
 dnl Checks for functions.
 AC_REPLACE_FUNCS([mkstemp])
