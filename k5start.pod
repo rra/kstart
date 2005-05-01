@@ -49,6 +49,10 @@ The command will not be run using the shell, so if you want to use shell
 metacharacters in the command with their special meaning, give C<sh -c
 I<command>> as the command to run and quote I<command>.
 
+If the command contains command-line options (like C<-c>), put -- on the
+command line before the beginning of the command to tell B<k5start> to not
+parse those options as its own.
+
 =head1 OPTIONS
 
 =over 4
@@ -173,17 +177,26 @@ command finishes.
     k5start -f /etc/krb5.keytab -K 10 -l 10h host/example.com \
         /usr/local/bin/auth-backup
 
+Shows the permissions of the temporary cache file created by B<k5start>:
+
+    k5start -f /etc/krb5.keytab host/example.com \
+        -- sh -c 'ls -l $KRB5CCNAME'
+
+Notice the C<--> before the command to keep B<k5start> from parsing the
+C<-c> as its own option.
+
 =head1 ENVIRONMENT
 
 If the environment variable KINIT_PROG is set to a program (such as
 B<aklog>) then this path will be used for the program to run with B<-t>
 rather than the default compiled into B<k5start>.
 
-If no ticket file is specified on the command line, B<k5start> will use
-the environment variable KRB5CCNAME to determine the location of the the
-ticket granting ticket.  If the B<-k> option is used, KRB5CCNAME will be
-set to point to that file before running the B<aklog> program or any
-command given on the command line.
+If no ticket file (with B<-k>) or command is specified on the command
+line, B<k5start> will use the environment variable KRB5CCNAME to determine
+the location of the the ticket granting ticket.  If either a command is
+specified or the B<-k> option is used, KRB5CCNAME will be set to point to
+that file before running the B<aklog> program or any command given on the
+command line.
 
 =head1 FILES
 
@@ -191,6 +204,10 @@ The default ticket cache is determined by the underlying Kerberos
 libraries.  The default path for aklog is determined at build time, and
 will normally be whichever of B<aklog> or B<afslog> is found in the user's
 path.
+
+If a command is specified and B<-k> was not given, B<k5start> will create
+a temporary ticket cache file of the form C</tmp/krb5cc_%d_%s> where %d is
+the UID B<k4start> is running as and %s is a random string.
 
 =head1 SEE ALSO
 
