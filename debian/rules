@@ -6,33 +6,37 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# We need to know the host architecture to determine whether setpag is
+# available.
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+# These architectures are supported by OpenAFS and therefore should get setpag
+# support.  Other architectures will not.  This list must be kept in sync with
+# debian/control (and probably should be extracted automatically).
+AFS_ARCHES = alpha amd64 hppa i386 ia64 powerpc s390 sparc
 
-
-CFLAGS = -Wall -g
-
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
+# Determine whether to attempt setpag support.
+ifeq (,$(findstring $(DEB_HOST_ARCH),$(AFS_ARCHES)))
+    SETPAG =
 else
-	CFLAGS += -O2
+    SETPAG = --with-afs-setpag
 endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-	INSTALL_PROGRAM += -s
+
+# Set up compiler flags.
+CFLAGS = -Wall -g
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+    CFLAGS += -O0
+else
+    CFLAGS += -O2
 endif
 
 config.status: configure
 	dh_testdir
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) \
-	    --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
+	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	    --with-aklog=/usr/bin/aklog --with-afs-setpag
+	    --with-aklog=/usr/bin/aklog $(SETPAG)
 
 build: build-stamp
-
 build-stamp: config.status
 	dh_testdir
 	$(MAKE)
@@ -48,7 +52,7 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_clean
 	dh_installdirs
 	$(MAKE) install prefix=$(CURDIR)/debian/kstart/usr
 
