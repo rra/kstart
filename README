@@ -1,4 +1,4 @@
-                            kstart release 2.4
+                            kstart release 2.5
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
@@ -38,11 +38,13 @@ DESCRIPTION
 REQUIREMENTS
 
   As Kerberos programs, k4start and k5start require Kerberos libraries to
-  link against.  They have only been tested with the MIT Kerberos
-  libraries, but there is no reason why they could not also be made to
-  work with Heimdall and KTH Kerberos v4.  This may, however, require some
-  porting.  If you do this work, patches are welcome.  k5start, when
-  compiled by itself, requires only Kerberos v5 libraries.
+  link against.  They have only been thoroughly tested with the MIT
+  Kerberos libraries, but should compile with Heimdal and KTH Kerberos v4.
+  Unfortunately, k5start error reporting will be less than useful with
+  Heimdal at present (patches that don't break MIT Kerberos are welcome).
+
+  If you only have Heimdal but not KTH Kerberos v4, you can build only
+  k5start with make k5start.
 
   Other than that, all you should need is a suitable C compiler.  Neither
   program has been tested on non-Unix systems.
