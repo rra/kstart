@@ -36,6 +36,10 @@
 
 #include <krb5.h>
 
+#ifndef HAVE_MKSTEMP
+extern int mkstemp(char *);
+#endif
+
 /* The AFS headers don't prototype this. */
 #ifdef HAVE_SETPAG
 int setpag(void);
@@ -267,7 +271,7 @@ main(int argc, char *argv[])
     const char *sname = NULL;
     const char *sinst = NULL;
     const char *srealm = NULL;
-    const char *cache = NULL;
+    char *cache = NULL;
     char *principal = NULL;
     char **command = NULL;
     int lifetime = DEFAULT_LIFETIME;
@@ -276,6 +280,7 @@ main(int argc, char *argv[])
     krb5_data *data;
     int status = 0;
     pid_t child = 0;
+    int clean_cache = 0;
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
@@ -373,9 +378,22 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    /* If requested, set a ticket cache.  Also put it into the environment in
-       case we're going to run aklog.  Either way, set up the cache in the
-       Kerberos libraries. */
+    /* If requested, set a ticket cache.  Otherwise, if we're running a
+       command, set the ticket cache to a mkstemp-generated file.  Also put it
+       into the environment in case we're going to run aklog.  Either way, set
+       up the cache in the Kerberos libraries. */
+    if (cache == NULL && command != NULL) {
+        int fd;
+
+        cache = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
+        sprintf(cache, "/tmp/krb5cc_%d_XXXXXX", getuid());
+        fd = mkstemp(cache);
+        if (fd < 0)
+            die("cannot create ticket cache file: %s", strerror(errno));
+        if (fchmod(fd, 0600) < 0)
+            die("cannot chmod ticket cache file: %s", strerror(errno));
+        clean_cache = 1;
+    }
     if (cache == NULL)
         k5_errno = krb5_cc_default(ctx, &options.ccache);
     else {
@@ -384,7 +402,7 @@ main(int argc, char *argv[])
         env = malloc(strlen(cache) + 12);
         if (env == NULL)
             die("cannot allocate memory: %s", strerror(errno));
-        sprintf(env, "KRB5CCACHE=%s", cache);
+        sprintf(env, "KRB5CCNAME=%s", cache);
         putenv(env);
         k5_errno = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
@@ -508,7 +526,7 @@ main(int argc, char *argv[])
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
                 if (result > 0)
-                    exit(status);
+                    goto done;
             }
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
@@ -518,6 +536,12 @@ main(int argc, char *argv[])
         }
     }
 
-    /* Otherwise, just exit. */
+done:
+    /* Otherwise, or when we're done, exit.  clean_cache is only set if we
+       used mkstemp to generate the ticket cache name. */
+    if (clean_cache)
+        if (unlink(cache) < 0)
+            fprintf(stderr, "k5start: unable to remove ticket cache %s: %s",
+                    cache, strerror(errno));
     exit(status);
 }

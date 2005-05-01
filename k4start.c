@@ -38,6 +38,10 @@
 # include <krb.h>
 #endif
 
+#ifndef HAVE_MKSTEMP
+extern int mkstemp(char *);
+#endif
+
 /* The AFS headers don't prototype this. */
 #ifdef HAVE_SETPAG
 int setpag(void);
@@ -68,8 +72,8 @@ struct options {
     char sname[SNAME_SZ];
     char sinst[INST_SZ];
     const char *aklog;
-    const char *cache;
     const char *srvtab;
+    char *cache;
     int lifetime;
     int happy_ticket;
     int keep_ticket;
@@ -231,6 +235,7 @@ main(int argc, char *argv[])
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
     int status = 0;
+    int clean_cache = 0;
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
@@ -346,8 +351,22 @@ main(int argc, char *argv[])
         username = pwd->pw_name;
     }
 
-    /* If requested, set a ticket cache.  Also put it into the environment in
-       case we're going to run aklog or a command. */
+    /* If requested, set a ticket cache.  Otherwise, if we're running a
+       command, set the ticket cache to a mkstemp-generated file.  Also put
+       the ticket cache, if we set one, into the environment in case we're
+       going to run aklog or a command. */
+    if (options.cache == NULL && command != NULL) {
+        int fd;
+
+        options.cache = malloc(strlen("/tmp/tkt_XXXXXX") + 20 + 1);
+        sprintf(options.cache, "/tmp/tkt%d_XXXXXX", getuid());
+        fd = mkstemp(options.cache);
+        if (fd < 0)
+            die("cannot create ticket cache file: %s", strerror(errno));
+        if (fchmod(fd, 0600) < 0)
+            die("cannot chmod ticket cache file: %s", strerror(errno));
+        clean_cache = 1;
+    }
     if (options.cache != NULL) {
         char *env;
 
@@ -443,7 +462,7 @@ main(int argc, char *argv[])
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
                 if (result > 0)
-                    exit(status);
+                    goto done;
             }
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
@@ -453,6 +472,12 @@ main(int argc, char *argv[])
         }
     }
 
-    /* Otherwise, just exit. */
+done:
+    /* Otherwise, or when we're done, exit.  clean_cache is only set if we
+       used mkstemp to generate the ticket cache name. */
+    if (clean_cache)
+        if (unlink(options.cache) < 0)
+            fprintf(stderr, "k4start: unable to remove ticket cache %s: %s",
+                    options.cache, strerror(errno));
     exit(status);
 }

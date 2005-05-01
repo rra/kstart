@@ -90,6 +90,12 @@ LIBS=$save_LIBS
 dnl Checks for header files.
 AC_CHECK_HEADERS([kerberosIV/krb.h])
 
+dnl Checks for types.
+AC_CHECK_TYPES([long long])
+
+dnl Checks for functions.
+AC_REPLACE_FUNCS([mkstemp])
+
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])

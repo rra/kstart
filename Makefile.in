@@ -46,8 +46,8 @@ install: k4start k5start $(srcdir)/k4start.1 $(srcdir)/k5start.1
 k4start: k4start.o command.o $(LIBOBJS)
 	$(CC) $(LDFLAGS) -o k4start k4start.o command.o $(LIBOBJS) $(KRBLIBS)
 
-k5start: k5start.o command.o
-	$(CC) $(LDFLAGS) -o k5start k5start.o command.o $(KRB5LIBS)
+k5start: k5start.o command.o $(LIBOBJS)
+	$(CC) $(LDFLAGS) -o k5start k5start.o command.o $(LIBOBJS) $(KRB5LIBS)
 
 $(srcdir)/k4start.1: $(srcdir)/k4start.pod
 	pod2man --release=$(VERSION) --center="User commands" $< > $@
