@@ -1,3 +1,14 @@
+kstart (2.5-1) unstable; urgency=low
+
+  * New upstream release.
+    - Create a new, temporary ticket cache when running a command without
+      the -k option, to avoid interference with other ticket caches owned
+      by the same user.
+    - Fix k5start bug in setting KRB5CCNAME.
+  * Only build with setpag support on architectures OpenAFS supports.
+
+ -- Russ Allbery <rra@stanford.edu>  Sun,  1 May 2005 13:59:17 -0700
+
 kstart (2.4-1) unstable; urgency=low
 
   * New upstream release.
