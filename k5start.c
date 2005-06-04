@@ -565,7 +565,7 @@ main(int argc, char *argv[])
         die("unable to allocate memory: %s", strerror(errno));
     sprintf(options.service, "%s/%s@%s", sname, sinst, srealm);
     status = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
-                                  srealm, sname, inst, (const char *) NULL);
+                                  srealm, sname, sinst, (const char *) NULL);
     if (status != 0) {
         com_err("k5start", status, "while creating service principal name");
         exit(1);
