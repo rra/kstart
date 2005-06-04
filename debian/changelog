@@ -3,6 +3,8 @@ kstart (2.6-1) unstable; urgency=low
   * New upstream release.
     - Add the -U option to get the client principal from a keytab.
   * Indent Homepage in the description for better wrapping.
+  * README.Debian should refer to k4start, not kstart.
+  * Update copyright to match upstream wording and include 2005.
 
  -- Russ Allbery <rra@stanford.edu>  Fri,  3 Jun 2005 23:49:04 -0700
 
