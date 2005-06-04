@@ -101,8 +101,6 @@ LIBS="$KRBLIBS $LIBS"
 if test x"$K4START" != x ; then
     AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
 fi
-AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
-AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
 LIBS=$save_LIBS
 
 dnl Checks for header files.
@@ -114,6 +112,15 @@ AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 
 dnl Checks for functions.
 AC_REPLACE_FUNCS([mkstemp])
+
+dnl Check for Heimdal functions and different generations of Kerberos v5
+dnl libraries.
+save_LIBS=$LIBS
+LIBS="$KRB5LIBS $LIBS"
+AC_CHECK_FUNCS([initialize_krb5_error_table])
+AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
+AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
+LIBS=$save_LIBS
 
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])

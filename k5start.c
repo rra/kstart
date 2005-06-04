@@ -441,6 +441,13 @@ main(int argc, char *argv[])
     if (options.aklog == NULL && options.run_aklog)
         die("set KINIT_PROG to specify the path to aklog");
 
+    /* Heimdal initializes the error table using state stored in the context,
+       but alas this means com_err doesn't work right.  This hack seems to fix
+       it. */
+#ifdef HAVE_INITIALIZE_KRB5_ERROR_TABLE
+    initialize_krb5_error_table();
+#endif
+
     /* Establish a K5 context. */
     k5_errno = krb5_init_context(&ctx);
     if (k5_errno != 0) {
