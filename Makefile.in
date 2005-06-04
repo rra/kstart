@@ -28,20 +28,25 @@ INSTALL		= @INSTALL@
 INSTALL_DATA	= @INSTALL_DATA@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 
+K4START		= @K4START@
+K4START_MAN	= @K4START_MAN@
+
 .c.o:
 	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
 
-all: k4start k5start k4start.1 k5start.1
+all: k5start k5start.1 $(K4START) $(K4START_MAN)
 
 warnings:
 	$(MAKE) CFLAGS="-g -O -Wall"
 
 install: k4start k5start $(srcdir)/k4start.1 $(srcdir)/k5start.1
 	$(INSTALL) -d $(bindir) $(mandir)/man1
-	$(INSTALL_PROGRAM) k4start $(bindir)/k4start
 	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
-	$(INSTALL_DATA) $(srcdir)/k4start.1 $(mandir)/man1/k4start.1
 	$(INSTALL_DATA) $(srcdir)/k5start.1 $(mandir)/man1/k5start.1
+	set -e; if test x"$(K4START)" != x ; then \
+	    $(INSTALL_PROGRAM) k4start $(bindir)/k4start; \
+	    $(INSTALL_DATA) $(srcdir)/k4start.1 $(mandir)/man1/k4start.1; \
+	fi
 
 k4start: k4start.o command.o $(LIBOBJS)
 	$(CC) $(LDFLAGS) -o k4start k4start.o command.o $(LIBOBJS) $(KRBLIBS)

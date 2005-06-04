@@ -44,7 +44,7 @@ REQUIREMENTS
   Heimdal at present (patches that don't break MIT Kerberos are welcome).
 
   If you only have Heimdal but not KTH Kerberos v4, you can build only
-  k5start with make k5start.
+  k5start by passing the --disable-k4start flag to configure.
 
   Other than that, all you should need is a suitable C compiler.  Neither
   program has been tested on non-Unix systems.
@@ -88,7 +88,8 @@ INSTALLATION
   If your Kerberos libraries aren't installed in a location found by your
   compiler by default, use the --with-kerberos=PATH option to configure.
   The Kerberos libraries will then be expected in PATH/lib and the headers
-  in PATH/include.
+  in PATH/include.  If you only want to build k5start, pass the
+  --disable-k4start flag to configure.
 
   If you are using aklog, afslog, or some other program to obtain AFS
   tokens, give its path to configure with the --with-aklog option, as in:

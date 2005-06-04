@@ -79,12 +79,28 @@ AC_ARG_WITH([afs-setpag],
             [-lafsrpc -lpthread])
      fi])
 
+dnl Allow the user to disable Kerberos v4 support.  Useful for building
+dnl against just Heimdal, without KTH Kerberos.
+K4START=k4start
+K4START_MAN=k4start.1
+AC_ARG_ENABLE([k4start],
+    AC_HELP_STRING([--disable-k4start],
+        [Don't build k4start (Kerberos v4 support)]),
+    [if test x"$enableval" = xno ; then
+        K4START=
+        K4START_MAN=
+     fi])
+AC_SUBST([K4START])
+AC_SUBST([K4START_MAN])
+
 dnl Check to see if we need to use our local lifetime function.  All of this
 dnl machinery is annoying, but required because AC_REPLACE_FUNCS doesn't take
 dnl an argument for extra libraries to check.
 save_LIBS=$LIBS
 LIBS="$KRBLIBS $LIBS"
-AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+if test x"$K4START" != x ; then
+    AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+fi
 AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
 LIBS=$save_LIBS
 
