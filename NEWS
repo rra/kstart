@@ -1,5 +1,19 @@
                        User-Visible kstart Changes
 
+kstart 2.6 (2005-06-03)
+
+    Finished the port to Heimdal.  k5start error reporting should now work
+    correctly, as should handling of krb5.conf defaults.
+
+    Added the -U flag to k5start, telling it to figure out the client
+    principal by looking in the provided keytab rather than expecting it
+    on the command line, making it easier to write scripts that use the
+    system keytab.
+
+    Added the --disable-k4start flag to configure to make it easier to
+    build only k5start (particularly useful if one only has Heimdal and
+    not KTH Kerberos).
+
 kstart 2.5 (2005-05-01)
 
     Unless -k is given, k4start and k5start both now create a temporary
