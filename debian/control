@@ -17,5 +17,4 @@ Description: Kerberos kinit variant supporting ticket refreshing
  checking to see if an existing ticket has expired, or obtaining an AFS
  token along with the ticket by running an external program automatically.
  .
- Homepage: http://www.eyrie.org/~eagle/software/kstart/
-
+  Homepage: http://www.eyrie.org/~eagle/software/kstart/
