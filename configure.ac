@@ -3,7 +3,7 @@ dnl $Id$
 
 AC_REVISION($Revision$)
 AC_PREREQ(2.57)
-AC_INIT([kstart], [2.6], [rra@stanford.edu])
+AC_INIT([kstart], [2.7], [rra@stanford.edu])
 
 dnl Checks for programs.
 AC_PROG_CC

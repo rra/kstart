@@ -1,5 +1,11 @@
                        User-Visible kstart Changes
 
+kstart 2.7 (2005-06-04)
+
+    Fixed a bug in k5start introduced in 2.4 that broke -H handling and
+    getting a specific service ticket, and which caused k5start to make an
+    additional bogus request for the wrong service on each authentication.
+
 kstart 2.6 (2005-06-03)
 
     Finished the port to Heimdal.  k5start error reporting should now work
