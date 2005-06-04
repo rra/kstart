@@ -95,12 +95,12 @@ Usage: k5start [options] [name [command]]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
-   -P                   Use the first principal in the keytab as the client\n\
-                        principal and don't look for a principal on the\n\
-                        command line\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
    -t                   Get AFS token via aklog or KINIT_PROG\n\
+   -U                   Use the first principal in the keytab as the client\n\
+                        principal and don't look for a principal on the\n\
+                        command line\n\
    -v                   Verbose\n\
 \n\
 If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
@@ -359,18 +359,18 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:nPpqr:S:stu:v")) != EOF)
+    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stUu:v")) != EOF)
         switch (option) {
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
         case 'k': cache = optarg;               break;
         case 'n': /* Ignored */                 break;
         case 'q': options.quiet = 1;            break;
-        case 'P': search_keytab = 1;            break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
         case 't': options.run_aklog = 1;        break;
         case 'v': options.verbose = 1;          break;
+        case 'U': search_keytab = 1;            break;
         case 'u': principal = optarg;           break;
 
         case 'f':

@@ -17,7 +17,7 @@ B<k5start> [B<-nqstv>]
 [B<-u> I<client principal>]
 [I<username> [I<command> ...]]
 
-B<k5start> B<-P> B<-f> I<keytab> [B<-nqstv>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-nqstv>]
 [B<-f> I<keytab>]
 [B<-H> I<minutes>]
 [B<-I> I<service instance>]
@@ -53,7 +53,7 @@ running, waking up periodically to refresh credentials slightly before
 they would expire, until the command completes.  (The frequency with which
 it wakes up to refresh credentials can still be controlled with the B<-K>
 option.)  To run in this mode, the principal must either be specified as a
-regular command-line argument or via the B<-P> option; the B<-u> and B<-i>
+regular command-line argument or via the B<-U> option; the B<-u> and B<-i>
 options may not be used.  Also, a keytab must be specified with B<-f> to
 run a specific command.
 
@@ -117,17 +117,6 @@ more information, see kinit(1).
 	
 Ignored, present for option compatibility with B<k4start>.
 
-=item B<-P>
-
-Rather than requiring the principal to authenticate as be given on the
-command line, read it from the keytab specified with B<-f>.  The principal
-will be taken from the first entry in the keytab.  B<-f> must be specified
-if this option is used.
-
-When B<-P> is given, B<k5start> will not expect a principal name to be
-given on the command line, and any arguments after the options will be
-taken as a command to run.
-
 =item B<-q>
 	
 Quiet.  Suppresses the printing of the initial banner message saying what
@@ -160,6 +149,17 @@ risk.  You normally want to use a keytab and the B<-f> option intead.
 Run an external program after getting a ticket.  The default use of this
 is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
 is set, it overrides the compiled-in default.
+
+=item B<-U>
+
+Rather than requiring the principal to authenticate as be given on the
+command line, read it from the keytab specified with B<-f>.  The principal
+will be taken from the first entry in the keytab.  B<-f> must be specified
+if this option is used.
+
+When B<-U> is given, B<k5start> will not expect a principal name to be
+given on the command line, and any arguments after the options will be
+taken as a command to run.
 
 =item B<-u> I<client principal>
 
@@ -210,7 +210,7 @@ C<-c> as its own option.
 
 Do the same thing, but determine the principal from the keytab:
 
-    k5start -f /etc/krb5.keytab -P -- sh -c 'ls -l $KRB5CCNAME'
+    k5start -f /etc/krb5.keytab -U -- sh -c 'ls -l $KRB5CCNAME'
 
 Note that no principal is given before the command.
 
