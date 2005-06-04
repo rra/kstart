@@ -102,6 +102,7 @@ if test x"$K4START" != x ; then
     AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
 fi
 AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
+AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
 LIBS=$save_LIBS
 
 dnl Checks for header files.

@@ -567,6 +567,11 @@ main(int argc, char *argv[])
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
     krb5_get_init_creds_opt_init(&options.kopts);
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
+    krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
+                                              options.kprinc->realm,
+                                              &options.kopts);
+#endif
     krb5_get_init_creds_opt_set_tkt_life(&options.kopts, life_secs);
 
     /* If we're just checking the service ticket, do that and exit if okay. */
