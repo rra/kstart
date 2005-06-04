@@ -40,8 +40,6 @@ REQUIREMENTS
   As Kerberos programs, k4start and k5start require Kerberos libraries to
   link against.  They have only been thoroughly tested with the MIT
   Kerberos libraries, but should compile with Heimdal and KTH Kerberos v4.
-  Unfortunately, k5start error reporting will be less than useful with
-  Heimdal at present (patches that don't break MIT Kerberos are welcome).
 
   If you only have Heimdal but not KTH Kerberos v4, you can build only
   k5start by passing the --disable-k4start flag to configure.
