@@ -17,6 +17,17 @@ B<k5start> [B<-nqstv>]
 [B<-u> I<client principal>]
 [I<username> [I<command> ...]]
 
+B<k5start> B<-P> B<-f> I<keytab> [B<-nqstv>]
+[B<-f> I<keytab>]
+[B<-H> I<minutes>]
+[B<-I> I<service instance>]
+[B<-K> I<minutes>]
+[B<-k> I<ticket file>]
+[B<-l> I<time string>]
+[B<-r> I<service realm>]
+[B<-S> I<service name>]
+[I<command> ...]
+
 =head1 DESCRIPTION
 
 B<k5start> obtains and caches an initial Kerberos v5 ticket-granting
@@ -41,9 +52,10 @@ point it to the right ticket cache.  B<k5start> will then continue
 running, waking up periodically to refresh credentials slightly before
 they would expire, until the command completes.  (The frequency with which
 it wakes up to refresh credentials can still be controlled with the B<-K>
-option.)  To run in this mode, the principal must be specified as a
-regular command-line argument rather than using the B<-u> and B<-i>
-options and a keytab must be specified with B<-f>.
+option.)  To run in this mode, the principal must either be specified as a
+regular command-line argument or via the B<-P> option; the B<-u> and B<-i>
+options may not be used.  Also, a keytab must be specified with B<-f> to
+run a specific command.
 
 The command will not be run using the shell, so if you want to use shell
 metacharacters in the command with their special meaning, give C<sh -c
@@ -104,6 +116,17 @@ more information, see kinit(1).
 =item B<-n>
 	
 Ignored, present for option compatibility with B<k4start>.
+
+=item B<-P>
+
+Rather than requiring the principal to authenticate as be given on the
+command line, read it from the keytab specified with B<-f>.  The principal
+will be taken from the first entry in the keytab.  B<-f> must be specified
+if this option is used.
+
+When B<-P> is given, B<k5start> will not expect a principal name to be
+given on the command line, and any arguments after the options will be
+taken as a command to run.
 
 =item B<-q>
 	
@@ -185,6 +208,12 @@ Shows the permissions of the temporary cache file created by B<k5start>:
 Notice the C<--> before the command to keep B<k5start> from parsing the
 C<-c> as its own option.
 
+Do the same thing, but determine the principal from the keytab:
+
+    k5start -f /etc/krb5.keytab -P -- sh -c 'ls -l $KRB5CCNAME'
+
+Note that no principal is given before the command.
+
 =head1 ENVIRONMENT
 
 If the environment variable KINIT_PROG is set to a program (such as
@@ -195,8 +224,8 @@ If no ticket file (with B<-k>) or command is specified on the command
 line, B<k5start> will use the environment variable KRB5CCNAME to determine
 the location of the the ticket granting ticket.  If either a command is
 specified or the B<-k> option is used, KRB5CCNAME will be set to point to
-that file before running the B<aklog> program or any command given on the
-command line.
+the ticket file before running the B<aklog> program or any command given
+on the command line.
 
 =head1 FILES
 

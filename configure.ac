@@ -85,6 +85,7 @@ dnl an argument for extra libraries to check.
 save_LIBS=$LIBS
 LIBS="$KRBLIBS $LIBS"
 AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
 LIBS=$save_LIBS
 
 dnl Checks for header files.

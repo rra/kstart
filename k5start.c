@@ -80,7 +80,7 @@ struct options {
 
 /* The usage message. */
 const char usage_message[] = "\
-Usage: k5start [options] [name]\n\
+Usage: k5start [options] [name [command]]\n\
    -u <client principal>        (default: local username)\n\
    -i <client instance>         (default: null)\n\
    -S <service name>            (default: krbtgt)\n\
@@ -95,6 +95,9 @@ Usage: k5start [options] [name]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
+   -P                   Use the first principal in the keytab as the client\n\
+                        principal and don't look for a principal on the\n\
+                        command line\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
    -t                   Get AFS token via aklog or KINIT_PROG\n\
@@ -286,6 +289,53 @@ authenticate(krb5_context ctx, struct options *options)
 }
 
 
+/*
+**  Find the principal of the first entry of a keytab and return it as a
+**  string in newly allocated memory.  The caller is responsible for freeing.
+**  Exit on error.
+*/
+static char *
+first_principal(krb5_context ctx, const char *path)
+{
+    krb5_keytab keytab;
+    krb5_kt_cursor cursor;
+    krb5_keytab_entry entry;
+    int k5_errno;
+    char *principal = NULL;
+
+    k5_errno = krb5_kt_resolve(ctx, path, &keytab);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while opening %s", path);
+        exit(1);
+    }
+    k5_errno = krb5_kt_start_seq_get(ctx, keytab, &cursor);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while reading %s", path);
+        exit(1);
+    }
+    k5_errno = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
+    if (k5_errno == 0) {
+        k5_errno = krb5_unparse_name(ctx, entry.principal, &principal);
+        if (k5_errno != 0) {
+            com_err("k5start", k5_errno, "while unparsing name from %s", path);
+            exit(1);
+        }
+#ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
+        krb5_free_keytab_entry_contents(ctx, &entry);
+#else
+        krb5_kt_free_entry(ctx, &entry);
+#endif
+    }
+    krb5_kt_end_seq_get(ctx, keytab, &cursor);
+    if (k5_errno == 0)
+        return principal;
+    else {
+        die("no principal found in keytab file %s", path);
+        return NULL;
+    }
+}
+
+
 int
 main(int argc, char *argv[])
 {
@@ -305,16 +355,18 @@ main(int argc, char *argv[])
     int status = 0;
     pid_t child = 0;
     int clean_cache = 0;
+    int search_keytab = 0;
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
+    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:nPpqr:S:stu:v")) != EOF)
         switch (option) {
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
         case 'k': cache = optarg;               break;
         case 'n': /* Ignored */                 break;
         case 'q': options.quiet = 1;            break;
+        case 'P': search_keytab = 1;            break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
         case 't': options.run_aklog = 1;        break;
@@ -358,14 +410,16 @@ main(int argc, char *argv[])
        taken to be the username if the -u option wasn't already given. */
     argc -= optind;
     argv += optind;
-    if (argc >= 1) {
+    if (argc >= 1 && !search_keytab) {
         if (principal == NULL)
             principal = argv[0];
         else
             die("username specified both with -u and as an argument");
+        argc--;
+        argv++;
     }
-    if (argc > 1)
-        command = argv + 1;
+    if (argc > 0)
+        command = argv;
 
     /* Check the arguments for consistency. */
     if (options.keep_ticket > 0 && options.keytab == NULL)
@@ -377,6 +431,8 @@ main(int argc, char *argv[])
             options.keep_ticket, lifetime);
     if (principal != NULL && strchr(principal, '/') != NULL && inst != NULL)
         die("instance specified in the principal and with -i");
+    if (search_keytab && options.keytab == NULL)
+        die("-p option requires a keytab be specified with -f");
 
     /* Set aklog from KINIT_PROG or the compiled-in default. */
     options.aklog = getenv("KINIT_PROG");
@@ -384,6 +440,17 @@ main(int argc, char *argv[])
         options.aklog = PATH_AKLOG;
     if (options.aklog == NULL && options.run_aklog)
         die("set KINIT_PROG to specify the path to aklog");
+
+    /* Establish a K5 context. */
+    k5_errno = krb5_init_context(&ctx);
+    if (k5_errno != 0) {
+        com_err("k5start", k5_errno, "while initializing Kerberos 5 library");
+        exit(1);
+    }
+
+    /* If the -P option was given, figure out the principal from the keytab. */
+    if (search_keytab)
+        principal = first_principal(ctx, options.keytab);
 
     /* The default principal is the name of the local user. */
     if (principal == NULL) {
@@ -393,13 +460,6 @@ main(int argc, char *argv[])
         if (pwd == NULL)
             die("no username given and unable to obtain default value");
         principal = pwd->pw_name;
-    }
-
-    /* Establish a K5 context. */
-    k5_errno = krb5_init_context(&ctx);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while initializing Kerberos 5 library");
-        exit(1);
     }
 
     /* If requested, set a ticket cache.  Otherwise, if we're running a
