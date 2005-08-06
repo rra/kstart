@@ -100,6 +100,7 @@ Usage: k5start [options] [name [command]]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
+   -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
    -t                   Get AFS token via aklog or KINIT_PROG\n\
@@ -354,6 +355,7 @@ main(int argc, char *argv[])
     char *cache = NULL;
     char *principal = NULL;
     char **command = NULL;
+    char *pidfile = NULL;
     int background = 0;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
@@ -365,13 +367,14 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:npqr:S:stUu:v")) != EOF)
+    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:np:qr:S:stUu:v")) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
         case 'k': cache = optarg;               break;
         case 'n': /* Ignored */                 break;
+        case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
@@ -401,7 +404,6 @@ main(int argc, char *argv[])
                 die("bad lifetime value %s, use 10h 10m format", optarg);
             lifetime = life_secs / 60;
             break;
-        case 'p':
         case 's':
             options.stdin_passwd = 1;
             if (options.keytab != NULL)
@@ -614,6 +616,18 @@ main(int argc, char *argv[])
        since otherwise we wouldn't be able to wait for the child process. */
     if (background)
         daemon(0, 0);
+
+    /* Write out the PID file.  Note that we can't report failures usefully,
+       since this is generally used with -b. */
+    if (pidfile != NULL) {
+        FILE *file;
+
+        file = fopen(pidfile, "w");
+        if (file != NULL) {
+            fprintf(file, "%lu\n", (unsigned long) getpid());
+            fclose(file);
+        }
+    }
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {

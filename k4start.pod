@@ -12,6 +12,7 @@ B<k4start> [B<-bnqstv>]
 [B<-K> I<minutes>]
 [B<-k> I<ticket file>]
 [B<-l> I<minutes>]
+[B<-p> I<pid file>]
 [B<-r> I<service realm>]
 [B<-S> I<service name>]
 [B<-u> I<client principal>]
@@ -118,6 +119,13 @@ your Kerberos libraries support long ticket lifetimes.
 Regardless of the setting of the environment variable KINIT_PROG, don't
 run the program.
 
+=item B<-p> I<pid file>
+
+Save the process ID (PID) of the running B<k4start> process into I<pid
+file>.  I<pid file> is created if it doesn't exist and overwritten if it
+does exist.  This option is most useful in conjunction with B<-b> to allow
+management of the running B<k4start> daemon.
+
 =item B<-q>
 	
 Quiet.  Suppresses the printing of the initial banner message saying what
@@ -193,11 +201,30 @@ command finishes.
 
 Shows the permissions of the temporary cache file created by B<k4start>:
 
-    k4start -f /etc/krb5.keytab host/example.com \
+    k4start -f /etc/srvtab rcmd.example \
         -- sh -c 'ls -l $KRBTKFILE'
 
 Notice the C<--> before the command to keep B<k4start> from parsing the
 C<-c> as its own option.
+
+Starts B<k4start> as a daemon using the Debian B<start-stop-daemon>
+management program.  This is the sort of line that one could put into a
+Debian init script:
+
+    start-stop-daemon --start --pidfile /var/run/k4start.pid \
+        --exec /usr/local/bin/k4start -- -b -p /var/run/k4start.pid \
+        -f /etc/srvtab rcmd.example
+
+This uses F</var/run/k4start.pid> as the PID file and obtains rcmd.example
+tickets from the system srvtab file.  B<k4start> would then be stopped
+with:
+
+    start-stop-daemon --stop --pidfile /var/run/k4start.pid
+    rm -f /var/run/k4start.pid
+
+This code could be added to an init script for Apache, for example, to
+start a B<k4start> process alongside Apache to manage its Kerberos
+credentials.
 
 =head1 ENVIRONMENT
 
@@ -236,6 +263,7 @@ B<k4start> was originally written by Robert Morgan.  Modifications and
 additional features were added by Booker C. Bense.  Additional cleanup and
 current maintenance are done by Russ Allbery <rra@stanford.edu>.
 
-Implementation of B<-b> is based on code contributed by Navid Golpayegani.
+Implementations of B<-b> and B<-p> and the example for a Debian init
+script are based on code contributed by Navid Golpayegani.
 
 =cut

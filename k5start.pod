@@ -12,6 +12,7 @@ B<k5start> [B<-bnqstv>]
 [B<-K> I<minutes>]
 [B<-k> I<ticket file>]
 [B<-l> I<time string>]
+[B<-p> I<pid file>]
 [B<-r> I<service realm>]
 [B<-S> I<service name>]
 [B<-u> I<client principal>]
@@ -24,6 +25,7 @@ B<k5start> B<-U> B<-f> I<keytab> [B<-bnqstv>]
 [B<-K> I<minutes>]
 [B<-k> I<ticket file>]
 [B<-l> I<time string>]
+[B<-p> I<pid file>]
 [B<-r> I<service realm>]
 [B<-S> I<service name>]
 [I<command> ...]
@@ -132,6 +134,13 @@ more information, see kinit(1).
 	
 Ignored, present for option compatibility with B<k4start>.
 
+=item B<-p> I<pid file>
+
+Save the process ID (PID) of the running B<k5start> process into I<pid
+file>.  I<pid file> is created if it doesn't exist and overwritten if it
+does exist.  This option is most useful in conjunction with B<-b> to allow
+management of the running B<k5start> daemon.
+
 =item B<-q>
 	
 Quiet.  Suppresses the printing of the initial banner message saying what
@@ -229,6 +238,25 @@ Do the same thing, but determine the principal from the keytab:
 
 Note that no principal is given before the command.
 
+Starts B<k5start> as a daemon using the Debian B<start-stop-daemon>
+management program.  This is the sort of line that one could put into a
+Debian init script:
+
+    start-stop-daemon --start --pidfile /var/run/k5start.pid \
+        --exec /usr/local/bin/k5start -- -b -p /var/run/k5start.pid \
+        -f /etc/krb5.keytab host/example.com
+
+This uses F</var/run/k5start.pid> as the PID file and obtains
+host/example.com tickets from the system keytab file.  B<k5start> would
+then be stopped with:
+
+    start-stop-daemon --stop --pidfile /var/run/k5start.pid
+    rm -f /var/run/k5start.pid
+
+This code could be added to an init script for Apache, for example, to
+start a B<k5start> process alongside Apache to manage its Kerberos
+credentials.
+
 =head1 ENVIRONMENT
 
 If the environment variable KINIT_PROG is set to a program (such as
@@ -266,6 +294,7 @@ B<k5start> was based on the k4start code written by Robert Morgan.  It was
 ported to Kerberos v5 by Booker C. Bense.  Additional cleanup and current
 maintenance are done by Russ Allbery <rra@stanford.edu>.
 
-Implementation of B<-b> is based on code contributed by Navid Golpayegani.
+Implementations of B<-b> and B<-p> and the example for a Debian init
+script are based on code contributed by Navid Golpayegani.
 
 =cut

@@ -2,8 +2,13 @@
 
 kstart 2.8 (unreleased)
 
-    Added -b option to both k4start and k5start to background after the
-    initial authentication, based on code by Navid Golpayegani.
+    Added the -b option to both k4start and k5start to background after
+    the initial authentication.  Added the -p option to both k4start and
+    k5start to save the PID of the process in a file.  Both were based on
+    code by Navid Golpayegani.
+
+    -p is no longer accepted as a synonym for -s (this synonym was never
+    documented).
 
 kstart 2.7 (2005-06-04)
 

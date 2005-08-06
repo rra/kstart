@@ -107,6 +107,7 @@ Usage: k4start [options] [name]\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
    -n                   Don't run aklog or KINIT_PROG\n\
+   -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
    -t                   Get AFS token via aklog or KINIT_PROG\n\
@@ -237,6 +238,7 @@ main(int argc, char *argv[])
     char *username = NULL;
     char *aklog = NULL;
     char **command = NULL;
+    char *pidfile = NULL;
     int background = 0;
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
@@ -245,11 +247,12 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
+    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:np:qr:S:stu:v")) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
         case 'k': options.cache = optarg;       break;
         case 'n': options.no_aklog = 1;         break;
+        case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
         case 't': options.run_aklog = 1;        break;
         case 'v': options.verbose = 1;          break;
@@ -303,7 +306,6 @@ main(int argc, char *argv[])
                 die("service name %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.sname));
             break;
-        case 'p':
         case 's':
             options.stdin_passwd = 1;
             if (options.srvtab != NULL)
@@ -457,6 +459,18 @@ main(int argc, char *argv[])
        since otherwise we wouldn't be able to wait for the child process. */
     if (background)
         daemon(0, 0);
+
+    /* Write out the PID file.  Note that we can't report failures usefully,
+       since this is generally used with -b. */
+    if (pidfile != NULL) {
+        FILE *file;
+
+        file = fopen(pidfile, "w");
+        if (file != NULL) {
+            fprintf(file, "%lu\n", (unsigned long) getpid());
+            fclose(file);
+        }
+    }
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {

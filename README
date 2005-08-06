@@ -113,7 +113,8 @@ INSTALLATION
 THANKS
 
   To Navid Golpayegani, for contributing the initial implementation of the
-  -b option to background after the initial authentication.
+  -b option to background after the initial authentication and the -p
+  option to save the PID in a file.
 
 LICENSE
 
