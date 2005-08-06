@@ -65,6 +65,7 @@ clean:
 
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status
+	rm -f rsync-exclude
 	rm -rf autom4te.cache $(TARDIR)
 
 maintclean: distclean
@@ -75,8 +76,9 @@ maintclean: distclean
 dist: $(srcdir)/k4start.1 $(srcdir)/k5start.1
 	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
 	mkdir $(TARDIR)
-	rsync -C --exclude /debian/ -a $(srcdir)/ $(TARDIR)/
-	rsync -a $(srcdir)/k4start.1 $(srcdir)/k5start.1 $(TARDIR)/
+	svn propget svn:ignore . | sed '/\.1$$/d' > rsync-exclude
+	echo debian >> rsync-exclude
+	rsync --exclude-from=rsync-exclude -a $(srcdir)/ $(TARDIR)/
 	cd $(TARDIR) && autoconf && autoheader && rm -rf autom4te.cache
 	tar cf $(TARNAME) $(TARDIR)
 	gzip -9 $(TARNAME)
