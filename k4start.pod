@@ -4,7 +4,7 @@ k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<k4start> [B<-nqstv>]
+B<k4start> [B<-bnqstv>]
 [B<-f> I<srvtab>]
 [B<-H> I<minutes>]
 [B<-I> I<service instance>]
@@ -54,6 +54,21 @@ parse those options as its own.
 =head1 OPTIONS
 
 =over 4
+
+=item B<-b>
+
+After starting, detach from the controlling terminal and run in the
+background.  This option only makes sense in combination with B<-K> or a
+command that B<k4start> will be running and can only be used if a srvtab
+is specified with F<-f>.  B<k4start> will not background itself until
+after it does the initial authentication, so that any initial errors will
+be reported, but it will then redirect output to F</dev/null> and no
+subsequent errors will be reported.
+
+If used in conjunction with a command to run, that command will also run
+in the background and will also have its input and output redirected to
+F</dev/null>.  It will have to report any errors via some other mechanism
+for the errors to be seen.
 
 =item B<-f> I<srvtab>
 	
@@ -220,5 +235,7 @@ will have the current version of B<k4start> and B<k5start>.
 B<k4start> was originally written by Robert Morgan.  Modifications and
 additional features were added by Booker C. Bense.  Additional cleanup and
 current maintenance are done by Russ Allbery <rra@stanford.edu>.
+
+Implementation of B<-b> is based on code contributed by Navid Golpayegani.
 
 =cut

@@ -111,7 +111,8 @@ AC_CHECK_TYPES([long long])
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 
 dnl Checks for functions.
-AC_REPLACE_FUNCS([mkstemp])
+AC_CHECK_FUNCS([setsid])
+AC_REPLACE_FUNCS([daemon mkstemp])
 
 dnl Check for Heimdal functions and different generations of Kerberos v5
 dnl libraries.

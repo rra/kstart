@@ -110,6 +110,11 @@ INSTALLATION
   --enable-static option to configure.  This has been tested on Solaris
   and Linux.
 
+THANKS
+
+  To Navid Golpayegani, for contributing the initial implementation of the
+  -b option to background after the initial authentication.
+
 LICENSE
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of

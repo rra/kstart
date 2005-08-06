@@ -84,5 +84,8 @@ dist: $(srcdir)/k4start.1 $(srcdir)/k5start.1
 
 # Dependencies (hand-generated for now).
 command.o: command.c command.h
+daemon.o: daemon.c config.h
 k4start.o: k4start.c command.h config.h
 k5start.o: k5start.c command.h config.h
+lifetime.o: lifetime.c config.h
+mkstemp.o: mkstemp.c config.h

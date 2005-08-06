@@ -36,6 +36,10 @@
 
 #include <krb5.h>
 
+#ifndef HAVE_DAEMON
+extern int daemon(int, int);
+#endif
+
 #ifndef HAVE_MKSTEMP
 extern int mkstemp(char *);
 #endif
@@ -87,6 +91,7 @@ Usage: k5start [options] [name [command]]\n\
    -I <service instance>        (default: realm name)\n\
    -r <service realm>           (default: local realm)\n\
 \n\
+   -b                   Fork and run in the background\n\
    -f <keytab>          Use <keytab> for authentication rather than password\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
@@ -340,7 +345,7 @@ int
 main(int argc, char *argv[])
 {
     struct options options;
-    int k5_errno, option, result;
+    int k5_errno, opt, result;
     size_t length;
     const char *inst = NULL;
     const char *sname = NULL;
@@ -349,6 +354,7 @@ main(int argc, char *argv[])
     char *cache = NULL;
     char *principal = NULL;
     char **command = NULL;
+    int background = 0;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
@@ -359,8 +365,9 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stUu:v")) != EOF)
-        switch (option) {
+    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:npqr:S:stUu:v")) != EOF)
+        switch (opt) {
+        case 'b': background = 1;               break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
         case 'k': cache = optarg;               break;
@@ -422,6 +429,10 @@ main(int argc, char *argv[])
         command = argv;
 
     /* Check the arguments for consistency. */
+    if (background && options.keytab == NULL)
+        die("-b option requires a keytab be specified with -f");
+    if (background && options.keep_ticket == 0 && command == NULL)
+        die("-b only makes sense with -K or a command to run");
     if (options.keep_ticket > 0 && options.keytab == NULL)
         die("-K option requires a keytab be specified with -f");
     if (command != NULL && options.keytab == NULL)
@@ -502,9 +513,9 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    /* If either -K or -H were given, set quiet automatically unless verbose
-       was set. */
-    if (options.keep_ticket > 0 || options.happy_ticket > 0)
+    /* If -K, -H, or -b were given, set quiet automatically unless verbose was
+       set. */
+    if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
             options.quiet = 1;
 
@@ -596,6 +607,15 @@ main(int argc, char *argv[])
 
     /* Now, the actual authentication part. */
     status = authenticate(ctx, &options);
+
+    /* If told to background, background ourselves.  We do this late so that
+       we can report initial errors.  We have to do this before spawning the
+       command, though, since we want to background the command as well and
+       since otherwise we wouldn't be able to wait for the child process. */
+    if (background)
+        daemon(0, 0);
+
+    /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
         child = start_command(command[0], command);
         if (child < 0)

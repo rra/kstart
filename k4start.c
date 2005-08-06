@@ -38,6 +38,10 @@
 # include <krb.h>
 #endif
 
+#ifndef HAVE_DAEMON
+extern int daemon(int, int);
+#endif
+
 #ifndef HAVE_MKSTEMP
 extern int mkstemp(char *);
 #endif
@@ -93,6 +97,7 @@ Usage: k4start [options] [name]\n\
    -I <service instance>        (default: realm name)\n\
    -r <service realm>           (default: local realm)\n\
 \n\
+   -b                   Fork and run in the background\n\
    -f <srvtab>          Read password from <srvtab>, as a srvtab key\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
@@ -228,10 +233,11 @@ int
 main(int argc, char *argv[])
 {
     struct options options;
-    int k_errno, option, result;
+    int k_errno, opt, result;
     char *username = NULL;
     char *aklog = NULL;
     char **command = NULL;
+    int background = 0;
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
     int status = 0;
@@ -239,8 +245,9 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((option = getopt(argc, argv, "f:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
-        switch (option) {
+    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:npqr:S:stu:v")) != EOF)
+        switch (opt) {
+        case 'b': background = 1;               break;
         case 'k': options.cache = optarg;       break;
         case 'n': options.no_aklog = 1;         break;
         case 'q': options.quiet = 1;            break;
@@ -322,6 +329,10 @@ main(int argc, char *argv[])
         command = argv + 1;
 
     /* Check the arguments for consistency. */
+    if (background && options.srvtab == NULL)
+        die("-b option requires a srvtab be specified with -f");
+    if (background && options.keep_ticket == 0 && command == NULL)
+        die("-b only makes sense with -K or a command to run");
     if (options.keep_ticket > 0 && options.srvtab == NULL)
         die("-K option requires a srvtab be specified with -f");
     if (command != NULL && options.srvtab == NULL)
@@ -378,9 +389,9 @@ main(int argc, char *argv[])
         putenv(env);
     }
 
-    /* If either -K or -H were given, set quiet automatically unless verbose
-       was set. */
-    if (options.keep_ticket > 0 || options.happy_ticket > 0)
+    /* If -K, -H, or -b were given, set quiet automatically unless verbose was
+       set. */
+    if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
             options.quiet = 1;
 
@@ -437,9 +448,17 @@ main(int argc, char *argv[])
             die("unable to create PAG: %s", strerror(errno));
 #endif
 
-    /* Now, do the actual authentication and then run our child command, if
-       one was specified. */
+    /* Now, do the actual authentication. */
     status = authenticate(&options, aklog);
+
+    /* If told to background, background ourselves.  We do this late so that
+       we can report initial errors.  We have to do this before spawning the
+       command, though, since we want to background the command as well and
+       since otherwise we wouldn't be able to wait for the child process. */
+    if (background)
+        daemon(0, 0);
+
+    /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
         child = start_command(command[0], command);
         if (child < 0)

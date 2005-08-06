@@ -1,5 +1,10 @@
                        User-Visible kstart Changes
 
+kstart 2.8 (unreleased)
+
+    Added -b option to both k4start and k5start to background after the
+    initial authentication, based on code by Navid Golpayegani.
+
 kstart 2.7 (2005-06-04)
 
     Fixed a bug in k5start introduced in 2.4 that broke -H handling and
