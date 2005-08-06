@@ -468,7 +468,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    /* If the -P option was given, figure out the principal from the keytab. */
+    /* If the -U option was given, figure out the principal from the keytab. */
     if (search_keytab)
         principal = first_principal(ctx, options.keytab);
 
