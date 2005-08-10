@@ -5,8 +5,9 @@ kstart (2.8-1) unstable; urgency=low
     - Add the -p option to write out the PID of the process.  -p is no
       longer an undocumented synonym for -s.
   * Update standards version to 3.6.2 (no changes required).
+  * Delete debian/docs; its one line is handled in debian/rules instead.
 
- --
+ -- Russ Allbery <rra@stanford.edu>  Tue,  9 Aug 2005 22:09:36 -0700
 
 kstart (2.7-1) unstable; urgency=low
 
