@@ -1,3 +1,13 @@
+kstart (2.8-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add the -b option to run as a daemon in the background.
+    - Add the -p option to write out the PID of the process.  -p is no
+      longer an undocumented synonym for -s.
+  * Update standards version to 3.6.2 (no changes required).
+
+ --
+
 kstart (2.7-1) unstable; urgency=low
 
   * New upstream release.
