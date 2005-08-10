@@ -1,0 +1,11 @@
+Makefile
+autom4te.cache
+config.cache
+config.h
+config.h.in
+config.log
+config.status
+configure
+k4start
+k5start
+kstart-*
