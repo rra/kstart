@@ -141,6 +141,11 @@ file>.  I<pid file> is created if it doesn't exist and overwritten if it
 does exist.  This option is most useful in conjunction with B<-b> to allow
 management of the running B<k5start> daemon.
 
+Note that, when used with B<-b> the PID file is written out after
+B<k5start> is backgrounded and changes its working directory to F</>, so
+relative paths for the PID file will be relative to F</> (probably not
+what you want).
+
 =item B<-q>
 	
 Quiet.  Suppresses the printing of the initial banner message saying what
