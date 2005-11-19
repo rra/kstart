@@ -14,4 +14,4 @@ reasons) to the full path to that program.  (You can also set that
 environment variable to the full path to any other local program you have
 for obtaining an AFS token from a Kerberos ticket.)
 
- -- Russ Allbery <rra@stanford.edu>, Fri Jun  3 23:50:23 2005
+ -- Russ Allbery <rra@debian.org>, Sat Nov 19 15:53:59 2005

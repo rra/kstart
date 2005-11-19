@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # GNU copyright 1997 to 1999 by Joey Hess.
-# Further updates by Russ Allbery <rra@stanford.edu>
+# Further updates by Russ Allbery <rra@debian.org>
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
