@@ -33,8 +33,8 @@ endif
 config.status: configure
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
-	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	    --with-aklog=/usr/bin/aklog $(SETPAG)
+	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
+	    $(SETPAG)
 
 build: build-stamp
 build-stamp: config.status
@@ -46,7 +46,9 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-	-$(MAKE) distclean
+ifeq (Makefile,$(wildcard Makefile))
+	$(MAKE) distclean
+endif
 	dh_clean
 
 install: build
@@ -55,9 +57,6 @@ install: build
 	dh_clean
 	dh_installdirs
 	$(MAKE) install prefix=$(CURDIR)/debian/kstart/usr
-
-# We have no architecture-independent files to build.
-binary-indep: build install
 
 binary-arch: build install
 	dh_testdir
@@ -75,5 +74,5 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install
+binary: binary-arch
+.PHONY: build clean binary-arch binary install

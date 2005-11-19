@@ -1,5 +1,7 @@
 kstart (2.8-2) unstable; urgency=low
 
+  * Use a better method to optionally run make distclean.
+  * Remove unused code in debian/rules.
   * Update maintainer address.
 
  --
