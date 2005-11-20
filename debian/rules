@@ -55,7 +55,6 @@ install: build
 	dh_testdir
 	dh_testroot
 	dh_clean
-	dh_installdirs
 	$(MAKE) install prefix=$(CURDIR)/debian/kstart/usr
 
 binary-arch: build install

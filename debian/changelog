@@ -1,11 +1,12 @@
 kstart (2.8-2) unstable; urgency=low
 
   * Use a better method to optionally run make distclean.
-  * Remove unused code in debian/rules.
+  * Fixes to upstream Makefile mean that debian/dirs is no longer needed.
   * Update copyright to my current format and add an explicit packaging
     copyright and license statement.
   * Remove the export clause in the license in debian/copyright following
     the change made upstream.
+  * Remove unused code in debian/rules.
   * Update maintainer address.
 
  --
