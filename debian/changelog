@@ -9,7 +9,7 @@ kstart (2.8-2) unstable; urgency=low
   * Remove unused code in debian/rules.
   * Update maintainer address.
 
- --
+ -- Russ Allbery <rra@debian.org>  Sat, 19 Nov 2005 16:10:49 -0800
 
 kstart (2.8-1) unstable; urgency=low
 
