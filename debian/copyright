@@ -1,62 +1,64 @@
-kstart was originally written by RL "Bob" Morgan and Booker Bense.
-k5start was originally written by Booker Bense.  The code was based
-heavily on kinit from the MIT Kerberos distribution.
+Packaged for Debian by Russ Allbery <rra@debian.org>            2004-07-29
 
-The current maintainer is Russ Allbery <rra@stanford.edu>, who also
-maintains the Debian packages.
-
-The original source of this package may be downloaded from:
+It was downloaded from:
 
     <http://www.eyrie.org/~eagle/software/kstart/>
 
+Upstream author:
+
+    Russ Allbery <rra@stanford.edu>
+
+Debian packaging copyright:
+
+    Copyright 2004, 2005 Board of Trustees, Leland Stanford Jr. University
+
+    All files and modifications related to Debian packaging are covered
+    under the same license terms as the rest of the package.
+
 Copyright:
 
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of
-  Trustees, Leland Stanford Jr. University.  All rights reserved.
+    Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board
+    of Trustees, Leland Stanford Jr. University.  All rights reserved.
   
-  Export of this software from the United States of America may require a
-  specific license from the United States Government.  It is the
-  responsibility of any person or organization contemplating export to
-  obtain such a license before exporting.
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appear in all copies and that
+    both that copyright notice and this permission notice appear in
+    supporting documentation, and that the name of Stanford University not
+    be used in advertising or publicity pertaining to distribution of the
+    software without specific, written prior permission.  Stanford
+    University makes no representations about the suitability of this
+    software for any purpose.  It is provided "as is" without express or
+    implied warranty.
 
-  WITHIN THAT CONSTRAINT, permission to use, copy, modify, and distribute
-  this software and its documentation for any purpose and without fee is
-  hereby granted, provided that the above copyright notice appear in all
-  copies and that both that copyright notice and this permission notice
-  appear in supporting documentation, and that the name of Stanford
-  University not be used in advertising or publicity pertaining to
-  distribution of the software without specific, written prior permission.
-  Stanford University makes no representations about the suitability of
-  this software for any purpose.  It is provided "as is" without express
-  or implied warranty.
+    THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+    WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+Portions of this code was based on the original kinit from the MIT
+Kerberos distribution, which is covered by the following license:
 
-  Portions of this code was based on the original kinit from the MIT
-  Kerberos distribution, which is covered by the following license:
+    Copyright (C) 1987, 1988, 1989 by the Massachusetts Institute of
+    Technology
 
-  Copyright (C) 1987, 1988, 1989 by the Massachusetts Institute of
-  Technology
+    Export of this software from the United States of America may require
+    a specific license from the United States Government.  It is the
+    responsibility of any person or organization contemplating export to
+    obtain such a license before exporting.
 
-  Export of this software from the United States of America may require a
-  specific license from the United States Government.  It is the
-  responsibility of any person or organization contemplating export to
-  obtain such a license before exporting.
+    WITHIN THAT CONSTRAINT, Permission to use, copy, modify, and
+    distribute this software and its documentation for any purpose and
+    without fee is hereby granted, provided that the above copyright
+    notice appear in all copies and that both that copyright notice and
+    this permission notice appear in supporting documentation, and that
+    the name of M.I.T. not be used in advertising or publicity pertaining
+    to distribution of the software without specific, written prior
+    permission.  Furthermore if you modify this software you must label
+    your software as modified software and not distribute it in such a
+    fashion that it might be confused with the original M.I.T. software.
+    M.I.T. makes no representations about the suitability of this software
+    for any purpose.  It is provided "as is" without express or implied
+    warranty.
 
-  WITHIN THAT CONSTRAINT, Permission to use, copy, modify, and distribute
-  this software and its documentation for any purpose and without fee is
-  hereby granted, provided that the above copyright notice appear in all
-  copies and that both that copyright notice and this permission notice
-  appear in supporting documentation, and that the name of M.I.T. not be
-  used in advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.  Furthermore if you
-  modify this software you must label your software as modified software
-  and not distribute it in such a fashion that it might be confused with
-  the original M.I.T. software.  M.I.T. makes no representations about the
-  suitability of this software for any purpose.  It is provided "as is"
-  without express or implied warranty.
-
-  (The portions taken from MIT Kerberos do not include any encryption
-  code covered by the US export restrictions.)
+(The portions taken from MIT Kerberos do not include any encryption code
+covered by the US export restrictions.)

@@ -2,6 +2,10 @@ kstart (2.8-2) unstable; urgency=low
 
   * Use a better method to optionally run make distclean.
   * Remove unused code in debian/rules.
+  * Update copyright to my current format and add an explicit packaging
+    copyright and license statement.
+  * Remove the export clause in the license in debian/copyright following
+    the change made upstream.
   * Update maintainer address.
 
  --
