@@ -1,7 +1,7 @@
 kstart (2.8-3) unstable; urgency=low
 
-  * Providing binary-arch in debian/rules is required by Policy even if
-    there are no arch-dependent packages.  Whoops.
+  * Providing binary-indep in debian/rules is required by Policy even if
+    there are no arch-independent packages.  Whoops.
 
  -- Russ Allbery <rra@debian.org>  Wed,  7 Dec 2005 15:20:44 -0800
 
