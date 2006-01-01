@@ -45,9 +45,9 @@ dnl Check for the Kerberos v5 libraries and for portability between krb5 and
 dnl Heimdal.
 save_LIBS=$LIBS
 RRA_LIB_KRB5([krb5], [true])
-AC_CHECK_FUNCS([initialize_krb5_error_table])
 AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
+AC_REPLACE_FUNCS([krb5_err])
 KRB5LIBS=$LIBS
 LIBS=$save_LIBS
 AC_SUBST([KRB5LIBS])

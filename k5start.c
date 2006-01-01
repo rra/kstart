@@ -46,8 +46,26 @@
 
 #include <krb5.h>
 
+/* __attribute__ is available in gcc 2.5 and later, but only with gcc 2.7
+   could you use the __format__ form of the attributes, which is what we use
+   (to avoid confusion with other macros). */
+#ifndef __attribute__
+# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
+#  define __attribute__(spec)   /* empty */
+# endif
+#endif
+
 #ifndef HAVE_DAEMON
 extern int daemon(int, int);
+#endif
+
+#ifndef HAVE_KRB5_ERR
+extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
+                                const char *, ...)
+    __attribute__((__format__(printf, 4, 5)));
+extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
+                                 const char *, ...)
+    __attribute__((__format__(printf, 3, 4)));
 #endif
 
 #ifndef HAVE_MKSTEMP
@@ -232,7 +250,7 @@ authenticate(krb5_context ctx, struct options *options)
 
         k5_errno = krb5_unparse_name(ctx, options->kprinc, &p);
         if (k5_errno != 0)
-            com_err("k5start", k5_errno, "when unparsing name");
+            krb5_warn(ctx, k5_errno, "when unparsing name");
         else {
             printf("Principal: %s\n", p);
             free(p);
@@ -241,11 +259,9 @@ authenticate(krb5_context ctx, struct options *options)
     }
     if (options->keytab != NULL) {
         k5_errno = krb5_kt_resolve(ctx, options->keytab, &k5_keytab);
-        if (k5_errno != 0) {
-            com_err("k5start", k5_errno, "resolving keytab %s",
-                    options->keytab);
-            exit(1);
-        }
+        if (k5_errno != 0)
+            krb5_err(ctx, 1, k5_errno, "resolving keytab %s",
+                     options->keytab);
         k5_errno = krb5_get_init_creds_keytab(ctx, &creds,
                                               options->kprinc, k5_keytab,
                                               0, options->service,
@@ -273,20 +289,14 @@ authenticate(krb5_context ctx, struct options *options)
                                                 options->service,
                                                 &options->kopts);
     }
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while getting initial credentials");
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while getting initial credentials");
     k5_errno = krb5_cc_initialize(ctx, options->ccache, options->kprinc);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while initializing ticket cache");
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while initializing ticket cache");
     k5_errno = krb5_cc_store_cred(ctx, options->ccache, &creds);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while storing credentials");
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while storing credentials");
 
     /* Make sure that we don't free princ; we use it later. */
     if (creds.client == options->kprinc)
@@ -320,22 +330,16 @@ first_principal(krb5_context ctx, const char *path)
     char *principal = NULL;
 
     k5_errno = krb5_kt_resolve(ctx, path, &keytab);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while opening %s", path);
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while opening %s", path);
     k5_errno = krb5_kt_start_seq_get(ctx, keytab, &cursor);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while reading %s", path);
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while reading %s", path);
     k5_errno = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
     if (k5_errno == 0) {
         k5_errno = krb5_unparse_name(ctx, entry.principal, &principal);
-        if (k5_errno != 0) {
-            com_err("k5start", k5_errno, "while unparsing name from %s", path);
-            exit(1);
-        }
+        if (k5_errno != 0)
+            krb5_err(ctx, 1, k5_errno, "while unparsing name from %s", path);
 #ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
         krb5_free_keytab_entry_contents(ctx, &entry);
 #else
@@ -464,19 +468,10 @@ main(int argc, char *argv[])
     if (options.aklog == NULL && options.run_aklog)
         die("set KINIT_PROG to specify the path to aklog");
 
-    /* Heimdal initializes the error table using state stored in the context,
-       but alas this means com_err doesn't work right.  This hack seems to fix
-       it. */
-#ifdef HAVE_INITIALIZE_KRB5_ERROR_TABLE
-    initialize_krb5_error_table();
-#endif
-
     /* Establish a K5 context. */
     k5_errno = krb5_init_context(&ctx);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while initializing Kerberos 5 library");
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while initializing Kerberos 5 library");
 
     /* If the -U option was given, figure out the principal from the keytab. */
     if (search_keytab)
@@ -520,10 +515,8 @@ main(int argc, char *argv[])
         putenv(env);
         k5_errno = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "while initializing ticket cache");
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while initializing ticket cache");
 
     /* If -K, -H, or -b were given, set quiet automatically unless verbose was
        set. */
@@ -547,10 +540,8 @@ main(int argc, char *argv[])
         principal = p;
     }
     k5_errno = krb5_parse_name(ctx, principal, &options.kprinc);
-    if (k5_errno != 0) {
-        com_err("k5start", k5_errno, "when parsing %s", principal);
-        exit(1);
-    }
+    if (k5_errno != 0)
+        krb5_err(ctx, 1, k5_errno, "while parsing %s", principal);
 
     /* Display the identity that we're obtaining Kerberos tickets for.  We do
        this by unparsing the principal rather than using username and inst
@@ -559,10 +550,8 @@ main(int argc, char *argv[])
         char *p;
 
         k5_errno = krb5_unparse_name(ctx, options.kprinc, &p);
-        if (k5_errno != 0) {
-            com_err("k5start", k5_errno, "when unparsing name %s", principal);
-            exit(1);
-        }
+        if (k5_errno != 0)
+            krb5_err(ctx, 1, k5_errno, "while unparsing name %s", principal);
         printf("Kerberos initialization for %s", p);
         free(p);
         if (sname != NULL) {
@@ -589,10 +578,8 @@ main(int argc, char *argv[])
     sprintf(options.service, "%s/%s@%s", sname, sinst, srealm);
     status = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
                                   srealm, sname, sinst, (const char *) NULL);
-    if (status != 0) {
-        com_err("k5start", status, "while creating service principal name");
-        exit(1);
-    }
+    if (status != 0)
+        krb5_err(ctx, 1, status, "while creating service principal name");
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
