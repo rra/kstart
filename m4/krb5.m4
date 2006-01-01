@@ -97,6 +97,17 @@ AC_CHECK_DECLS([GSS_KRB5_MECHANISM], , ,
 #endif
 ])])
 
+dnl Additional checks for portability between MIT and Heimdal if krb5
+dnl libraries were requested.
+AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
+[AC_CHECK_HEADERS([et/com_err.h])
+AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
+AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])])
+
+dnl Additional checks for portability if krb4 libraries were requested.
+AC_DEFUN([_RRA_LIB_KRB5_KRB4_EXTRA],
+[AC_CHECK_HEADERS([kerberosIV/krb.h])])
+
 dnl The main macro.
 AC_DEFUN([RRA_LIB_KRB5],
 [KRBROOT=
@@ -183,7 +194,8 @@ if test x"$reduce_depends" != xtrue ; then
             fi
             LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
         fi
-        AC_SEARCH_LIBS([res_search], [resolv])
+        AC_SEARCH_LIBS([res_search], [resolv],
+            [AC_SEARCH_LIBS([__res_search], [resolv])])
         AC_SEARCH_LIBS([crypt], [crypt])
         case "$1" in
         gssapi) _RRA_LIB_KRB5_GSSAPI ;;
@@ -207,6 +219,8 @@ CPPFLAGS=`echo "$CPPFLAGS" | sed 's/^  *//'`
 LDFLAGS=`echo "$LDFLAGS" | sed 's/^  *//'`
 
 dnl Run any extra checks for the desired libraries.
-if test x"$1" = x"gssapi" ; then
-    _RRA_LIB_KRB5_GSSAPI_EXTRA
-fi])
+case "$1" in
+gssapi) _RRA_LIB_KRB5_GSSAPI_EXTRA ;;
+krb5)   _RRA_LIB_KRB5_KRB5_EXTRA   ;;
+krb4)   _RRA_LIB_KRB5_KRB4_EXTRA   ;;
+esac])

@@ -42,17 +42,18 @@ AC_SUBST([K4START])
 AC_SUBST([K4START_MAN])
 
 dnl Check for the Kerberos v5 libraries and for portability between krb5 and
-dnl Heimdal.
+dnl Heimdal when getting initial tickets.  Add our local krb5_err
+dnl implementation if needed.
 save_LIBS=$LIBS
 RRA_LIB_KRB5([krb5], [true])
-AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
 AC_REPLACE_FUNCS([krb5_err])
 KRB5LIBS=$LIBS
 LIBS=$save_LIBS
 AC_SUBST([KRB5LIBS])
 
-dnl If we're building k4start, check for the Kerberos v4 libraries.
+dnl If we're building k4start, check for the Kerberos v4 libraries and add our
+dnl local lifetime implementation if needed.
 KRBLIBS=
 if test x"$K4START" != x ; then
     save_LIBS=$LIBS
@@ -81,11 +82,10 @@ AC_ARG_WITH([afs-setpag],
 
 dnl Checks for header files.
 AC_HEADER_TIME
-AC_CHECK_HEADERS([kerberosIV/krb.h sys/time.h])
+AC_CHECK_HEADERS([sys/time.h])
 
 dnl Checks for types.
 AC_CHECK_TYPES([long long])
-AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 
 dnl Checks for functions.
 AC_CHECK_FUNCS([setsid])
