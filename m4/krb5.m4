@@ -181,7 +181,7 @@ if test x"$reduce_depends" != xtrue ; then
             if test x"$KRBROOT" != x/usr ; then
                 KRBCPPFLAGS="-I$KRBROOT/include"
             fi
-            KRBLIBS="-L$KRBROOT/lib"
+            LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
         fi
         AC_SEARCH_LIBS([res_search], [resolv])
         AC_SEARCH_LIBS([crypt], [crypt])
