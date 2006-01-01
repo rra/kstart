@@ -19,6 +19,9 @@ kstart 2.9 (unreleased)
     Ported to systems that require sys/time.h be included instead of
     time.h (Tru64 4.0 in particular).
 
+    Attempt better portability to KTH Kerberos installs that build their
+    own DES library rather than using OpenSSL.
+
 kstart 2.8 (2005-08-09)
 
     Added the -b option to both k4start and k5start to background after

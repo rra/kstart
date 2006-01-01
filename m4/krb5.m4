@@ -65,8 +65,11 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5],
 
 dnl Does the appropriate library checks for krb4 linkage.
 AC_DEFUN([_RRA_LIB_KRB5_KRB4],
-[AC_CHECK_LIB([krb], [krb_get_svc_in_tkt],
-    [KRBLIBS="-lkrb -lcrypto"],
+[KRB4EXTRA=
+AC_CHECK_LIB([crypto], [des_set_key], [KRB4EXTRA="-lcrypto"],
+    [KRB4EXTRA="-ldes"])
+AC_CHECK_LIB([krb], [krb_get_svc_in_tkt],
+    [KRBLIBS="-lkrb $KRB4EXTRA"],
     [KRB5EXTRA="-ldes425 -lkrb5 -lk5crypto -lcom_err"
      AC_CHECK_LIB([krb5support], [main],
         [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])
@@ -74,7 +77,7 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB4],
         [KRBLIBS="-lkrb4 $KRB5EXTRA"],
         [AC_MSG_ERROR([cannot find usable Kerberos v4 library])],
         [$KRB5EXTRA])],
-    [-lcrypto])])
+    [$KRB4EXTRA])])
 
 dnl Additional checks for portability between MIT and Heimdal if GSSAPI
 dnl libraries were requested.
