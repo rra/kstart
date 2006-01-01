@@ -51,6 +51,9 @@ AC_CHECK_LIB([k5crypto], [main],
     [KRB5LIBS="-lkrb5 -lk5crypto -lcom_err"],
     [KRB5LIBS="-lkrb5 -lcrypto -lasn1 -lroken -lcom_err"],
     [-lk5crypto -lcom_err])
+AC_CHECK_LIB([krb5support], [main],
+    [KRBLIBS="$KRBLIBS -lkrb5support"
+     KRB5LIBS="$KRB5LIBS -lkrb5support"])
 AC_SUBST([KRBLIBS])
 AC_SUBST([KRB5LIBS])
 
@@ -104,7 +107,8 @@ fi
 LIBS=$save_LIBS
 
 dnl Checks for header files.
-AC_CHECK_HEADERS([kerberosIV/krb.h])
+AC_HEADER_TIME
+AC_CHECK_HEADERS([kerberosIV/krb.h sys/time.h])
 
 dnl Checks for types.
 AC_CHECK_TYPES([long long])
@@ -125,5 +129,5 @@ LIBS=$save_LIBS
 
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile kstart.spec])
 AC_OUTPUT

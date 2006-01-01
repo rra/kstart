@@ -31,8 +31,18 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
+
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
 
 #include <krb5.h>
 
@@ -259,8 +269,8 @@ authenticate(krb5_context ctx, struct options *options)
             die("password too long");
         k5_errno = krb5_get_init_creds_password(ctx, &creds,
                                                 options->kprinc, buffer,
-                                                krb5_prompter_posix, NULL,
-                                                0, options->service,
+                                                NULL, NULL, 0,
+                                                options->service,
                                                 &options->kopts);
     }
     if (k5_errno != 0) {
