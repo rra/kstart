@@ -2,9 +2,9 @@
 
 kstart 2.9 (unreleased)
 
-    Improved error handling when using Heimdal.  Use krb5_err and
-    krb5_warn functions always and provide replacements when using MIT
-    Kerberos.
+    Improved error handling when using Heimdal and clearer formatting with
+    any Kerberos implementation.  Use krb5_err and krb5_warn functions
+    always and provide replacements when using MIT Kerberos.
 
     Significantly improved Kerberos library probes.  Use krb5-config where
     available to get Kerberos libraries and compiler flags unless
