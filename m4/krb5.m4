@@ -194,7 +194,7 @@ if test x"$reduce_depends" != xtrue ; then
             fi
             LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
         fi
-        AC_SEARCH_LIBS([res_search], [resolv],
+        AC_SEARCH_LIBS([res_search], [resolv], ,
             [AC_SEARCH_LIBS([__res_search], [resolv])])
         AC_SEARCH_LIBS([crypt], [crypt])
         case "$1" in
