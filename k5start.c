@@ -3,7 +3,7 @@
 **  Kerberos v5 kinit replacement suitable for daemon authentication.
 **
 **  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006
 **      Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.

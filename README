@@ -4,10 +4,10 @@
          Originally written by Robert Morgan and Booker C. Bense
          Currently maintained by Russ Allbery <rra@stanford.edu>
 
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of
-  Trustees, Leland Stanford Jr. University.  This software is distributed
-  under a BSD-style license.  Please see the section LICENSE below for
-  terms of use and redistribution.
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006
+  Board of Trustees, Leland Stanford Jr. University.  This software is
+  distributed under a BSD-style license.  Please see the section LICENSE
+  below for terms of use and redistribution.
 
   Based on code copyright 1987, 1988 by the Massachusetts Institute of
   Technology.
