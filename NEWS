@@ -1,5 +1,20 @@
                        User-Visible kstart Changes
 
+kstart 2.9 (unreleased)
+
+    Add the --enable-reduced-depends configure option to try to minimize
+    the shared library dependencies of the resulting binaries on platforms
+    with proper shared library dependencies.  This is of interest
+    primarily to people building packages for distributions.
+
+    Significantly improved Kerberos library probes.  Use krb5-config where
+    available to get Kerberos libraries and compiler flags unless
+    --enable-reduced-depends is used, and support MIT Kerberos 1.4 with
+    --enable-static.
+
+    Ported to systems that require sys/time.h be included instead of
+    time.h (Tru64 4.0 in particular).
+
 kstart 2.8 (2005-08-09)
 
     Added the -b option to both k4start and k5start to background after

@@ -1,0 +1,212 @@
+dnl krb5.m4 -- Find the compiler and linker flags for Kerberos v5.
+dnl $Id$
+dnl
+dnl Finds the compiler and linker flags and adds them to CPPFLAGS and LIBS.
+dnl Provides --with-kerberos, --enable-reduced-depends, and --enable-static
+dnl configure options to control how linking with Kerberos is done.  Uses
+dnl krb5-config where available unless reduced dependencies is requested.
+dnl
+dnl Provides the macro RRA_LIB_KRB5, which takes two arguments.  The first
+dnl argument is the type of Kerberos libraries desired (one of the arguments
+dnl to krb5-config).  The second argument is whether to probe for networking
+dnl libraries in the non-krb5-config, non-reduced-dependencies case and should
+dnl be either "true" (if the program doesn't otherwise use the networking
+dnl libraries) or "false" (if it is already probing for the networking
+dnl libraries separately).
+
+dnl Does the appropriate library checks for reduced-dependency GSSAPI linkage.
+AC_DEFUN([_RRA_LIB_KRB5_GSSAPI_REDUCED],
+[AC_CHECK_LIB([gssapi], [gss_import_name],
+    [KRBLIBS="-lgssapi"],
+    [AC_CHECK_LIB([gssapi_krb5], [gss_import_name],
+        [KRBLIBS="-lgssapi_krb5"],
+        [AC_MSG_ERROR([cannot find usable GSSAPI library])])])])
+
+dnl Does the appropriate library checks for reduced-dependency krb5 linkage.
+AC_DEFUN([_RRA_LIB_KRB5_KRB5_REDUCED],
+[AC_CHECK_LIB([krb5], [krb5_init_context], [KRBLIBS="-lkrb5"],
+    [AC_MSG_ERROR([cannot find usable Kerberos v5 library])])
+AC_CHECK_LIB([com_err], [com_err], [KRBLIBS="$KRBLIBS -lcom_err"],
+    [AC_MSG_ERROR([cannot find usable com_err library])])])
+
+dnl Does the appropriate library checks for reduced-dependency krb4 linkage.
+AC_DEFUN([_RRA_LIB_KRB5_KRB4_REDUCED],
+[AC_CHECK_LIB([krb4], [krb_get_svc_in_tkt], [KRBLIBS="-lkrb4"],
+    [AC_CHECK_LIB([krb], [krb_get_svc_in_tkt], [KRBLIBS="-lkrb"],
+        [AC_MSG_ERROR([cannot find usable Kerberos v4 library])])])])
+
+dnl Does the appropriate library checks for GSSAPI linkage.
+AC_DEFUN([_RRA_LIB_KRB5_GSSAPI],
+[AC_CHECK_LIB([gssapi], [gss_import_name],
+    [KRBLIBS="-lgssapi -lkrb5 -lasn1 -lroken -lcrypto -lcom_err"],
+    [KRB5EXTRA="-lkrb5 -lk5crypto -lcom_err"
+     AC_CHECK_LIB([krb5support], [main],
+        [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])
+     AC_CHECK_LIB([gssapi_krb5], [gss_import_name],
+        [KRBLIBS="-lgssapi_krb5 $KRB5EXTRA"],
+        [AC_MSG_ERROR([cannot find usable GSSAPI library])],
+        [$KRB5EXTRA])],
+    [-lkrb5 -lasn1 -lroken -lcrypto -lcom_err])])
+
+dnl Does the appropriate library checks for krb5 linkage.  Note that we have
+dnl to check for a different function the second time since the Heimdal and
+dnl MIT libraries have the same name.
+AC_DEFUN([_RRA_LIB_KRB5_KRB5],
+[AC_CHECK_LIB([krb5], [krb5_init_context],
+    [KRBLIBS="-lkrb5 -lasn1 -lroken -lcrypto -lcom_err"],
+    [KRB5EXTRA="-lk5crypto -lcom_err"
+     AC_CHECK_LIB([krb5support], [main],
+        [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])
+     AC_CHECK_LIB([krb5], [krb5_cc_default],
+        [KRBLIBS="-lkrb5 $KRB5EXTRA"],
+        [AC_MSG_ERROR([cannot find usable Kerberos v5 library])],
+        [$KRB5EXTRA])],
+    [-lasn1 -lroken -lcrypto -lcom_err])])
+
+dnl Does the appropriate library checks for krb4 linkage.
+AC_DEFUN([_RRA_LIB_KRB5_KRB4],
+[AC_CHECK_LIB([krb], [krb_get_svc_in_tkt],
+    [KRBLIBS="-lkrb -lcrypto"],
+    [KRB5EXTRA="-ldes425 -lkrb5 -lk5crypto -lcom_err"
+     AC_CHECK_LIB([krb5support], [main],
+        [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])
+     AC_CHECK_LIB([krb4], [krb_get_svc_in_tkt],
+        [KRBLIBS="-lkrb4 $KRB5EXTRA"],
+        [AC_MSG_ERROR([cannot find usable Kerberos v4 library])],
+        [$KRB5EXTRA])],
+    [-lcrypto])])
+
+dnl Additional checks for portability between MIT and Heimdal if GSSAPI
+dnl libraries were requested.
+AC_DEFUN([_RRA_LIB_KRB5_GSSAPI_EXTRA],
+[AC_CHECK_HEADERS([gssapi.h])
+AC_CHECK_DECL([GSS_C_NT_USER_NAME],
+    [AC_DEFINE([HAVE_GSS_RFC_OIDS], 1,
+       [Define to 1 if the GSS-API library uses RFC-compliant OIDs.])], ,
+[#ifdef HAVE_GSSAPI_H
+# include <gssapi.h>
+#else
+# include <gssapi/gssapi.h>
+#endif
+])
+AC_CHECK_DECLS([GSS_KRB5_MECHANISM], , ,
+[#ifdef HAVE_GSSAPI_H
+# include <gssapi.h>
+#else
+# include <gssapi/gssapi.h>
+#endif
+])])
+
+dnl The main macro.
+AC_DEFUN([RRA_LIB_KRB5],
+[KRBROOT=
+AC_ARG_WITH([kerberos],
+    AC_HELP_STRING([--with-kerberos=DIR],
+        [Location of Kerberos headers and libraries]),
+    [if test x"$withval" != xno ; then
+        KRBROOT="$withval"
+     fi])
+
+reduce_depends=false
+AC_ARG_ENABLE([reduced-depends],
+    AC_HELP_STRING([--enable-reduced-depends],
+        [Try to minimize shared library dependencies]),
+    [if test x"$enableval" = xyes ; then
+         if test x"$KRBROOT" != x ; then
+             if test x"$KRBROOT" != x/usr ; then
+                 CPPFLAGS="-I$KRBROOT/include"
+             fi
+             LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
+         fi
+         case "$1" in
+         gssapi) _RRA_LIB_KRB5_GSSAPI_REDUCED ;;
+         krb5)   _RRA_LIB_KRB5_KRB5_REDUCED   ;;
+         krb4)   _RRA_LIB_KRB5_KRB4_REDUCED   ;;
+         *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
+         esac
+         reduce_depends=true
+     fi])
+
+dnl Support static linkage as best we can.  Set a variable and do the
+dnl wrapping later on.
+static=false
+AC_ARG_ENABLE([static],
+    AC_HELP_STRING([--enable-static],
+        [Link against the static Kerberos libraries]),
+    [if test x"$enableval" = xyes ; then
+         if test x"$reduce_depends" = xtrue ; then
+AC_MSG_ERROR([--enable-static cannot be used with --enable-reduced-depends])
+         fi
+         static=true
+     fi])
+
+dnl Checking for the neworking libraries shouldn't be necessary for the
+dnl krb5-config case, but apparently it is at least for MIT Kerberos 1.2.
+dnl This will unfortunately mean multiple -lsocket -lnsl references when
+dnl building with current versions of Kerberos, but this shouldn't cause
+dnl any practical problems.
+if test x"$reduce_depends" != xtrue ; then
+    if test x"$2" = xtrue ; then
+        AC_SEARCH_LIBS([gethostbyname], [nsl])
+        AC_SEARCH_LIBS([socket], [socket], ,
+            [AC_CHECK_LIB([nsl], [socket],
+                [LIBS="-lnsl -lsocket $LIBS"], , [-lsocket])])
+    fi
+    AC_ARG_VAR([KRB5_CONFIG], [Path to krb5-config])
+    if test x"$KRBROOT" != x ; then
+        if test -x "$KRBROOT/bin/krb5-config" ; then
+            KRB5_CONFIG="$KRBROOT/bin/krb5-config"
+        fi
+    else
+        AC_PATH_PROG([KRB5_CONFIG], [krb5-config])
+    fi
+
+    # We can't use krb5-config if building static since we can't tell what
+    # of the libraries it gives us should be static and which should be
+    # dynamic.
+    if test x"$KRB5_CONFIG" != x && test x"$static" != xtrue ; then
+        AC_MSG_CHECKING([for $1 support in krb5-config])
+        if "$KRB5_CONFIG" | grep '$1' > /dev/null 2>&1 ; then
+            AC_MSG_RESULT([yes])
+            KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags '$1'`
+            KRBLIBS=`"$KRB5_CONFIG" --libs '$1'`
+        else
+            AC_MSG_RESULT([no])
+            KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags`
+            KRBLIBS=`"$KRB5_CONFIG" --libs`
+        fi
+        KRBCPPFLAGS=`echo "$KRBCPPFLAGS" | sed 's%-I/usr/include ?%%'`
+    else
+        if test x"$KRBROOT" != x ; then
+            if test x"$KRBROOT" != x/usr ; then
+                KRBCPPFLAGS="-I$KRBROOT/include"
+            fi
+            KRBLIBS="-L$KRBROOT/lib"
+        fi
+        AC_SEARCH_LIBS([res_search], [resolv])
+        AC_SEARCH_LIBS([crypt], [crypt])
+        case "$1" in
+        gssapi) _RRA_LIB_KRB5_GSSAPI ;;
+        krb5)   _RRA_LIB_KRB5_KRB5   ;;
+        krb4)   _RRA_LIB_KRB5_KRB4   ;;
+        *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
+        esac
+    fi
+    if test x"$KRBCPPFLAGS" != x ; then
+        CPPFLAGS="$CPPFLAGS $KRBCPPFLAGS"
+    fi
+fi
+
+dnl Generate the final library list and put it into the standard variables.
+if test x"$static" = xtrue ; then
+    LIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic $LIBS"
+else
+    LIBS="$KRBLIBS $LIBS"
+fi
+CPPFLAGS=`echo "$CPPFLAGS" | sed 's/^  *//'`
+LDFLAGS=`echo "$LDFLAGS" | sed 's/^  *//'`
+
+dnl Run any extra checks for the desired libraries.
+if test x"$1" = x"gssapi" ; then
+    _RRA_LIB_KRB5_GSSAPI_EXTRA
+fi])
