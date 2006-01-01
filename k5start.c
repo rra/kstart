@@ -496,7 +496,7 @@ main(int argc, char *argv[])
         int fd;
 
         cache = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
-        sprintf(cache, "/tmp/krb5cc_%d_XXXXXX", getuid());
+        sprintf(cache, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
         fd = mkstemp(cache);
         if (fd < 0)
             die("cannot create ticket cache file: %s", strerror(errno));

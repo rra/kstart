@@ -381,7 +381,7 @@ main(int argc, char *argv[])
         int fd;
 
         options.cache = malloc(strlen("/tmp/tkt_XXXXXX") + 20 + 1);
-        sprintf(options.cache, "/tmp/tkt%d_XXXXXX", getuid());
+        sprintf(options.cache, "/tmp/tkt%d_XXXXXX", (int) getuid());
         fd = mkstemp(options.cache);
         if (fd < 0)
             die("cannot create ticket cache file: %s", strerror(errno));
