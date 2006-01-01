@@ -26,10 +26,13 @@ krb5_err(krb5_context context, int eval, krb5_error_code code,
          const char *format, ...)
 {
     va_list args;
+    const char *message;
 
+    message = error_message(code);
     va_start(args, format);
-    com_err_va("k5start", code, format, args);
+    vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, ": %s\n", message);
     exit(eval);
 }
 
@@ -37,9 +40,12 @@ krb5_error_code
 krb5_warn(krb5_context context, krb5_error_code code, const char *format, ...)
 {
     va_list args;
+    const char *message;
 
+    message = error_message(code);
     va_start(args, format);
-    com_err_va("k5start", code, format, args);
+    vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, ": %s\n", message);
     return 0;
 }
