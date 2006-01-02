@@ -34,7 +34,7 @@ config.status: configure
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
-	    $(SETPAG)
+	    --enable-reduced-depends $(SETPAG)
 
 build: build-stamp
 build-stamp: config.status
