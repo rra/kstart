@@ -4,19 +4,11 @@ k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<k4start> [B<-bnqstv>]
-[B<-f> I<srvtab>]
-[B<-H> I<minutes>]
-[B<-I> I<service instance>]
-[B<-i> I<client instance>]
-[B<-K> I<minutes>]
-[B<-k> I<ticket file>]
-[B<-l> I<minutes>]
-[B<-p> I<pid file>]
-[B<-r> I<service realm>]
-[B<-S> I<service name>]
-[B<-u> I<client principal>]
-[I<username> [I<command> ...]]
+B<k4start> [B<-bnqstv>] [B<-f> I<srvtab>] [B<-H> I<minutes>]
+    [B<-I> I<service instance>] [B<-i> I<client instance>]
+    [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<minutes>]
+    [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
+    [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
 =head1 DESCRIPTION
 
