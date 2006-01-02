@@ -46,6 +46,17 @@
 
 #include <krb5.h>
 
+#if HAVE_K_SETPAG
+# if HAVE_KAFS_H
+#  include <kafs.h>
+# endif
+# define lsetpag() k_setpag()
+#elif HAVE_LSETPAG
+int lsetpag(void);
+#else
+# define lsetpag() (0)
+#endif
+
 /* __attribute__ is available in gcc 2.5 and later, but only with gcc 2.7
    could you use the __format__ form of the attributes, which is what we use
    (to avoid confusion with other macros). */
@@ -70,11 +81,6 @@ extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
 
 #ifndef HAVE_MKSTEMP
 extern int mkstemp(char *);
-#endif
-
-/* The AFS headers don't prototype this. */
-#ifdef HAVE_SETPAG
-int setpag(void);
 #endif
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -601,11 +607,9 @@ main(int argc, char *argv[])
 
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */
-#ifdef HAVE_SETPAG
     if (command != NULL && options.run_aklog)
-        if (setpag() < 0)
+        if (lsetpag() < 0)
             die("unable to create PAG: %s", strerror(errno));
-#endif
 
     /* Now, the actual authentication part. */
     status = authenticate(ctx, &options);

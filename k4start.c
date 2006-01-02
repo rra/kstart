@@ -41,6 +41,17 @@
 # endif
 #endif
 
+#if HAVE_K_SETPAG
+# if HAVE_KAFS_H
+#  include <kafs.h>
+# endif
+# define lsetpag() k_setpag()
+#elif HAVE_LSETPAG
+int lsetpag(void);
+#else
+# define lsetpag() (0)
+#endif
+
 #ifdef HAVE_KERBEROSIV_KRB_H
 # include <kerberosIV/krb.h>
 #else
@@ -53,11 +64,6 @@ extern int daemon(int, int);
 
 #ifndef HAVE_MKSTEMP
 extern int mkstemp(char *);
-#endif
-
-/* The AFS headers don't prototype this. */
-#ifdef HAVE_SETPAG
-int setpag(void);
 #endif
 
 /* We default to a ten hour ticket lifetime if the Kerberos headers don't
@@ -453,11 +459,9 @@ main(int argc, char *argv[])
 
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */
-#ifdef HAVE_SETPAG
     if (command != NULL && options.run_aklog && !options.no_aklog)
-        if (setpag() < 0)
+        if (lsetpag() < 0)
             die("unable to create PAG: %s", strerror(errno));
-#endif
 
     /* Now, do the actual authentication. */
     status = authenticate(&options, aklog);

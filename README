@@ -39,7 +39,7 @@ REQUIREMENTS
 
   As Kerberos programs, k4start and k5start require Kerberos libraries to
   link against.  They have only been thoroughly tested with the MIT
-  Kerberos libraries, but should compile with Heimdal and KTH Kerberos v4.
+  Kerberos libraries, but should work with Heimdal and KTH Kerberos v4.
 
   If you only have Heimdal but not KTH Kerberos v4, you can build only
   k5start by passing the --disable-k4start flag to configure.
@@ -53,15 +53,15 @@ REQUIREMENTS
   not given, the first of aklog or afslog that is found on your path at
   configure time will be used.
 
-  To enable the somewhat experimental support for AFS PAGs, pass the
-  --with-afs-setpag flag to configure.  It is not enabled by default.
-  Currently, this support requires the newer OpenAFS libraries
-  (libafsauthent and libafsrpc) and pthreads (because those libraries
-  require pthreads).  If your AFS libraries aren't in your standard search
-  path, give the root of your AFS tree to --with-afs-setpag as an
-  argument.  When enabled, k4start and k5start will always create a new
-  PAG before authentication when running a specific command and when aklog
-  is being run.
+  To enable support for AFS PAGs, pass the --with-afs-setpag flag to
+  configure.  It is not enabled by default.  This support requires either
+  the newer OpenAFS libraries (libafsauthent and libafsrpc) or the kafs
+  library that comes with either Heimdal or KTH Kerberos.  If these
+  libraries aren't in your standard search path, give the root the
+  installation (the directory above the lib directory) to
+  --with-afs-setpag as an argument.  When enabled, k4start and k5start
+  will always create a new PAG before authentication when running a
+  specific command and when aklog is being run.
 
 INSTALLATION
 
@@ -89,6 +89,11 @@ INSTALLATION
   in PATH/include.  If you only want to build k5start, pass the
   --disable-k4start flag to configure.
 
+  To specify a particular krb5-config script to use, either set the
+  KRB5_CONFIG environment variable or pass it to configure like:
+
+      ./configure KRB5_CONFIG=/path/to/krb5-config
+
   If you are using aklog, afslog, or some other program to obtain AFS
   tokens, give its path to configure with the --with-aklog option, as in:
 
@@ -107,8 +112,8 @@ INSTALLATION
   dynamically (so that the binaries can be used on systems without
   Kerberos libraries installed, for example, or so that they're
   independent of shared libraries installed in AFS or NFS), give the
-  --enable-static option to configure.  This has been tested on Solaris
-  and Linux.
+  --enable-static option to configure.  This has only been tested on
+  Solaris and Linux and may not work on all platforms.
 
   You can pass the --enable-reduced-depends flag to configure to try to
   minimize the shared library dependencies encoded in the binaries.  This
@@ -127,6 +132,8 @@ THANKS
   To Navid Golpayegani, for contributing the initial implementation of the
   -b option to background after the initial authentication and the -p
   option to save the PID in a file.
+
+  To Buck Huppmann, for contributing an RPM spec file.
 
 LICENSE
 

@@ -72,12 +72,17 @@ AC_ARG_WITH([afs-setpag],
         if test x"$withval" != xyes ; then
             LDFLAGS="-L$withval/lib $LDFLAGS"
         fi
-        AC_CHECK_LIB([afsauthent], [setpag],
-            [LIBS="-lafsauthent -lafsrpc -lpthread $LIBS"
-             AC_DEFINE([HAVE_SETPAG], 1,
-                [Define to 1 if you have the AFS setpag function.])],
-            [AC_MSG_ERROR([setpag function not found])],
-            [-lafsrpc -lpthread])
+        AC_CHECK_LIB([afsauthent], [lsetpag],
+            [LIBS="-lafsauthent -lafsrpc $LIBS"
+             AC_DEFINE([HAVE_LSETPAG], 1,
+                [Define to 1 if you have the AFS lsetpag function.])],
+            [AC_CHECK_LIB([kafs], [k_setpag],
+                [LIBS="-lkafs $LIBS"
+                 AC_CHECK_HEADERS([kafs.h])
+                 AC_DEFINE([HAVE_K_SETPAG], 1,
+                     [Define to 1 if you have the k_setpag function.])],
+                [AC_MSG_ERROR([setpag function not found])])],
+            [-lafsrpc])
      fi])
 
 dnl Checks for header files.

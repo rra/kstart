@@ -8,13 +8,16 @@ kstart 2.9 (unreleased)
 
     Significantly improved Kerberos library probes.  Use krb5-config where
     available to get Kerberos libraries and compiler flags unless
-    --enable-reduced-depends is used, and support MIT Kerberos 1.4 with
-    --enable-static.
+    --enable-reduced-depends or --enable-static are used, and support MIT
+    Kerberos 1.4 with --enable-static.
 
     Add the --enable-reduced-depends configure option to try to minimize
     the shared library dependencies of the resulting binaries on platforms
     with proper shared library dependencies.  This is of interest
     primarily to people building packages for distributions.
+
+    AFS setpag support no longer requires linking with pthreads and also
+    supports the Heimdal or KTH libkafs library as a source of setpag.
 
     Ported to systems that require sys/time.h be included instead of
     time.h (Tru64 4.0 in particular).
@@ -22,7 +25,7 @@ kstart 2.9 (unreleased)
     Attempt better portability to KTH Kerberos installs that build their
     own DES library rather than using OpenSSL.
 
-    Include a spec file for RPM builds, contributed by Buck Huppmann.
+    Included a spec file for RPM builds, contributed by Buck Huppmann.
 
 kstart 2.8 (2005-08-09)
 
