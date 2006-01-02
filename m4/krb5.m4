@@ -42,7 +42,7 @@ AC_DEFUN([_RRA_LIB_KRB5_GSSAPI],
     [KRB5EXTRA="-lkrb5 -lk5crypto -lcom_err"
      AC_CHECK_LIB([krb5support], [krb5int_getspecific],
         [KRB5EXTRA="$KRB5EXTRA -lkrb5support"],
-        [AC_SEARCH_LIBS([pthreads pthread], [pthread_setspecific])
+        [AC_SEARCH_LIBS([pthread_setspecific], [pthreads pthread])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
             [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])])
      AC_CHECK_LIB([gssapi_krb5], [gss_import_name],
@@ -60,7 +60,7 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5],
     [KRB5EXTRA="-lk5crypto -lcom_err"
      AC_CHECK_LIB([krb5support], [krb5int_getspecific],
         [KRB5EXTRA="$KRB5EXTRA -lkrb5support"],
-        [AC_SEARCH_LIBS([pthreads pthread], [pthread_setspecific])
+        [AC_SEARCH_LIBS([pthread_setspecific], [pthreads pthread])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
             [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])])
      AC_CHECK_LIB([krb5], [krb5_cc_default],
@@ -79,7 +79,7 @@ AC_CHECK_LIB([krb], [krb_get_svc_in_tkt],
     [KRB5EXTRA="-ldes425 -lkrb5 -lk5crypto -lcom_err"
      AC_CHECK_LIB([krb5support], [krb5int_getspecific],
         [KRB5EXTRA="$KRB5EXTRA -lkrb5support"],
-        [AC_SEARCH_LIBS([pthreads pthread], [pthread_setspecific])
+        [AC_SEARCH_LIBS([pthread_setspecific], [pthreads pthread])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
             [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])])
      AC_CHECK_LIB([krb4], [krb_get_svc_in_tkt],
