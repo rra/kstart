@@ -10,10 +10,10 @@ B<k5start> [B<-bnqstv>] [B<-f> I<keytab>] [B<-H> I<minutes>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bnqstv>] [B<-f> I<keytab>]
-    [B<-H> I<minutes>] [B<-I> I<service instance>] [B<-K> I<minutes>]
-    [B<-k> I<ticket file>] [B<-l> I<time string>] [B<-p> I<pid file>]
-    [B<-r> I<service realm>] [B<-S> I<service name>] [I<command> ...]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bnqstv>] [B<-H> I<minutes>]
+    [B<-I> I<service instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
+    [B<-l> I<time string>] [B<-p> I<pid file>] [B<-r> I<service realm>]
+    [B<-S> I<service name>] [I<command> ...]
 
 =head1 DESCRIPTION
 
