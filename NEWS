@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 2.9 (unreleased)
+kstart 2.9 (2006-01-01)
 
     Improved error handling when using Heimdal and clearer formatting with
     any Kerberos implementation.  Use krb5_err and krb5_warn functions

@@ -1,4 +1,4 @@
-                            kstart release 2.8
+                            kstart release 2.9
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
@@ -9,8 +9,8 @@
   distributed under a BSD-style license.  Please see the section LICENSE
   below for terms of use and redistribution.
 
-  Based on code copyright 1987, 1988 by the Massachusetts Institute of
-  Technology.
+  Based on code copyright 1987, 1988, 1989 by the Massachusetts Institute
+  of Technology.
 
 DESCRIPTION
 
