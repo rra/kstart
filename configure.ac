@@ -42,12 +42,10 @@ AC_SUBST([K4START])
 AC_SUBST([K4START_MAN])
 
 dnl Check for the Kerberos v5 libraries and for portability between krb5 and
-dnl Heimdal when getting initial tickets.  Add our local krb5_err
-dnl implementation if needed.
+dnl Heimdal when getting initial tickets.
 save_LIBS=$LIBS
 RRA_LIB_KRB5([krb5], [true])
-AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags])
-AC_REPLACE_FUNCS([krb5_err])
+AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags krb5_err])
 KRB5LIBS=$LIBS
 LIBS=$save_LIBS
 AC_SUBST([KRB5LIBS])
@@ -73,16 +71,17 @@ AC_ARG_WITH([afs-setpag],
             LDFLAGS="-L$withval/lib $LDFLAGS"
         fi
         AC_CHECK_LIB([afsauthent], [lsetpag],
-            [LIBS="-lafsauthent -lafsrpc $LIBS"
+            [AFSLIBS="-lafsauthent -lafsrpc"
              AC_DEFINE([HAVE_LSETPAG], 1,
                 [Define to 1 if you have the AFS lsetpag function.])],
             [AC_CHECK_LIB([kafs], [k_setpag],
-                [LIBS="-lkafs $LIBS"
+                [AFSLIBS="-lkafs"
                  AC_CHECK_HEADERS([kafs.h])
                  AC_DEFINE([HAVE_K_SETPAG], 1,
                      [Define to 1 if you have the k_setpag function.])],
                 [AC_MSG_ERROR([setpag function not found])])],
             [-lafsrpc])
+        AC_SUBST([AFSLIBS])
      fi])
 
 dnl Checks for header files.

@@ -11,6 +11,11 @@
 **  getting good error reporting on Heimdal is annoying.
 */
 
+#include "config.h"
+
+/* Skip this whole file if we have krb5_err. */
+#ifndef HAVE_KRB5_ERR
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,3 +55,5 @@ krb5_warn(krb5_context context, krb5_error_code code, const char *format, ...)
     fprintf(stderr, ": %s\n", message);
     return 0;
 }
+
+#endif /* !HAVE_KRB5_ERR */
