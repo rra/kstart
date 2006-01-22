@@ -4,8 +4,10 @@ kstart (3.0-1) unstable; urgency=low
     - Adds krenew, like k5start but renewing existing renewable ticket
       caches without the need for a keytab.
     - Allow KINIT_PROG to be set to a command with options.
+  * Add build-arch and build-indep targets.
+  * Use a cleaner way to optionally run make distclean.
 
- -- Russ Allbery <rra@debian.org>  Sun, 22 Jan 2006 00:50:44 -0800
+ -- Russ Allbery <rra@debian.org>  Sun, 22 Jan 2006 01:13:19 -0800
 
 kstart (2.9-1) unstable; urgency=low
 

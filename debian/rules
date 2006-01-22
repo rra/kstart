@@ -36,7 +36,9 @@ config.status: configure
 	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
 	    --enable-reduced-depends $(SETPAG)
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep:
 build-stamp: config.status
 	dh_testdir
 	$(MAKE)
@@ -45,19 +47,18 @@ build-stamp: config.status
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
-ifeq (Makefile,$(wildcard Makefile))
-	$(MAKE) distclean
-endif
-	dh_clean
+	[ -f ! Makefile ] || $(MAKE) distclean
+	dh_clean build-stamp
 
-install: build
+install: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean
 	$(MAKE) install prefix=$(CURDIR)/debian/kstart/usr
 
-binary-arch: build install
+binary: binary-arch binary-indep
+binary-indep:
+binary-arch: install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
@@ -73,6 +74,5 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary-indep:
-binary: binary-arch binary-indep
-.PHONY: build clean binary-arch binary-indep binary install
+.PHONY: build build-arch build-indep clean binary-arch binary-indep binary
+.PHONY: install
