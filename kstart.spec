@@ -1,6 +1,6 @@
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 2.9
+Version: 3.0
 Release: 1
 License: MIT, BSD
 Group: System Environment/Base
@@ -11,22 +11,21 @@ BuildRequires: krb5-devel
 Requires: krb5-workstation
 
 %description
-Kerberos kinit variant supporting ticket refreshing k5start (for
-Kerberos v5) and k4start (for Kerberos v4) can be used instead of
-kinit to obtain Kerberos tickets.  Both programs are included in
-this package.  They are intended primarily for use with automated
-processes and support some additional features useful for that
-purpose, such as running as a daemon and refreshing the ticket
-periodically, checking to see if an existing ticket has expired,
-or obtaining an AFS token along with the ticket by running an
-external program automatically.
+Kerberos kinit variant supporting ticket refreshing.  k5start (for
+Kerberos v5) and k4start (for Kerberos v4) can be used instead of kinit to
+obtain Kerberos tickets.  krenew can renew an existing ticket cache.  They
+are intended primarily for use with automated processes and support some
+additional features useful for that purpose, such as running as a daemon
+and refreshing the ticket periodically, checking to see if an existing
+ticket has expired, or obtaining an AFS token along with the ticket by
+running an external program automatically.
 
 %prep
 %setup
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/sbin:$PATH" \
-%configure --enable-reduced-depends
+%configure
 %{__make}
 
 %install
@@ -43,6 +42,10 @@ PATH="/sbin:/bin:/usr/sbin:/usr/sbin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Sun Jan 22 2006 Russ Allbery <rra@stanford.edu> 3.0-1
+- New version for 3.0 release.
+- Update description to include krenew.
+- No longer build with --enable-reduced-depends.
 * Sat Dec 31 2005 Russ Allbery <rra@stanford.edu> 2.9-1
 - New version for 2.9 release.
 - No longer generated via Autoconf, since the changelog has to be added.
