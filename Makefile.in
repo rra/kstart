@@ -41,18 +41,22 @@ INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 K4START		= @K4START@
 K4START_MAN	= @K4START_MAN@
 
+MANPAGES	= $(srcdir)/k5start.1 $(srcdir)/krenew.1 $(K4START_MAN)
+
 .c.o:
 	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
 
-all: k5start k5start.1 $(K4START) $(K4START_MAN)
+all: k5start krenew $(K4START) $(MANPAGES)
 
 warnings:
 	$(MAKE) CFLAGS="-g -O -Wall"
 
-install: k4start k5start $(srcdir)/k4start.1 $(srcdir)/k5start.1
+install: k5start krenew $(K4START) $(MANPAGES)
 	$(INSTALL) -d $(bindir) $(mandir)/man1
 	$(INSTALL_PROGRAM) k5start $(bindir)/k5start
 	$(INSTALL_DATA) $(srcdir)/k5start.1 $(mandir)/man1/k5start.1
+	$(INSTALL_PROGRAM) krenew $(bindir)/krenew
+	$(INSTALL_DATA) $(srcdir)/krenew.1 $(mandir)/man1/krenew.1
 	set -e; if test x"$(K4START)" != x ; then \
 	    $(INSTALL_PROGRAM) k4start $(bindir)/k4start; \
 	    $(INSTALL_DATA) $(srcdir)/k4start.1 $(mandir)/man1/k4start.1; \
@@ -65,25 +69,32 @@ k5start: k5start.o command.o krb5_err.o $(LIBOBJS)
 	$(CC) $(LDFLAGS) -o k5start k5start.o command.o krb5_err.o \
 	    $(LIBOBJS) $(KRB5LIBS)
 
+krenew: krenew.o command.o krb5_err.o $(LIBOBJS)
+	$(CC) $(LDFLAGS) -o krenew krenew.o command.o krb5_err.o \
+	    $(LIBOBJS) $(KRB5LIBS)
+
 $(srcdir)/k4start.1: $(srcdir)/k4start.pod
 	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
 $(srcdir)/k5start.1: $(srcdir)/k5start.pod
 	pod2man --release=$(VERSION) --center="User commands" $< > $@
 
+$(srcdir)/krenew.1: $(srcdir)/krenew.pod
+	pod2man --release=$(VERSION) --center="User commands" $< > $@
+
 clean:
-	rm -f *.o k4start k5start
+	rm -f *.o k4start k5start krenew
 
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status
 	rm -rf autom4te.cache $(TARDIR)
 
 maintclean: distclean
-	rm -f config.h.in config.h.in~ configure k4start.1 k5start.1
+	rm -f config.h.in config.h.in~ configure k4start.1 k5start.1 krenew.1
 	rm -f $(TARNAME).gz $(TARNAME).gz.md5
 	rm -f *.orig.tar.gz
 
-dist: $(srcdir)/k4start.1 $(srcdir)/k5start.1
+dist: $(srcdir)/k4start.1 $(srcdir)/k5start.1 $(srcdir)/krenew.1
 	rm -rf $(TARNAME).gz $(TARNAME).gz.md5 $(TARDIR)
 	mkdir $(TARDIR)
 	rsync -C --exclude /debian/ -a $(srcdir)/ $(TARDIR)/
@@ -98,5 +109,6 @@ daemon.o: daemon.c config.h
 k4start.o: k4start.c command.h config.h
 k5start.o: k5start.c command.h config.h
 krb5_err.o: krb5_err.c config.h
+krenew.o: krenew.c command.h config.h
 lifetime.o: lifetime.c config.h
 mkstemp.o: mkstemp.c config.h

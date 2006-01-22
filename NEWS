@@ -1,6 +1,9 @@
                        User-Visible kstart Changes
 
-kstart 2.10 (2006-01-21)
+kstart 3.0 (2006-01-22)
+
+    Add a krenew command that acts like k5start except that it uses an
+    existing ticket cache and just renews it.
 
     Don't check the executability of the aklog program before running it,
     as this prevents people from configuring aklog programs that include

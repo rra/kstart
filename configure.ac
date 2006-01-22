@@ -30,7 +30,7 @@ fi
 dnl Allow the user to disable Kerberos v4 support.  Useful for building
 dnl against just Heimdal, without KTH Kerberos.
 K4START=k4start
-K4START_MAN=k4start.1
+K4START_MAN='$(srcdir)/k4start.1'
 AC_ARG_ENABLE([k4start],
     AC_HELP_STRING([--disable-k4start],
         [Don't build k4start (Kerberos v4 support)]),
@@ -45,7 +45,8 @@ dnl Check for the Kerberos v5 libraries and for portability between krb5 and
 dnl Heimdal when getting initial tickets.
 save_LIBS=$LIBS
 RRA_LIB_KRB5([krb5], [true])
-AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags krb5_err])
+AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags krb5_err \
+                krb5_get_renewed_creds])
 KRB5LIBS=$LIBS
 LIBS=$save_LIBS
 AC_SUBST([KRB5LIBS])

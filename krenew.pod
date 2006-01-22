@@ -1,0 +1,150 @@
+=head1 NAME
+
+krenew - Renew a Kerberos v5 ticket
+
+=head1 SYNOPSIS
+
+B<krenew> [B<-btv>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
+    [B<-p> I<pid file>] [I<command> ...]
+
+=head1 DESCRIPTION
+
+B<krenew> renews an existing renewable ticket.  When run without any
+arguments, it just attempts to renew the existing ticket-granting ticket
+in the current ticket cache, equivalent to C<kinit -R>, but it can
+optionally run a program like B<aklog> to refresh AFS tokens, can run as a
+daemon and wake up periodically to renew the ticket cache, or can run a
+specified command and keep renewing the ticket cache until the command
+finishes (or renewal is no longer possible).  If a command is specified,
+B<krenew> by default wakes up every 60 minutes (1 hour) to check the
+ticket cache.
+
+If a command is given, it will not be run using the shell, so if you want
+to use shell metacharacters in the command with their special meaning,
+give C<sh -c I<command>> as the command to run and quote I<command>.  If
+the command contains command-line options (like C<-c>), put -- on the
+command line before the beginning of the command to tell B<krenew> to not
+parse those options as its own.
+
+If B<krenew> is built with setpag support and AFS tokens are requested
+with the B<-t> option, it will put the command in a separate PAG before
+obtaining AFS tokens so that they don't interfere with other processes on
+the system.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-b>
+
+After starting, detach from the controlling terminal and run in the
+background.  This option only makes sense in combination with B<-K> or a
+command that B<krenew> will be running.  B<krenew> will not background
+itself until after it does the initial ticket renewal, so that any initial
+errors will be reported, but it will then redirect output to F</dev/null>
+and no subsequent errors will be reported.
+
+If used in conjunction with a command to run, that command will also run
+in the background and will also have its input and output redirected to
+F</dev/null>.  It will have to report any errors via some other mechanism
+for the errors to be seen.
+
+=item B<-K> I<minutes>
+	
+Run in daemon mode to keep a ticket alive indefinitely.  The program
+reawakens after I<minutes> minutes, checks if the ticket will expire
+before the next wakeup, and renews the ticket if needed.  If this option
+is not given but a command was given on the command line, the default
+interval is 60 minutes (1 hour).
+
+=item B<-k> I<ticket file>
+
+Use I<ticket file> as the ticket cache rather than the contents of the
+environment variable KRB5CCNAME or the library default.
+
+=item B<-p> I<pid file>
+
+Save the process ID (PID) of the running B<krenew> process into I<pid
+file>.  I<pid file> is created if it doesn't exist and overwritten if it
+does exist.  This option is most useful in conjunction with B<-b> to allow
+management of the running B<krenew> daemon.
+
+Note that, when used with B<-b> the PID file is written out after
+B<krenew> is backgrounded and changes its working directory to F</>, so
+relative paths for the PID file will be relative to F</> (probably not
+what you want).
+
+=item B<-t>
+	
+Run an external program after getting a ticket.  The default use of this
+is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
+is set, it overrides the compiled-in default.
+
+=item B<-v>
+	
+Be verbose.  This will print out a bit of additional information about
+what is being attempted and what the results are.
+
+=back
+
+=head1 RETURN VALUES
+
+The program normally exits with status 0 if it successfully renews a
+ticket.  If B<krenew> runs aklog or some other program B<krenew> returns
+the exit status of that program.
+
+=head1 EXAMPLES
+
+Renew the current ticket-granting ticket.
+
+    krenew
+
+Wake up every ten minutes and check to see if the ticket cache needs
+renewing.  If it does, re-run B<aklog> as well.
+
+    krenew -K 10 -t
+
+Run the program F</usr/local/bin/compute-job> in the background, checking
+every hour to see if the ticket needs to be renewed (the default).  Put
+the PID of the B<krenew> job in F</var/run/compute.pid>.  Obtain a new AFS
+token each time the ticket has to be renewed.
+
+    krenew -b -t -p /var/run/compute.pid /usr/local/bin/compute-job
+
+If you wanted to pass options to F</usr/local/bin/compute-job>, putting a
+C<--> argument before it would be necessary to keep B<krenew> from
+interpreting those options as its own.
+
+=head1 ENVIRONMENT
+
+If the environment variable KINIT_PROG is set to a program (such as
+B<aklog>) then this path will be used for the program to run with B<-t>
+rather than the default compiled into B<krenew>.
+
+If no ticket file (with B<-k>) or command is specified on the command
+line, B<krenew> will use the environment variable KRB5CCNAME to determine
+the location of the the ticket granting ticket.  If the B<-k> option is
+used, KRB5CCNAME will be set to point to the ticket file before running
+the B<aklog> program or any command given on the command line.
+
+=head1 FILES
+
+The default ticket cache is determined by the underlying Kerberos
+libraries.  The default path for aklog is determined at build time, and
+will normally be whichever of B<aklog> or B<afslog> is found in the user's
+path.
+
+=head1 SEE ALSO
+
+k5start(1), kinit(1)
+
+The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
+will have the current version of B<krenew>.
+
+=head1 AUTHORS
+
+B<krenew> was written by Russ Allbery <rra@stanford.edu>.  It was based
+heavily on B<k5start> by Booker C. Bense, which in turn was based on the
+k4start code written by Robert Morgan.
+
+=cut
