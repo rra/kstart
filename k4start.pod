@@ -4,7 +4,7 @@ k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<k4start> [B<-bnqstv>] [B<-f> I<srvtab>] [B<-H> I<minutes>]
+B<k4start> [B<-bhnqstv>] [B<-f> I<srvtab>] [B<-H> I<minutes>]
     [B<-I> I<service instance>] [B<-i> I<client instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<minutes>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
@@ -72,6 +72,10 @@ Authenticate using the srvtab I<srvtab> rather than asking for a password.
 Check for a happy ticket, one that has a remaining lifetime of at least
 I<minutes> minutes.  If such a ticket is found, exit immediately with
 status 0.  Otherwise, try to obtain a new ticket.
+
+=item B<-h>
+
+Display a usage message and exit.
 
 =item B<-I> I<service instance>
 

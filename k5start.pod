@@ -4,13 +4,13 @@ k5start - Obtain and optionally keep active a Kerberos v5 ticket.
 
 =head1 SYNOPSIS
 
-B<k5start> [B<-bnqstv>] [B<-f> I<keytab>] [B<-H> I<minutes>]
+B<k5start> [B<-bhnqstv>] [B<-f> I<keytab>] [B<-H> I<minutes>]
     [B<-I> I<service instance>] [B<-i> I<client instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<time string>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bnqstv>] [B<-H> I<minutes>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bhnqstv>] [B<-H> I<minutes>]
     [B<-I> I<service instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-l> I<time string>] [B<-p> I<pid file>] [B<-r> I<service realm>]
     [B<-S> I<service name>] [I<command> ...]
@@ -81,6 +81,10 @@ password.  A key for the client principal must be present in I<keytab>.
 Check for a happy ticket, one that has a remaining lifetime of at least
 I<minutes> minutes.  If such a ticket is found, exit immediately with
 status 0.  Otherwise, try to obtain a new ticket.
+
+=item B<-h>
+
+Display a usage message and exit.
 
 =item B<-I> I<service instance>
 

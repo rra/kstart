@@ -9,7 +9,9 @@ kstart 3.0 (2006-01-22)
     as this prevents people from configuring aklog programs that include
     flags.
 
-    Report the compiled aklog path in -h output.
+    Add a -h flag to all programs to display the usage message and exit.
+
+    Report the compiled aklog path in usage output.
 
 kstart 2.9 (2006-01-01)
 

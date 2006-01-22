@@ -84,6 +84,7 @@ extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
 const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
    -b                   Fork and run in the background\n\
+   -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
@@ -308,9 +309,10 @@ main(int argc, char *argv[])
     pid_t child = 0;
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bhK:k:p:qtv")) != EOF)
         switch (option) {
         case 'b': background = 1;               break;
+        case 'h': usage(0);                     break;
         case 'k': cachename = optarg;           break;
         case 'p': pidfile = optarg;             break;
         case 't': run_aklog = 1;                break;

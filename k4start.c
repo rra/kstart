@@ -117,6 +117,7 @@ Usage: k4start [options] [name]\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
                         otherwise obtain a ticket\n\
+   -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
@@ -266,9 +267,10 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:I:i:K:k:l:np:qr:S:stu:v")) != EOF)
+    while ((opt = getopt(argc, argv, "bf:H:hI:i:K:k:l:np:qr:S:stu:v")) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'h': usage(0);                     break;
         case 'k': options.cache = optarg;       break;
         case 'n': options.no_aklog = 1;         break;
         case 'p': pidfile = optarg;             break;
