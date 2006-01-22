@@ -3,9 +3,9 @@ kstart for Debian
 
 k4start is only useful for people who are still running a native Kerberos
 v4 realm, something that you probably don't want to be doing.  Most sites
-will only use k5start.
+will only use k5start and krenew
 
-If you also use AFS, both k4start and k5start are compiled to run
+If you also use AFS, k4start, k5start, and krenew are compiled to run
 /usr/bin/aklog to obtain an AFS token if requested with the -t option.
 The openafs-krb5 and arla packages both provide this program.  If you want
 to use afslog from heimdal-clients or kafslog from kerberos4kth-clients
@@ -14,4 +14,4 @@ reasons) to the full path to that program.  (You can also set that
 environment variable to the full path to any other local program you have
 for obtaining an AFS token from a Kerberos ticket.)
 
- -- Russ Allbery <rra@debian.org>, Sat Nov 19 15:53:59 2005
+ -- Russ Allbery <rra@debian.org>, Sun Jan 22 00:47:24 2006
