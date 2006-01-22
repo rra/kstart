@@ -1,4 +1,4 @@
-                            kstart release 2.9
+                            kstart release 3.0
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
@@ -35,14 +35,22 @@ DESCRIPTION
   for AFS PAGs, they can also put the program in its own PAG so that its
   authentication doesn't affect any other programs.
 
+  krenew is identical to k5start except that rather than obtaining new
+  tickets from a password or keytab, it renews an existing renewable
+  ticket cache.  It can be used to periodically renew tickets and
+  optionally AFs tokens for long-running processes in cases where using a
+  keytab is inappropriate (such as users running their own jobs with their
+  own credentials).
+
 REQUIREMENTS
 
-  As Kerberos programs, k4start and k5start require Kerberos libraries to
-  link against.  They have only been thoroughly tested with the MIT
-  Kerberos libraries, but should work with Heimdal and KTH Kerberos v4.
+  As Kerberos programs, k4start, k5start, and krenew require Kerberos
+  libraries to link against.  They have only been thoroughly tested with
+  the MIT Kerberos libraries, but should work with Heimdal and KTH
+  Kerberos v4.
 
   If you only have Heimdal but not KTH Kerberos v4, you can build only
-  k5start by passing the --disable-k4start flag to configure.
+  k5start and krenew by passing the --disable-k4start flag to configure.
 
   Other than that, all you should need is a suitable C compiler.  Neither
   program has been tested on non-Unix systems.
@@ -59,8 +67,8 @@ REQUIREMENTS
   library that comes with either Heimdal or KTH Kerberos.  If these
   libraries aren't in your standard search path, give the root the
   installation (the directory above the lib directory) to
-  --with-afs-setpag as an argument.  When enabled, k4start and k5start
-  will always create a new PAG before authentication when running a
+  --with-afs-setpag as an argument.  When enabled, k4start, k5start, and
+  krenew will always create a new PAG before authentication when running a
   specific command and when aklog is being run.
 
 INSTALLATION
@@ -71,10 +79,11 @@ INSTALLATION
       make
       make install
 
-  This will build k4start and k5start and install them in /usr/local/bin
-  with man pages in /usr/local/man/man1.  You may need to be root to run
-  make install.  To install in a different location, specify a different
-  location with the --prefix option to configure, as in:
+  This will build k4start, k5start, and krenew and install them in
+  /usr/local/bin with man pages in /usr/local/man/man1.  You may need to
+  be root to run make install.  To install in a different location,
+  specify a different location with the --prefix option to configure, as
+  in:
 
       ./configure --prefix=/opt/sw
 
@@ -86,7 +95,7 @@ INSTALLATION
   If your Kerberos libraries aren't installed in a location found by your
   compiler by default, use the --with-kerberos=PATH option to configure.
   The Kerberos libraries will then be expected in PATH/lib and the headers
-  in PATH/include.  If you only want to build k5start, pass the
+  in PATH/include.  If you only want to build k5start and krenew, pass the
   --disable-k4start flag to configure.
 
   To specify a particular krb5-config script to use, either set the
@@ -99,8 +108,8 @@ INSTALLATION
 
       ./configure --with-aklog=/usr/local/bin/aklog
 
-  This program will be run when the -t option is given to k4start or
-  k5start.
+  This program will be run when the -t option is given to k4start,
+  k5start, or krenew.
 
   To enable the AFS PAG support, pass --with-afs-setpag to configure.  You
   may need to specify the root of your AFS client tree if the AFS
@@ -133,7 +142,8 @@ THANKS
   -b option to background after the initial authentication and the -p
   option to save the PID in a file.
 
-  To Buck Huppmann, for contributing an RPM spec file.
+  To Buck Huppmann, for contributing an RPM spec file and suggesting
+  krenew.
 
   To Adam Megacz, for pointing out that checking the executability of the
   aklog program isn't necessary.
