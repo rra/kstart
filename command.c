@@ -21,29 +21,18 @@
 #include <unistd.h>
 
 /*
-**  Run the given aklog command, returning its exit status or 7 if it could
-**  not be executed.  The command must be a fully-qualified path.
+**  Run the given aklog command, returning its exit status.  The command must
+**  be a fully-qualified path.
 */
 int
 run_aklog(const char *aklog, int verbose)
 {
     int status;
 
-    if (access(aklog, X_OK) == 0) {
-        status = system(aklog);
-
-        /* IRIX 6.5's WEXITSTATUS() macro is broken and can't cope with being
-           called directly on the return value of system().  If we can't
-           execute the aklog program, set the exit status to an arbitrary but
-           distinct value. */
-        status = WEXITSTATUS(status);
-        if (verbose)
-            printf("%s exited with status %d\n", aklog, status);
-    } else {
-        if (verbose)
-            printf("no execute access to %s\n", aklog);
-        status = 7;
-    }
+    status = system(aklog);
+    status = WEXITSTATUS(status);
+    if (verbose)
+        printf("%s exited with status %d\n", aklog, status);
     return status;
 }
 

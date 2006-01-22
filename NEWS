@@ -1,5 +1,13 @@
                        User-Visible kstart Changes
 
+kstart 2.10 (2006-01-21)
+
+    Don't check the executability of the aklog program before running it,
+    as this prevents people from configuring aklog programs that include
+    flags.
+
+    Report the compiled aklog path in -h output.
+
 kstart 2.9 (2006-01-01)
 
     Improved error handling when using Heimdal and clearer formatting with

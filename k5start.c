@@ -94,7 +94,7 @@ extern int mkstemp(char *);
 /* Make sure everything compiles even if no aklog program was found by
    configure. */
 #ifndef PATH_AKLOG
-# define PATH_AKLOG NULL
+# define PATH_AKLOG ""
 #endif
 
 /* Holds the various command-line options for passing to functions, after
@@ -144,8 +144,8 @@ Usage: k5start [options] [name [command]]\n\
    -v                   Verbose\n\
 \n\
 If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
-then this program will be executed when requested by the -t flag, rather\n\
-than whatever aklog program was compiled into k5start.\n";
+then this program will be executed when requested by the -t flag.\n\
+Otherwise, %s.\n";
 
 
 /*
@@ -173,7 +173,10 @@ die(const char *format, ...)
 static void
 usage(int status)
 {
-    fprintf((status == 0) ? stdout : stderr, usage_message);
+    fprintf((status == 0) ? stdout : stderr, usage_message,
+            ((PATH_AKLOG[0] == '\0')
+             ? "using -t is an error"
+             : "the default program to run is " PATH_AKLOG));
     exit(status);
 }
 
@@ -472,7 +475,7 @@ main(int argc, char *argv[])
     options.aklog = getenv("KINIT_PROG");
     if (options.aklog == NULL)
         options.aklog = PATH_AKLOG;
-    if (options.aklog == NULL && options.run_aklog)
+    if (options.aklog[0] == '\0' && options.run_aklog)
         die("set KINIT_PROG to specify the path to aklog");
 
     /* Establish a K5 context. */

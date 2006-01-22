@@ -135,10 +135,13 @@ THANKS
 
   To Buck Huppmann, for contributing an RPM spec file.
 
+  To Adam Megacz, for pointing out that checking the executability of the
+  aklog program isn't necessary.
+
 LICENSE
 
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005 Board of
-  Trustees, Leland Stanford Jr. University.  All rights reserved.
+  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006
+  Board of Trustees, Leland Stanford Jr. University.  All rights reserved.
   
   Permission to use, copy, modify, and distribute this software and its
   documentation for any purpose and without fee is hereby granted,

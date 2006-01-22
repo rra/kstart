@@ -80,7 +80,7 @@ extern int mkstemp(char *);
 /* Make sure everything compiles even if no aklog program was found by
    configure. */
 #ifndef PATH_AKLOG
-# define PATH_AKLOG NULL
+# define PATH_AKLOG ""
 #endif
 
 /* Holds the various command-line options for passing to functions. */
@@ -131,7 +131,8 @@ Usage: k4start [options] [name]\n\
 If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
 then this program will automatically be executed after the ticket granting\n\
 ticket has been retrieved unless -n is given.  Otherwise, the default is to\n\
-not run any aklog program.\n";
+not run any aklog program.  If -t is given and KINIT_PROG is not set,\n\
+%s.\n";
 
 
 /*
@@ -159,7 +160,10 @@ die(const char *format, ...)
 static void
 usage(int status)
 {
-    fprintf((status == 0) ? stdout : stderr, usage_message);
+    fprintf((status == 0) ? stdout : stderr, usage_message,
+            ((PATH_AKLOG[0] == '\0')
+             ? "k4start exits with an error"
+             : "the program run will be " PATH_AKLOG));
     exit(status);
 }
 
@@ -366,7 +370,7 @@ main(int argc, char *argv[])
         aklog = PATH_AKLOG;
     else
         options.run_aklog = 1;
-    if (aklog == NULL && options.run_aklog && !options.no_aklog)
+    if (aklog[0] == '\0' && options.run_aklog && !options.no_aklog)
         die("set KINIT_PROG to specify the path to aklog");
 
     /* The default username is the name of the local user. */
