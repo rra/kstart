@@ -38,7 +38,7 @@ DESCRIPTION
   krenew is identical to k5start except that rather than obtaining new
   tickets from a password or keytab, it renews an existing renewable
   ticket cache.  It can be used to periodically renew tickets and
-  optionally AFs tokens for long-running processes in cases where using a
+  optionally AFS tokens for long-running processes in cases where using a
   keytab is inappropriate (such as users running their own jobs with their
   own credentials).
 
