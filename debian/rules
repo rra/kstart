@@ -47,8 +47,9 @@ build-stamp: config.status
 clean:
 	dh_testdir
 	dh_testroot
+	rm -f build-stamp
 	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean build-stamp
+	dh_clean
 
 install: build-stamp
 	dh_testdir

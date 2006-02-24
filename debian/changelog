@@ -2,8 +2,9 @@ kstart (3.1-1) unstable; urgency=low
 
   * New upstream release.
     - Add -g option to generate group readable ticket.
+  * Remove build-stamp first thing in debian/rules clean.
 
- -- Russ Allbery <rra@debian.org>  Thu, 23 Feb 2006 17:08:19 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 23 Feb 2006 17:12:58 -0800
 
 kstart (3.0-1) unstable; urgency=low
 
