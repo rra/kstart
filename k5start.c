@@ -316,15 +316,17 @@ authenticate(krb5_context ctx, struct options *options)
     if (k5_keytab != NULL)
         krb5_kt_close(ctx, k5_keytab);
 
+    /* If requested, set the ticket to group readable. */
+    if (options->groupread) 
+        status = chmod(krb5_cc_get_name(ctx, options->ccache), 0640);
+
     /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
        broken and can't cope with being called directly on the return value of
        system().  If we can't execute the aklog program, set the exit status
        to an arbitrary but distinct value. */
-    if (options->run_aklog)
+    if ((status != 0) && options->run_aklog)
         status = run_aklog(options->aklog, options->verbose);
 
-    if (options->groupread) 
-        status = chmod(krb5_cc_get_name(ctx, options->ccache), 0640);
     return status;
 }
 
