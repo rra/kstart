@@ -1,3 +1,11 @@
+kstart (3.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add -g option to generate group readable ticket.  Note that some
+    applications may be unhappy about a group readable ticket.
+
+ -- Huaqing Zheng <morpheus@stanford.edu>  Thu, 23 Feb 2006 16:45:46 -0800
+
 kstart (3.0-1) unstable; urgency=low
 
   * New upstream release.
