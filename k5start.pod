@@ -10,7 +10,7 @@ B<k5start> [B<-bhnqstv>] [B<-f> I<keytab>] [B<-H> I<minutes>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bhnqstv>] [B<-H> I<minutes>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bghnqstv>] [B<-H> I<minutes>]
     [B<-I> I<service instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-l> I<time string>] [B<-p> I<pid file>] [B<-r> I<service realm>]
     [B<-S> I<service name>] [I<command> ...]
@@ -75,6 +75,11 @@ for the errors to be seen.
 	
 Authenticate using the keytab I<keytab> rather than asking for a
 password.  A key for the client principal must be present in I<keytab>.
+
+=item B<-g>
+	
+Make the resulting ticket group readable.  Some applications may not be
+happy with a group readable ticket.
 
 =item B<-H> I<minutes>
 

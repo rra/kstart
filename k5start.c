@@ -114,6 +114,7 @@ struct options {
     const char *aklog;
     int stdin_passwd;
     int verbose;
+    int groupread;
 };
 
 /* The usage message. */
@@ -321,6 +322,9 @@ authenticate(krb5_context ctx, struct options *options)
        to an arbitrary but distinct value. */
     if (options->run_aklog)
         status = run_aklog(options->aklog, options->verbose);
+
+    if (options->groupread) 
+        status = chmod(krb5_cc_get_name(ctx, options->ccache), 0640);
     return status;
 }
 
@@ -392,9 +396,10 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:hI:i:K:k:l:np:qr:S:stUu:v")) != EOF)
+    while ((opt = getopt(argc, argv, "bgf:H:hI:i:K:k:l:np:qr:S:stUu:v")) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'g': options.groupread = 1;        break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
