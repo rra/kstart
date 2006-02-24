@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 3.1 (2006-02-23)
+
+    Add the -g flag to k5start and krenew to make the ticket cache
+    group-readable.  This is useful for maintaining a ticket cache shared
+    by multiple automated processes on the same host running as different
+    users (such as Mailman).
+
 kstart 3.0 (2006-01-22)
 
     Add a krenew command that acts like k5start except that it uses an
