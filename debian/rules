@@ -6,9 +6,16 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# We need to know the host architecture to determine whether setpag is
-# available.
-DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+# Tell Autoconf the correct system types.  We need to know the host
+# architecture to determine whether setpag is available.
+DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
+else
+    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
 
 # These architectures are supported by OpenAFS and therefore should get setpag
 # support.  Other architectures will not.  This list must be kept in sync with
@@ -32,7 +39,7 @@ endif
 
 config.status: configure
 	dh_testdir
-	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
+	CFLAGS="$(CFLAGS)" ./configure $(SYSTEM) --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
 	    --enable-reduced-depends $(SETPAG)
 
