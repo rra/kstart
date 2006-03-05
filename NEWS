@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 3.2 (2006-03-05)
+
+    Revert the -g feature.  MIT Kerberos refuses to use ticket caches not
+    owned by the running process, removing the usefulness of the feature,
+    and a bug in its implementation was causing k5start and krenew to not
+    run aklog when they should.
+
 kstart 3.1 (2006-02-23)
 
     Add the -g flag to k5start and krenew to make the ticket cache

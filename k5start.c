@@ -114,7 +114,6 @@ struct options {
     const char *aklog;
     int stdin_passwd;
     int verbose;
-    int groupread;
 };
 
 /* The usage message. */
@@ -316,17 +315,12 @@ authenticate(krb5_context ctx, struct options *options)
     if (k5_keytab != NULL)
         krb5_kt_close(ctx, k5_keytab);
 
-    /* If requested, set the ticket to group readable. */
-    if (options->groupread) 
-        status = chmod(krb5_cc_get_name(ctx, options->ccache), 0640);
-
     /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
        broken and can't cope with being called directly on the return value of
        system().  If we can't execute the aklog program, set the exit status
        to an arbitrary but distinct value. */
-    if ((status != 0) && options->run_aklog)
+    if (options->run_aklog)
         status = run_aklog(options->aklog, options->verbose);
-
     return status;
 }
 
@@ -398,10 +392,9 @@ main(int argc, char *argv[])
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bgf:H:hI:i:K:k:l:np:qr:S:stUu:v")) != EOF)
+    while ((opt = getopt(argc, argv, "bf:H:hI:i:K:k:l:np:qr:S:stUu:v")) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
-        case 'g': options.groupread = 1;        break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;

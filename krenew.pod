@@ -4,7 +4,7 @@ krenew - Renew a Kerberos v5 ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bghtv>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
+B<krenew> [B<-bhtv>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-p> I<pid file>] [I<command> ...]
 
 =head1 DESCRIPTION
@@ -48,11 +48,6 @@ If used in conjunction with a command to run, that command will also run
 in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
 for the errors to be seen.
-
-=item B<-g>
-        
-Make the resulting ticket group readable.  Some applications may not be
-happy with a group readable ticket.
 
 =item B<-h>
 

@@ -219,8 +219,7 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 **  failed, return the exit status of aklog instead.
 */
 static int
-renew(krb5_context ctx, krb5_ccache cache, const char *aklog,
-      int groupread, int verbose)
+renew(krb5_context ctx, krb5_ccache cache, const char *aklog, int verbose)
 {
     int status;
     krb5_principal user;
@@ -274,7 +273,6 @@ renew(krb5_context ctx, krb5_ccache cache, const char *aklog,
     if (status != 0)
         krb5_err(ctx, 1, status, "krenew: error storing credentials");
     krb5_free_principal(ctx, user);
-
 #ifdef HAVE_KRB5_GET_RENEWED_CREDS
     krb5_free_cred_contents(ctx, &creds);
 #else
@@ -284,14 +282,11 @@ renew(krb5_context ctx, krb5_ccache cache, const char *aklog,
     if (out != NULL)
         krb5_free_creds(ctx, out);
 #endif
-    /* If requested, set the ticket to group readable. */
-    if ((status != 0) && groupread)
-        status = chmod(krb5_cc_get_name(ctx, cache), 0640);
- 
+
     /* If requested, run the aklog program. */
-    if ((status != 0) && aklog != NULL && aklog[0] != '\0')
+    if (aklog != NULL && aklog[0] != '\0')
         status = run_aklog(aklog, verbose);
-  
+
     return status;
 }
 
@@ -312,13 +307,11 @@ main(int argc, char *argv[])
     krb5_ccache cache;
     int status = 0;
     pid_t child = 0;
-    int groupread = 0;
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bghK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bhK:k:p:qtv")) != EOF)
         switch (option) {
         case 'b': background = 1;               break;
-        case 'g': groupread = 1;                break;
         case 'h': usage(0);                     break;
         case 'k': cachename = optarg;           break;
         case 'p': pidfile = optarg;             break;
@@ -380,7 +373,7 @@ main(int argc, char *argv[])
 
     /* Now, do the initial ticket renewal even if it's not necessary so that
        we can catch any problems. */
-    status = renew(ctx, cache, run_aklog ? aklog : NULL, groupread, verbose);
+    status = renew(ctx, cache, run_aklog ? aklog : NULL, verbose);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
@@ -427,7 +420,7 @@ main(int argc, char *argv[])
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
             if (ticket_expired(ctx, cache, keep_ticket))
-                status = renew(ctx, cache, aklog, groupread, verbose);
+                status = renew(ctx, cache, aklog, verbose);
         }
     }
 
