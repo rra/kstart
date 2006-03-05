@@ -1,3 +1,11 @@
+kstart (3.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - Revert the -g option, which turns out not to be useful.
+    - Fix a serious bug in k5start's and krenew's aklog support.
+
+ --
+
 kstart (3.1-1) unstable; urgency=low
 
   * New upstream release.
