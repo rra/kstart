@@ -24,7 +24,7 @@ running an external program automatically.
 %setup
 
 %build
-PATH="/sbin:/bin:/usr/sbin:/usr/sbin:$PATH" \
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %configure
 %{__make}
 
