@@ -44,15 +44,19 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %changelog
 * Sun Mar 05 2006 Russ Allbery <rra@stanford.edu> 3.2-1
 - New version for 3.2 release.
+
 * Sun Jan 22 2006 Russ Allbery <rra@stanford.edu> 3.0-1
 - New version for 3.0 release.
 - Update description to include krenew.
 - No longer build with --enable-reduced-depends.
+
 * Sat Dec 31 2005 Russ Allbery <rra@stanford.edu> 2.9-1
 - New version for 2.9 release.
 - No longer generated via Autoconf, since the changelog has to be added.
+
 * Sat Dec 10 2005 Russ Allbery <rra@stanford.edu> 2.8-2
 - Incorporate into the package, remove Autoreq.
+
 * Thu Oct 27 2005 Buck <buckh@> 2.8-1
 - stole spec file (not recently) from
   http://svn.rpmforge.net/svn/trunk/rpms/nagios-plugins/nagios-plugins.spec
