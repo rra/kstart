@@ -65,7 +65,7 @@ AC_SUBST([KRBLIBS])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_WITH([afs-setpag],
-    AC_HELP_STRING([--with-afs-setpag=DIR],
+    AC_HELP_STRING([--with-afs-setpag@<:@=DIR@:>@],
         [Enable AFS setpag support, libraries at DIR]),
     [if test x"$withval" != xno ; then
         if test x"$withval" != xyes ; then
