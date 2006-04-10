@@ -1,4 +1,4 @@
-                            kstart release 3.2
+                            kstart release 3.3
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
@@ -147,6 +147,11 @@ THANKS
 
   To Adam Megacz, for pointing out that checking the executability of the
   aklog program isn't necessary.
+
+  To Quanah Gibson-Mount, for pointing out various build system issues and
+  missing documentation.
+
+  To Sidney Cammeresi, for catching a missing include in krenew.
 
 LICENSE
 

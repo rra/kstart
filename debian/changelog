@@ -1,3 +1,9 @@
+kstart (3.3-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 10 Apr 2006 16:30:44 -0700
+
 kstart (3.2-1) unstable; urgency=low
 
   * New upstream release.

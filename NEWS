@@ -1,5 +1,14 @@
                        User-Visible kstart Changes
 
+kstart 3.3 (2006-04-10)
+
+    Add a missing <stdarg.h> include that caused compilation failures on
+    OS X in krenew and could have led to latent problems on other
+    platforms.
+
+    Clarify that the DIR argument to --with-afs-setpag is optional in
+    configure --help output.
+
 kstart 3.2 (2006-03-05)
 
     Revert the -g feature.  MIT Kerberos refuses to use ticket caches not
