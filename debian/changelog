@@ -1,3 +1,11 @@
+kstart (3.4-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fix bug in krenew that ran aklog even when -t wasn't given.
+  * Update to standards version 3.7.2 (no changes required).
+
+ -- Russ Allbery <rra@debian.org>  Fri,  5 May 2006 22:27:20 -0700
+
 kstart (3.3-1) unstable; urgency=low
 
   * New upstream release.

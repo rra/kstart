@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 4.0.0), libkrb5-dev, libopenafs-dev [alpha amd64 hppa i386 ia64 powerpc s390 sparc]
-Standards-Version: 3.6.2
+Standards-Version: 3.7.2
 
 Package: kstart
 Architecture: any
