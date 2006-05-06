@@ -1,4 +1,4 @@
-                            kstart release 3.3
+                            kstart release 3.4
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
@@ -151,7 +151,9 @@ THANKS
   To Quanah Gibson-Mount, for pointing out various build system issues and
   missing documentation.
 
-  To Sidney Cammeresi, for catching a missing include in krenew.
+  To Sidney Cammeresi, for catching a missing include in krenew and for
+  providing information and suggestions about Mac OS X's default ticket
+  cache and its effects on the -b option of k5start and krenew.
 
 LICENSE
 
