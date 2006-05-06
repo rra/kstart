@@ -638,6 +638,13 @@ main(int argc, char *argv[])
         }
     }
 
+    /* If we're backgrounded, check our ticket and possibly do the
+       authentication again.  Normally this will never trigger, but on Mac OS
+       X our ticket cache isn't going to survive the setsid that daemon does
+       and we've now lost our credentials. */
+    if (background && ticket_expired(ctx, &options))
+        status = authenticate(ctx, &options);
+
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
         child = start_command(command[0], command);

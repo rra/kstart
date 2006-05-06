@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 3.4 (2006-05-05)
+
+    k5start now rechecks the ticket cache and possibly reauthenticates
+    after backgrounding itself when running as a daemon.  This works
+    around the loss of the ticket cache after backgrounding on Mac OS X
+    with the default ticket cache type.
+
 kstart 3.3 (2006-04-10)
 
     Add a missing <stdarg.h> include that caused compilation failures on
