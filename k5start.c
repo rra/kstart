@@ -398,7 +398,6 @@ main(int argc, char *argv[])
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
-        case 'k': cache = optarg;               break;
         case 'n': /* Ignored */                 break;
         case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
@@ -423,6 +422,12 @@ main(int argc, char *argv[])
             options.keep_ticket = atoi(optarg);
             if (options.keep_ticket <= 0)
                 die("-K interval argument %s out of range", optarg);
+            break;
+        case 'k':
+            cache = malloc(strlen(optarg) + strlen("FILE:") + 1);
+            if (cache == NULL)
+                die("cannot allocate memory: %s", strerror(errno));
+            sprintf(cache, "FILE:%s", optarg);
             break;
         case 'l':
             k5_errno = krb5_string_to_deltat(optarg, &life_secs);
@@ -507,6 +512,8 @@ main(int argc, char *argv[])
         int fd;
 
         cache = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
+        if (cache == NULL)
+            die("cannot allocate memory: %s", strerror(errno));
         sprintf(cache, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
         fd = mkstemp(cache);
         if (fd < 0)

@@ -71,6 +71,12 @@ in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
 for the errors to be seen.
 
+Note that on Mac OS X, the default ticket cache type is per-session and
+using the B<-b> flag will disassociate B<k5start> from the existing ticket
+cache.  When using B<-b> in conjunction with B<-K> on Mac OS X, you
+probably also want to use the B<-k> flag to specify a ticket cache file
+and force the use of a file cache.
+
 =item B<-f> I<keytab>
 	
 Authenticate using the keytab I<keytab> rather than asking for a
@@ -110,7 +116,11 @@ before the next wakeup, and gets a new ticket if needed.
 =item B<-k> I<ticket file>
 
 Use I<ticket file> as the ticket cache rather than the contents of the
-environment variable KRB5CCNAME or the library default.
+environment variable KRB5CCNAME or the library default.  I<ticket file>
+should be the path to a file, without any leading C<FILE:> string.  Using
+this option forces a file-based ticket cache; if you wish to use a
+different type of ticket cache, don't specify B<-k> and instead set
+KRB5CCNAME to the designator of the cache you wish to use.
 
 =item B<-l> I<time string>
 

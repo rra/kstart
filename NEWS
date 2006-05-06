@@ -7,6 +7,19 @@ kstart 3.4 (2006-05-05)
     around the loss of the ticket cache after backgrounding on Mac OS X
     with the default ticket cache type.
 
+    Force the use of a file ticket cache in k5start and krenew if the -k
+    option is given.  The code was assuming that a file ticket cache was
+    the default, which may not always be the case.
+
+    Document in the krenew man page that the -b option may not do what one
+    desires on Mac OS X and suggest an alternative that doesn't detach
+    from the current session.
+
+    krenew no longer runs aklog unless the -t flag was given.  Previously,
+    due to a bug, it would skip running aklog the first time unless -t was
+    given but would then always run aklog if either a compiled-in default
+    or a default from the environment were available.
+
 kstart 3.3 (2006-04-10)
 
     Add a missing <stdarg.h> include that caused compilation failures on

@@ -49,6 +49,17 @@ in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
 for the errors to be seen.
 
+Use of this flag on Mac OS X without specifying a file-based ticket cache
+by either using B<-k> or setting KRB5CCNAME will probably not do what you
+want.  Ticket caches on Mac OS X are, by default, per-session and with
+B<-b> B<krenew> will detach itself from your existing ticket cache.
+Instead, to renew the default ticket cache on Mac OS X, try something
+like:
+
+    (krenew -K 60 &)
+
+to run B<krenew> in the background but within the current session.
+
 =item B<-h>
 
 Display a usage message and exit.
@@ -64,7 +75,11 @@ interval is 60 minutes (1 hour).
 =item B<-k> I<ticket file>
 
 Use I<ticket file> as the ticket cache rather than the contents of the
-environment variable KRB5CCNAME or the library default.
+environment variable KRB5CCNAME or the library default.  I<ticket file>
+should be the path to a file, without any leading C<FILE:> string.  Using
+this option forces a file-based ticket cache; if you wish to use a
+different type of ticket cache, don't specify B<-k> and instead set
+KRB5CCNAME to the designator of the cache you wish to use.
 
 =item B<-p> I<pid file>
 

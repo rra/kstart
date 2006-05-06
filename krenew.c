@@ -314,7 +314,6 @@ main(int argc, char *argv[])
         switch (option) {
         case 'b': background = 1;               break;
         case 'h': usage(0);                     break;
-        case 'k': cachename = optarg;           break;
         case 'p': pidfile = optarg;             break;
         case 't': run_aklog = 1;                break;
         case 'v': verbose = 1;                  break;
@@ -323,6 +322,12 @@ main(int argc, char *argv[])
             keep_ticket = atoi(optarg);
             if (keep_ticket <= 0)
                 die("-K interval argument %s out of range", optarg);
+            break;
+        case 'k':
+            cachename = malloc(strlen(optarg) + strlen("FILE:") + 1);
+            if (cachename == NULL)
+                die("cannot allocate memory: %s", strerror(errno));
+            sprintf(cachename, "FILE:%s", optarg);
             break;
 
         default:
@@ -421,7 +426,7 @@ main(int argc, char *argv[])
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
             if (ticket_expired(ctx, cache, keep_ticket))
-                status = renew(ctx, cache, aklog, verbose);
+                status = renew(ctx, cache, run_aklog ? aklog : NULL, verbose);
         }
     }
 
