@@ -1,3 +1,10 @@
+kstart (3.5-1) unstable; urgency=low
+
+  * New upstream release.
+    - Propagate HUP, TERM, and QUIT signals to child processes.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 13 Jun 2006 13:58:50 -0700
+
 kstart (3.4-1) unstable; urgency=low
 
   * New upstream release.
