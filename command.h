@@ -11,7 +11,9 @@
 int run_aklog(const char *aklog, int verbose);
 
 /* Start a command, executing the given command with the given argument vector
-   (which includes argv[0]).  Returns the PID or -1 on error. */
+   (which includes argv[0]).  Returns the PID or -1 on error.  This function
+   should not be called again without an intervening finish_command or the
+   signal handling won't work properly. */
 pid_t start_command(const char *command, char **argv);
 
 /* Check to see if the given command has finished.  If so, return 1 and set

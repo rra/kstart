@@ -1,5 +1,13 @@
                        User-Visible kstart Changes
 
+kstart 3.5 (2006-06-13)
+
+    When invoked to run a command, k4start, k5start, and krenew now
+    propagate HUP, TERM, and QUIT signals to the child process rather than
+    just exiting.  These signals do not terminate k4start, k5start, or
+    krenew any longer, but of course they will exit if the signal causes
+    the child process to exit.  Patch from Adam Megacz.
+
 kstart 3.4 (2006-05-05)
 
     k5start now rechecks the ticket cache and possibly reauthenticates

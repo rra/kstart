@@ -20,6 +20,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+/* Global so that it can be used in signal handlers. */
+static pid_t global_child_pid;
+
+
 /*
 **  Run the given aklog command, returning its exit status.  The command must
 **  be a fully-qualified path.
@@ -50,24 +54,47 @@ child_handler(int signal)
 
 
 /*
+**  This handler is installed for signals that should be propagated to the
+**  child (and ignored by kstart).
+*/
+static void
+propagate_handler(int signal)
+{
+    kill(global_child_pid, signal);
+}
+
+
+/*
 **  Start a command, returning its PID.  Takes the command to run, which will
 **  be searched for on the path if not fully-qualified, and then the arguments
 **  to pass to it.  If execution fails for some reason, returns -1.
+**
+**  This function should only be called once before a call to finish_command;
+**  otherwise, the signal handler code won't work properly.
 */
 pid_t
 start_command(const char *command, char **argv)
 {
     pid_t child;
 
+    /* Ignored. */
     signal(SIGCHLD, child_handler);
+
+    /* Propagated to child process. */
+    signal(SIGHUP, propagate_handler);
+    signal(SIGTERM, propagate_handler);
+    signal(SIGQUIT, propagate_handler);
+
     child = fork();
     if (child < 0)
         return -1;
     else if (child == 0) {
         execvp(command, argv);
         return -1;
-    } else
+    } else {
+        global_child_pid = child;
         return child;
+    }
 }
 
 

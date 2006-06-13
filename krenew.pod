@@ -31,6 +31,13 @@ with the B<-t> option, it will put the command in a separate PAG before
 obtaining AFS tokens so that they don't interfere with other processes on
 the system.
 
+When running a command, B<krenew> propagates HUP, TERM, and QUIT signals
+to the child process and does not exit when those signals are received.
+(If the propagated signal causes the child process to exit, B<krenew> will
+then exit.)  This allows B<krenew> to react properly when run under a
+command supervision system such as runit(8) or svscan(8) that uses signals
+to control supervised commands.
+
 =head1 OPTIONS
 
 =over 4

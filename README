@@ -146,7 +146,8 @@ THANKS
   krenew.
 
   To Adam Megacz, for pointing out that checking the executability of the
-  aklog program isn't necessary.
+  aklog program isn't necessary and for contributing the code to propagate
+  signals to a child process.
 
   To Quanah Gibson-Mount, for pointing out various build system issues and
   missing documentation.

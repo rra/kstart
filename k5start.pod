@@ -52,6 +52,13 @@ If the command contains command-line options (like C<-c>), put -- on the
 command line before the beginning of the command to tell B<k5start> to not
 parse those options as its own.
 
+When running a command, B<k5start> propagates HUP, TERM, and QUIT signals
+to the child process and does not exit when those signals are received.
+(If the propagated signal causes the child process to exit, B<k5start>
+will then exit.)  This allows B<k5start> to react properly when run under
+a command supervision system such as runit(8) or svscan(8) that uses
+signals to control supervised commands.
+
 =head1 OPTIONS
 
 =over 4
