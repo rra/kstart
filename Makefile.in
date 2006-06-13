@@ -11,7 +11,7 @@ TARNAME		= $(TARDIR).tar
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
-
+datarootdir	= @datarootdir@
 bindir		= @bindir@
 mandir		= @mandir@
 

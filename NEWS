@@ -8,6 +8,8 @@ kstart 3.5 (2006-06-13)
     krenew any longer, but of course they will exit if the signal causes
     the child process to exit.  Patch from Adam Megacz.
 
+    Minor Makefile updates to support Autoconf 2.60.
+
 kstart 3.4 (2006-05-05)
 
     k5start now rechecks the ticket cache and possibly reauthenticates
