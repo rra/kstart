@@ -156,6 +156,9 @@ THANKS
   providing information and suggestions about Mac OS X's default ticket
   cache and its effects on the -b option of k5start and krenew.
 
+  To Thomas Kula, for pointing out that k_hasafs has to be called before
+  k_setpag when using the kafs functions.
+
 LICENSE
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006

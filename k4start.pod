@@ -168,6 +168,11 @@ to run B<aklog> to get a token.  If the environment variable KINIT_PROG is
 set, the program is run regardless of the B<-t> flag (unless the B<-n>
 flag is given).
 
+If B<k4start> has been built with AFS setpag support and a command was
+given on the command line, B<k4start> will create a new PAG before
+obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
+PAG.
+
 =item B<-u> I<client principal>
 
 This specifies the principal to obtain credentials as.  The entire

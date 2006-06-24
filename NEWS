@@ -1,5 +1,13 @@
                        User-Visible kstart Changes
 
+kstart 3.6 (unreleased)
+
+    Call k_hasafs before k_setpag in builds with the kafs functions.
+    Without calling k_hasafs first, k_setpag may fail or die with a
+    signal.  Thanks to Thomas Kula for the bug report.
+
+    Document in the man pages when a new PAG is created.
+
 kstart 3.5 (2006-06-13)
 
     When invoked to run a command, k4start, k5start, and krenew now

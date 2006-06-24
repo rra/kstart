@@ -45,11 +45,13 @@
 # if HAVE_KAFS_H
 #  include <kafs.h>
 # endif
-# define lsetpag() k_setpag()
 #elif HAVE_LSETPAG
 int lsetpag(void);
+# define k_hasafs() (1)
+# define k_setpag() lsetpag()
 #else
-# define lsetpag() (0)
+# define k_hasafs() (1)
+# define k_setpag() (0)
 #endif
 
 #ifdef HAVE_KERBEROSIV_KRB_H
@@ -465,9 +467,14 @@ main(int argc, char *argv[])
 
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */
-    if (command != NULL && options.run_aklog && !options.no_aklog)
-        if (lsetpag() < 0)
-            die("unable to create PAG: %s", strerror(errno));
+    if (command != NULL && options.run_aklog && !options.no_aklog) {
+        if (k_hasafs()) {
+            if (k_setpag() < 0)
+                die("unable to create PAG: %s", strerror(errno));
+        } else {
+            die("cannot create PAG: AFS support is not available");
+        }
+    }
 
     /* Now, do the actual authentication. */
     status = authenticate(&options, aklog);

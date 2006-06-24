@@ -106,6 +106,11 @@ Run an external program after getting a ticket.  The default use of this
 is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
 is set, it overrides the compiled-in default.
 
+If B<krenew> has been built with AFS setpag support and a command was
+given on the command line, B<krenew> will create a new PAG before
+obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
+PAG.
+
 =item B<-v>
 	
 Be verbose.  This will print out a bit of additional information about
