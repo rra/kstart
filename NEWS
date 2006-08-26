@@ -8,6 +8,9 @@ kstart 3.6 (unreleased)
 
     Document in the man pages when a new PAG is created.
 
+    Avoid $< in non-pattern rules.  This doesn't work with some non-GNU
+    makes.
+
 kstart 3.5 (2006-06-13)
 
     When invoked to run a command, k4start, k5start, and krenew now

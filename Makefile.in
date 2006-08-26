@@ -74,13 +74,16 @@ krenew: krenew.o command.o krb5_err.o $(LIBOBJS)
 	    $(LIBOBJS) $(KRB5LIBS)
 
 $(srcdir)/k4start.1: $(srcdir)/k4start.pod
-	pod2man --release=$(VERSION) --center="User commands" $< > $@
+	pod2man --release=$(VERSION) --center="User commands" \
+	    $(srcdir)/k4start.pod > $@
 
 $(srcdir)/k5start.1: $(srcdir)/k5start.pod
-	pod2man --release=$(VERSION) --center="User commands" $< > $@
+	pod2man --release=$(VERSION) --center="User commands" \
+	    $(srcdir)/k5start.pod > $@
 
 $(srcdir)/krenew.1: $(srcdir)/krenew.pod
-	pod2man --release=$(VERSION) --center="User commands" $< > $@
+	pod2man --release=$(VERSION) --center="User commands" \
+	    $(srcdir)/krenew.pod > $@
 
 clean:
 	rm -f *.o k4start k5start krenew
