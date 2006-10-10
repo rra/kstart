@@ -234,7 +234,7 @@ every 10 minutes to check if the ticket is about to expire.
         host/example.com
 
 Do the same, but using the default ticket cache and run the command
-/usr/local/bin/auth-backup.  B<k4start> will continue running until the
+/usr/local/bin/auth-backup.  B<k5start> will continue running until the
 command finishes.
 
     k5start -f /etc/krb5.keytab -K 10 -l 10h host/example.com \
@@ -295,7 +295,7 @@ path.
 
 If a command is specified and B<-k> was not given, B<k5start> will create
 a temporary ticket cache file of the form C</tmp/krb5cc_%d_%s> where %d is
-the UID B<k4start> is running as and %s is a random string.
+the UID B<k5start> is running as and %s is a random string.
 
 =head1 SEE ALSO
 
