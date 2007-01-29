@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 3.7 (unreleased)
+kstart 3.7 (2007-01-28)
 
     Correctly honor the argument to -H for k4start and k5start.  This was
     lost during an earlier code restructuring.  Thanks to Thomas Weiss for
