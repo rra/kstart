@@ -91,9 +91,10 @@ password.  A key for the client principal must be present in I<keytab>.
 
 =item B<-H> I<minutes>
 
-Check for a happy ticket, one that has a remaining lifetime of at least
-I<minutes> minutes.  If such a ticket is found, exit immediately with
-status 0.  Otherwise, try to obtain a new ticket.
+Check for a happy ticket, defined as one that has a remaining lifetime of
+at least I<minutes> minutes.  If such a ticket is found, exit immediately
+with status 0.  Otherwise, try to obtain a new ticket.  Cannot be used
+with B<-K>.
 
 =item B<-h>
 
@@ -118,7 +119,8 @@ option.
 	
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before the next wakeup, and gets a new ticket if needed.
+before or less than two minutes after the next wakeup, and gets a new
+ticket if needed.
 
 =item B<-k> I<ticket file>
 

@@ -1,5 +1,15 @@
                        User-Visible kstart Changes
 
+kstart 3.7 (unreleased)
+
+    Correctly honor the argument to -H for k4start and k5start.  This was
+    lost during an earlier code restructuring.  Thanks to Thomas Weiss for
+    the bug report.
+
+    Document that -K will renew a ticket if it will expire within two
+    minutes of the next wakeup, not just if it will expire before the next
+    wakeup.
+
 kstart 3.6 (2006-10-04)
 
     Call k_hasafs before k_setpag in builds with the kafs functions.

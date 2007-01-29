@@ -3,7 +3,7 @@
 **  Kerberos v5 kinit replacement suitable for daemon authentication.
 **
 **  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007
 **      Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.
@@ -217,7 +217,7 @@ static krb5_error_code
 ticket_expired(krb5_context ctx, struct options *options)
 {
     krb5_creds increds, *outcreds = NULL;
-    time_t now, then;
+    time_t now, then, offset;
     int status;
 
     /* Obtain the ticket. */
@@ -227,11 +227,18 @@ ticket_expired(krb5_context ctx, struct options *options)
     status = krb5_get_credentials(ctx, 0, options->ccache, &increds,
                                   &outcreds);
 
-    /* Check the expiration time. */
+    /* Check the expiration time.  We may be looking for a ticket that lasts a
+       particuliar length of time based on either keep_ticket or
+       happy_ticket.  Only one of those options will be set; at least one of
+       them will always be zero. */
     if (status == 0) {
         now = time(NULL);
         then = outcreds->times.endtime;
-        if (then < now + 60 * options->keep_ticket + EXPIRE_FUDGE)
+        if (options->happy_ticket > 0)
+            offset = 60 * options->happy_ticket;
+        else
+            offset = 60 * options->keep_ticket + EXPIRE_FUDGE;
+        if (then < now + offset)
             status = KRB5KRB_AP_ERR_TKT_EXPIRED;
     }
 
@@ -478,7 +485,9 @@ main(int argc, char *argv[])
     if (principal != NULL && strchr(principal, '/') != NULL && inst != NULL)
         die("instance specified in the principal and with -i");
     if (search_keytab && options.keytab == NULL)
-        die("-p option requires a keytab be specified with -f");
+        die("-U option requires a keytab be specified with -f");
+    if (options.happy_ticket > 0 && options.keep_ticket > 0)
+        die("-H and -K options cannot be used at the same time");
 
     /* Set aklog from KINIT_PROG or the compiled-in default. */
     options.aklog = getenv("KINIT_PROG");

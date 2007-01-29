@@ -3,7 +3,7 @@
 **  Kerberos v4 kinit replacement suitable for daemon authentication.
 **
 **  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007
 **      Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.
@@ -182,13 +182,17 @@ ticket_expired(struct options *options)
 {
     CREDENTIALS cr;
     int status;
-    time_t now, then;
+    time_t now, then, offset;
 
     status = krb_get_cred(options->sname, options->sinst, options->realm, &cr);
     if (status == KSUCCESS) {
         now = time(NULL);
         then = krb_life_to_time(cr.issue_date, cr.lifetime);
-        if (then < now + 60 * options->keep_ticket + EXPIRE_FUDGE)
+        if (options->happy_ticket > 0)
+            offset = 60 * options->happy_ticket;
+        else
+            offset = 60 * options->keep_ticket + EXPIRE_FUDGE;
+        if (then < now + offset)
             status = RD_AP_EXP;
     }
     return status;
@@ -365,6 +369,8 @@ main(int argc, char *argv[])
     if (lifetime > 0 && options.keep_ticket > lifetime)
         die("-K limit %d must be smaller than lifetime %d",
             options.keep_ticket, options.lifetime);
+    if (options.happy_ticket > 0 && options.keep_ticket > 0)
+        die("-H and -K options cannot be used at the same time");
 
     /* Check to see if KINIT_PROG is set.  If it is, and no_aklog is not set,
        set run_aklog, since setting that environment variable changes the
