@@ -69,7 +69,7 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
                  krb5_get_init_creds_opt_set_default_flags \
                  krb5_get_renewed_creds])
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
-rra_krb5_uses_com_err=false
+rra_krb5_uses_com_err=true
 if test x"$reduce_depends" = xtrue ; then
     AC_CHECK_FUNCS([krb5_err], ,
         [AC_LIBOBJ([krb5_err])
