@@ -435,7 +435,7 @@ main(int argc, char *argv[])
        authenticate.  If -H was set, authenticate only if the ticket isn't
        expired. */
     if (options.happy_ticket == 0 || ticket_expired(&options))
-        status = authenticate(ctx, &options);
+        status = authenticate(&options, aklog);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
