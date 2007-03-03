@@ -92,9 +92,10 @@ password.  A key for the client principal must be present in I<keytab>.
 =item B<-H> I<minutes>
 
 Check for a happy ticket, defined as one that has a remaining lifetime of
-at least I<minutes> minutes.  If such a ticket is found, exit immediately
-with status 0.  Otherwise, try to obtain a new ticket.  Cannot be used
-with B<-K>.
+at least I<minutes> minutes.  If such a ticket is found, do not attempt
+authentication.  Instead, just run the command (if one was specified) or
+exit immediately with status 0 (if none was).  Otherwise, try to obtain a
+new ticket and then run the command, if any.  Cannot be used with B<-K>.
 
 =item B<-h>
 
