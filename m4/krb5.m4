@@ -25,9 +25,7 @@ AC_DEFUN([_RRA_LIB_KRB5_GSSAPI_REDUCED],
 dnl Does the appropriate library checks for reduced-dependency krb5 linkage.
 AC_DEFUN([_RRA_LIB_KRB5_KRB5_REDUCED],
 [AC_CHECK_LIB([krb5], [krb5_init_context], [KRBLIBS="-lkrb5"],
-    [AC_MSG_ERROR([cannot find usable Kerberos v5 library])])
-AC_CHECK_LIB([com_err], [com_err], [KRBLIBS="$KRBLIBS -lcom_err"],
-    [AC_MSG_ERROR([cannot find usable com_err library])])])
+    [AC_MSG_ERROR([cannot find usable Kerberos v5 library])])])
 
 dnl Does the appropriate library checks for reduced-dependency krb4 linkage.
 AC_DEFUN([_RRA_LIB_KRB5_KRB4_REDUCED],
@@ -112,13 +110,24 @@ AC_CHECK_DECLS([GSS_KRB5_MECHANISM], , ,
 dnl Additional checks for portability between MIT and Heimdal if krb5
 dnl libraries were requested.
 AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
-[AC_CHECK_HEADERS([et/com_err.h])
-AC_CHECK_FUNCS([krb5_free_keytab_entry_contents])
-AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])])
+[AC_CHECK_FUNCS([krb5_free_keytab_entry_contents \
+                 krb5_get_init_creds_opt_set_default_flags \
+                 krb5_get_renewed_creds])
+AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
+if test x"$reduce_depends" = xtrue ; then
+    AC_CHECK_FUNCS([krb5_err], ,
+        [AC_CHECK_FUNCS([krb5_get_error_message], ,
+            [AC_CHECK_HEADERS([et/com_err.h])
+             AC_CHECK_LIB([com_err], [com_err], [LIBS="$LIBS -lcom_err"],
+                [AC_MSG_ERROR([cannot find usable com_err library])])])])
+else
+    AC_CHECK_FUNCS([krb5_err krb5_get_error_message])
+fi])
 
 dnl Additional checks for portability if krb4 libraries were requested.
 AC_DEFUN([_RRA_LIB_KRB5_KRB4_EXTRA],
-[AC_CHECK_HEADERS([kerberosIV/krb.h])])
+[AC_CHECK_HEADERS([kerberosIV/krb.h])
+AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])])
 
 dnl The main macro.
 AC_DEFUN([RRA_LIB_KRB5],

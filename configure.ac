@@ -45,8 +45,6 @@ dnl Check for the Kerberos v5 libraries and for portability between krb5 and
 dnl Heimdal when getting initial tickets.
 save_LIBS=$LIBS
 RRA_LIB_KRB5([krb5], [true])
-AC_CHECK_FUNCS([krb5_get_init_creds_opt_set_default_flags krb5_err \
-                krb5_get_renewed_creds])
 KRB5LIBS=$LIBS
 LIBS=$save_LIBS
 AC_SUBST([KRB5LIBS])
@@ -57,7 +55,6 @@ KRBLIBS=
 if test x"$K4START" != x ; then
     save_LIBS=$LIBS
     RRA_LIB_KRB5([krb4], [true])
-    AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
     KRBLIBS=$LIBS
     LIBS=$save_LIBS
 fi

@@ -9,6 +9,8 @@ kstart 3.8 (unreleased)
     mode produces less Kerberos traffic and avoids service ticket requests
     being rejected as possible relay attacks.
 
+    Support the new MIT Kerberos error message functions.
+
 kstart 3.7 (2007-01-28)
 
     Correctly honor the argument to -H for k4start and k5start.  This was

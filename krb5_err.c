@@ -21,10 +21,15 @@
 #include <stdlib.h>
 
 #include <krb5.h>
-#if HAVE_ET_COM_ERR_H
-# include <et/com_err.h>
-#else
-# include <com_err.h>
+
+#ifndef KRB5_GET_ERROR_MESSAGE
+# if HAVE_ET_COM_ERR_H
+#  include <et/com_err.h>
+# else
+#  include <com_err.h>
+# endif
+# define krb5_get_error_message(c, s)  (char *) error_message(s)
+# define krb5_free_error_message(c, m) /* empty */
 #endif
 
 krb5_error_code
@@ -32,13 +37,14 @@ krb5_err(krb5_context context, int eval, krb5_error_code code,
          const char *format, ...)
 {
     va_list args;
-    const char *message;
+    char *message;
 
-    message = error_message(code);
+    message = krb5_get_error_message(context, code);
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
     fprintf(stderr, ": %s\n", message);
+    krb5_free_error_message(context, message);
     exit(eval);
 }
 
@@ -46,13 +52,14 @@ krb5_error_code
 krb5_warn(krb5_context context, krb5_error_code code, const char *format, ...)
 {
     va_list args;
-    const char *message;
+    char *message;
 
-    message = error_message(code);
+    message = krb5_get_error_message(context, code);
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
     fprintf(stderr, ": %s\n", message);
+    krb5_free_error_message(context, message);
     return 0;
 }
 
