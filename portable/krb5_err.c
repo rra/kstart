@@ -14,9 +14,6 @@
 #include <config.h>
 #include <system.h>
 
-/* Skip this whole file if we have krb5_err. */
-#ifndef HAVE_KRB5_ERR
-
 #include <krb5.h>
 
 #ifndef KRB5_GET_ERROR_MESSAGE
@@ -67,5 +64,3 @@ krb5_warn(krb5_context context UNUSED, krb5_error_code code,
     krb5_free_error_message(context, message);
     return 0;
 }
-
-#endif /* !HAVE_KRB5_ERR */

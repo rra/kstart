@@ -1,17 +1,27 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl $Id$
+dnl
+dnl Written by Russ Allbery <rra@stanford.edu>
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+dnl     Board of Trustees, Leland Stanford Jr. University
+dnl
+dnl See README for licensing terms.
 
-AC_REVISION($Revision$)
-AC_PREREQ(2.57)
+AC_REVISION([$Revision$])
+AC_PREREQ([2.60])
 AC_INIT([kstart], [3.7], [rra@stanford.edu])
-
-m4_include([m4/krb5.m4])
+AC_CONFIG_AUX_DIR([tools])
+AC_CONFIG_LIBOBJ_DIR([portable])
+AM_INIT_AUTOMAKE([1.10])
+AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
+AC_PROG_RANLIB
 
-dnl aklog is the old name for the utility to get AFS tokens from Kerberos
+dnl aklog is the standard name for the utility to get AFS tokens from Kerberos
 dnl tickets.  afslog is the name of the utility that comes with KTH Kerberos
 dnl or Heimdal.  By default, we build in support for calling it if we find
 dnl either on the user's path or if the user specifies a default path.
@@ -55,10 +65,10 @@ KRBLIBS=
 if test x"$K4START" != x ; then
     save_LIBS=$LIBS
     RRA_LIB_KRB5([krb4], [true])
-    KRBLIBS=$LIBS
+    KRB4LIBS=$LIBS
     LIBS=$save_LIBS
 fi
-AC_SUBST([KRBLIBS])
+AC_SUBST([KRB4LIBS])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_WITH([afs-setpag],

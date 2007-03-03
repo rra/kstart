@@ -11,6 +11,10 @@ kstart 3.8 (unreleased)
 
     Support the new MIT Kerberos error message functions.
 
+    Overhaul the build system.  Use Automake, use a better strategy for
+    dealing with portability issues, and factor duplicate code out into
+    shared files.
+
 kstart 3.7 (2007-01-28)
 
     Correctly honor the argument to -H for k4start and k5start.  This was

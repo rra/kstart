@@ -14,14 +14,6 @@ dnl be either "true" (if the program doesn't otherwise use the networking
 dnl libraries) or "false" (if it is already probing for the networking
 dnl libraries separately).
 
-dnl Does the appropriate library checks for reduced-dependency GSSAPI linkage.
-AC_DEFUN([_RRA_LIB_KRB5_GSSAPI_REDUCED],
-[AC_CHECK_LIB([gssapi], [gss_import_name],
-    [KRBLIBS="-lgssapi"],
-    [AC_CHECK_LIB([gssapi_krb5], [gss_import_name],
-        [KRBLIBS="-lgssapi_krb5"],
-        [AC_MSG_ERROR([cannot find usable GSSAPI library])])])])
-
 dnl Does the appropriate library checks for reduced-dependency krb5 linkage.
 AC_DEFUN([_RRA_LIB_KRB5_KRB5_REDUCED],
 [AC_CHECK_LIB([krb5], [krb5_init_context], [KRBLIBS="-lkrb5"],
@@ -32,22 +24,6 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB4_REDUCED],
 [AC_CHECK_LIB([krb4], [krb_get_svc_in_tkt], [KRBLIBS="-lkrb4"],
     [AC_CHECK_LIB([krb], [krb_get_svc_in_tkt], [KRBLIBS="-lkrb"],
         [AC_MSG_ERROR([cannot find usable Kerberos v4 library])])])])
-
-dnl Does the appropriate library checks for GSSAPI linkage.
-AC_DEFUN([_RRA_LIB_KRB5_GSSAPI],
-[AC_CHECK_LIB([gssapi], [gss_import_name],
-    [KRBLIBS="-lgssapi -lkrb5 -lasn1 -lroken -lcrypto -lcom_err"],
-    [KRB5EXTRA="-lkrb5 -lk5crypto -lcom_err"
-     AC_CHECK_LIB([krb5support], [krb5int_getspecific],
-        [KRB5EXTRA="$KRB5EXTRA -lkrb5support"],
-        [AC_SEARCH_LIBS([pthread_setspecific], [pthreads pthread])
-         AC_CHECK_LIB([krb5support], [krb5int_setspecific],
-            [KRB5EXTRA="$KRB5EXTRA -lkrb5support"])])
-     AC_CHECK_LIB([gssapi_krb5], [gss_import_name],
-        [KRBLIBS="-lgssapi_krb5 $KRB5EXTRA"],
-        [AC_MSG_ERROR([cannot find usable GSSAPI library])],
-        [$KRB5EXTRA])],
-    [-lkrb5 -lasn1 -lroken -lcrypto -lcom_err])])
 
 dnl Does the appropriate library checks for krb5 linkage.  Note that we have
 dnl to check for a different function the second time since the Heimdal and
@@ -86,27 +62,6 @@ AC_CHECK_LIB([krb], [krb_get_svc_in_tkt],
         [$KRB5EXTRA])],
     [$KRB4EXTRA])])
 
-dnl Additional checks for portability between MIT and Heimdal if GSSAPI
-dnl libraries were requested.
-AC_DEFUN([_RRA_LIB_KRB5_GSSAPI_EXTRA],
-[AC_CHECK_HEADERS([gssapi.h])
-AC_CHECK_DECL([GSS_C_NT_USER_NAME],
-    [AC_DEFINE([HAVE_GSS_RFC_OIDS], 1,
-       [Define to 1 if the GSS-API library uses RFC-compliant OIDs.])], ,
-[#ifdef HAVE_GSSAPI_H
-# include <gssapi.h>
-#else
-# include <gssapi/gssapi.h>
-#endif
-])
-AC_CHECK_DECLS([GSS_KRB5_MECHANISM], , ,
-[#ifdef HAVE_GSSAPI_H
-# include <gssapi.h>
-#else
-# include <gssapi/gssapi.h>
-#endif
-])])
-
 dnl Additional checks for portability between MIT and Heimdal if krb5
 dnl libraries were requested.
 AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
@@ -114,15 +69,21 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
                  krb5_get_init_creds_opt_set_default_flags \
                  krb5_get_renewed_creds])
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
+rra_krb5_uses_com_err=false
 if test x"$reduce_depends" = xtrue ; then
     AC_CHECK_FUNCS([krb5_err], ,
-        [AC_CHECK_FUNCS([krb5_get_error_message], ,
-            [AC_CHECK_HEADERS([et/com_err.h])
+        [AC_LIBOBJ([krb5_err])
+         AC_CHECK_FUNCS([krb5_get_error_message], ,
+            [rra_krb5_uses_com_err=false
+             AC_CHECK_HEADERS([et/com_err.h])
              AC_CHECK_LIB([com_err], [com_err], [LIBS="$LIBS -lcom_err"],
                 [AC_MSG_ERROR([cannot find usable com_err library])])])])
 else
-    AC_CHECK_FUNCS([krb5_err krb5_get_error_message])
-fi])
+    AC_CHECK_FUNCS([krb5_err], ,
+        [AC_LIBOBJ([krb5_err])
+         AC_CHECK_FUNCS([krb5_get_error_message])])
+fi
+AM_CONDITIONAL([USES_COM_ERR], [test x"$rra_krb5_uses_com_err" = xtrue])])
 
 dnl Additional checks for portability if krb4 libraries were requested.
 AC_DEFUN([_RRA_LIB_KRB5_KRB4_EXTRA],
@@ -151,7 +112,6 @@ AC_ARG_ENABLE([reduced-depends],
              LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
          fi
          case "$1" in
-         gssapi) _RRA_LIB_KRB5_GSSAPI_REDUCED ;;
          krb5)   _RRA_LIB_KRB5_KRB5_REDUCED   ;;
          krb4)   _RRA_LIB_KRB5_KRB4_REDUCED   ;;
          *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
@@ -219,7 +179,6 @@ if test x"$reduce_depends" != xtrue ; then
             [AC_SEARCH_LIBS([__res_search], [resolv])])
         AC_SEARCH_LIBS([crypt], [crypt])
         case "$1" in
-        gssapi) _RRA_LIB_KRB5_GSSAPI ;;
         krb5)   _RRA_LIB_KRB5_KRB5   ;;
         krb4)   _RRA_LIB_KRB5_KRB4   ;;
         *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
@@ -241,7 +200,6 @@ LDFLAGS=`echo "$LDFLAGS" | sed 's/^  *//'`
 
 dnl Run any extra checks for the desired libraries.
 case "$1" in
-gssapi) _RRA_LIB_KRB5_GSSAPI_EXTRA ;;
 krb5)   _RRA_LIB_KRB5_KRB5_EXTRA   ;;
 krb4)   _RRA_LIB_KRB5_KRB4_EXTRA   ;;
 esac])
