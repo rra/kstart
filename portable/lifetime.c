@@ -9,14 +9,9 @@
 */
 
 #include <config.h>
+#include <portable/krb4.h>
 
 #include <time.h>
-
-#ifdef HAVE_KERBEROSIV_KRB_H
-# include <kerberosIV/krb.h>
-#else
-# include <krb.h>
-#endif
 
 /* The lifetime value indicating a ticket that never expires. */
 #define TKTLIFENOEXPIRE 0xFF

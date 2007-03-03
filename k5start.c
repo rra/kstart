@@ -21,48 +21,16 @@
 
 #include <config.h>
 #include <system.h>
+#include <portable/kafs.h>
+#include <portable/krb5.h>
+#include <portable/time.h>
 
 #include <errno.h>
 #include <netdb.h>
 #include <pwd.h>
 #include <sys/stat.h>
 
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <krb5.h>
-
-#include "command.h"
-
-#if HAVE_K_SETPAG
-# if HAVE_KAFS_H
-#  include <kafs.h>
-# endif
-#elif HAVE_LSETPAG
-int lsetpag(void);
-# define k_hasafs() (1)
-# define k_setpag() lsetpag()
-#else
-# define k_hasafs() (1)
-# define k_setpag() (0)
-#endif
-
-#ifndef HAVE_KRB5_ERR
-extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
-                                const char *, ...)
-    __attribute__((__format__(printf, 4, 5)));
-extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
-                                 const char *, ...)
-    __attribute__((__format__(printf, 3, 4)));
-#endif
+#include <command.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)

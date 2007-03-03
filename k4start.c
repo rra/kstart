@@ -19,21 +19,12 @@
 
 #include <config.h>
 #include <system.h>
+#include <portable/kafs.h>
+#include <portable/time.h>
 
 #include <errno.h>
 #include <pwd.h>
 #include <sys/stat.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
 
 #ifdef HAVE_KERBEROSIV_KRB_H
 # include <kerberosIV/krb.h>
@@ -41,26 +32,7 @@
 # include <krb.h>
 #endif
 
-#include "command.h"
-
-#if HAVE_K_SETPAG
-# if HAVE_KAFS_H
-#  include <kafs.h>
-# endif
-#elif HAVE_LSETPAG
-int lsetpag(void);
-# define k_hasafs() (1)
-# define k_setpag() lsetpag()
-#else
-# define k_hasafs() (1)
-# define k_setpag() (0)
-#endif
-
-/* We default to a ten hour ticket lifetime if the Kerberos headers don't
-   provide a value. */
-#ifndef DEFAULT_TKT_LIFE
-# define DEFAULT_TKT_LIFE 120
-#endif
+#include <command.h>
 
 /* The number of seconds of fudge to add to the check for whether we need to
    obtain a new ticket.  This is here to make sure that we don't wake up just

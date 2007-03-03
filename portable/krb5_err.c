@@ -13,8 +13,7 @@
 
 #include <config.h>
 #include <system.h>
-
-#include <krb5.h>
+#include <portable/krb5.h>
 
 #ifndef KRB5_GET_ERROR_MESSAGE
 # if HAVE_ET_COM_ERR_H
@@ -25,13 +24,6 @@
 # define krb5_get_error_message(c, s)  (char *) error_message(s)
 # define krb5_free_error_message(c, m) /* empty */
 #endif
-
-extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
-                                const char *, ...)
-    __attribute__((__format__(printf, 4, 5)));
-extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
-                                 const char *, ...)
-    __attribute__((__format__(printf, 3, 4)));
 
 krb5_error_code
 krb5_err(krb5_context context UNUSED, int eval, krb5_error_code code,

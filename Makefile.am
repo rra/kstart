@@ -10,7 +10,7 @@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen k4start.1 k4start.pod k5start.1 k5start.pod krenew.1 \
-	krenew.pod kstart.spec system.h
+	krenew.pod kstart.spec
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
@@ -36,7 +36,7 @@ endif
 
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
-k4start_SOURCES = k4start.c command.c
+k4start_SOURCES = k4start.c command.c portable/krb4.h
 k4start_LDADD = portable/libportable.a $(K4START_LIBS)
 k5start_SOURCES = k5start.c command.c
 k5start_LDADD = portable/libportable.a $(K5START_LIBS)
@@ -44,7 +44,8 @@ krenew_SOURCES = krenew.c command.c
 krenew_LDADD = portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a
-portable_libportable_a_SOURCES =
+portable_libportable_a_SOURCES = portable/kafs.h portable/krb5.h \
+	portable/time.h system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
 
 man_MANS = @K4START_MAN@ k5start.1 krenew.1

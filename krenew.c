@@ -2,7 +2,7 @@
 **
 **  Automatically renew a Kerberos v5 ticket.
 **
-**  Copyright 2006 Board of Trustees, Leland Stanford Jr. University
+**  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.
 **
@@ -15,45 +15,13 @@
 
 #include <config.h>
 #include <system.h>
+#include <portable/kafs.h>
+#include <portable/krb5.h>
+#include <portable/time.h>
 
 #include <errno.h>
 
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <krb5.h>
-
-#include "command.h"
-
-#if HAVE_K_SETPAG
-# if HAVE_KAFS_H
-#  include <kafs.h>
-# endif
-#elif HAVE_LSETPAG
-int lsetpag(void);
-# define k_hasafs() (1)
-# define k_setpag() lsetpag()
-#else
-# define k_hasafs() (1)
-# define k_setpag() (0)
-#endif
-
-#ifndef HAVE_KRB5_ERR
-extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
-                                const char *, ...)
-    __attribute__((__format__(printf, 4, 5)));
-extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
-                                 const char *, ...)
-    __attribute__((__format__(printf, 3, 4)));
-#endif
+#include <command.h>
 
 /* The number of seconds of fudge to add to the check for whether we need to
    obtain a new ticket.  This is here to make sure that we don't wake up just
