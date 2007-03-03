@@ -2,12 +2,12 @@
 
 kstart 3.8 (unreleased)
 
-    Allow -H to be used with a command in k5start.  In this case, check
-    the existing ticket cache and authenticate if it's stale, then run the
-    command in either case.  This is useful when running several commands
-    with the same credentials at near the same time; using k5start in this
-    mode produces less Kerberos traffic and avoids service ticket requests
-    being rejected as possible relay attacks.
+    Allow -H to be used with a command in k4start and k5start.  In this
+    case, check the existing ticket cache and authenticate if it's stale,
+    then run the command in either case.  This is useful when running
+    several commands with the same credentials at near the same time.  It
+    reduces Kerberos traffic and avoids service ticket requests being
+    rejected as possible relay attacks.
 
     Support the new MIT Kerberos error message functions.
 

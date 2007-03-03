@@ -416,7 +416,7 @@ main(int argc, char *argv[])
     }
 
     /* If we're just checking the service ticket, do that and exit if okay. */
-    if (options.happy_ticket > 0)
+    if (options.happy_ticket > 0 && command == NULL)
         if (!ticket_expired(&options))
             exit(0);
 
@@ -431,8 +431,11 @@ main(int argc, char *argv[])
         }
     }
 
-    /* Now, do the actual authentication. */
-    status = authenticate(&options, aklog);
+    /* Now, the actual authentication part.  If -H wasn't set, always
+       authenticate.  If -H was set, authenticate only if the ticket isn't
+       expired. */
+    if (options.happy_ticket == 0 || ticket_expired(&options))
+        status = authenticate(ctx, &options);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
