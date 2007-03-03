@@ -20,17 +20,12 @@
 #include <config.h>
 #include <system.h>
 #include <portable/kafs.h>
+#include <portable/krb4.h>
 #include <portable/time.h>
 
 #include <errno.h>
 #include <pwd.h>
 #include <sys/stat.h>
-
-#ifdef HAVE_KERBEROSIV_KRB_H
-# include <kerberosIV/krb.h>
-#else
-# include <krb.h>
-#endif
 
 #include <command.h>
 
@@ -38,12 +33,6 @@
    obtain a new ticket.  This is here to make sure that we don't wake up just
    as the ticket is expiring. */
 #define EXPIRE_FUDGE 120
-
-/* Make sure everything compiles even if no aklog program was found by
-   configure. */
-#ifndef PATH_AKLOG
-# define PATH_AKLOG ""
-#endif
 
 /* Holds the various command-line options for passing to functions. */
 struct options {

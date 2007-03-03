@@ -32,10 +32,8 @@ AC_ARG_WITH([aklog],
         PATH_AKLOG=$withval
     fi],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
-if test -n "$PATH_AKLOG" ; then
-    AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
-        [Full path to aklog binary.])
-fi
+AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
+    [Full path to aklog binary.])
 
 dnl Allow the user to disable Kerberos v4 support.  Useful for building
 dnl against just Heimdal, without KTH Kerberos.

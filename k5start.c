@@ -40,12 +40,6 @@
    as the ticket is expiring. */
 #define EXPIRE_FUDGE 120
 
-/* Make sure everything compiles even if no aklog program was found by
-   configure. */
-#ifndef PATH_AKLOG
-# define PATH_AKLOG ""
-#endif
-
 /* Holds the various command-line options for passing to functions, after
    processing in the main routine and conversion to internal K5 data
    structures where appropriate. */
