@@ -11,14 +11,11 @@
 **  getting good error reporting on Heimdal is annoying.
 */
 
-#include "config.h"
+#include <config.h>
+#include <system.h>
 
 /* Skip this whole file if we have krb5_err. */
 #ifndef HAVE_KRB5_ERR
-
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <krb5.h>
 
@@ -32,8 +29,15 @@
 # define krb5_free_error_message(c, m) /* empty */
 #endif
 
+extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
+                                const char *, ...)
+    __attribute__((__format__(printf, 4, 5)));
+extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
+                                 const char *, ...)
+    __attribute__((__format__(printf, 3, 4)));
+
 krb5_error_code
-krb5_err(krb5_context context, int eval, krb5_error_code code,
+krb5_err(krb5_context context UNUSED, int eval, krb5_error_code code,
          const char *format, ...)
 {
     va_list args;
@@ -49,7 +53,8 @@ krb5_err(krb5_context context, int eval, krb5_error_code code,
 }
 
 krb5_error_code
-krb5_warn(krb5_context context, krb5_error_code code, const char *format, ...)
+krb5_warn(krb5_context context UNUSED, krb5_error_code code,
+          const char *format, ...)
 {
     va_list args;
     char *message;

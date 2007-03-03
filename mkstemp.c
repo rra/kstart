@@ -9,13 +9,12 @@
 **  systems that don't have it.
 */
 
-#include "config.h"
+#include <config.h>
+#include <system.h>
+
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/time.h>
-#include <sys/types.h>
 
 /* If we're running the test suite, rename mkstemp to avoid conflicts with the
    system version.  #undef it first because some systems may define it to

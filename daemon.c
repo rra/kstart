@@ -9,13 +9,13 @@
 **  systems that don't have it.
 */
 
-#include "config.h"
+#include <config.h>
+#include <system.h>
+
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 int
 daemon(int nochdir, int noclose)

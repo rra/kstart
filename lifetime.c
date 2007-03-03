@@ -8,7 +8,8 @@
 **  defined, the normal Kerberos v4 lifetime semantics are used.
 */
 
-#include "config.h"
+#include <config.h>
+
 #include <time.h>
 
 #ifdef HAVE_KERBEROSIV_KRB_H

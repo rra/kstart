@@ -11,14 +11,13 @@
 **  k4start and k5start.
 */
 
-#include "config.h"
+#include <config.h>
+#include <system.h>
 
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
+
+#include "command.h"
 
 /* Global so that it can be used in signal handlers. */
 static pid_t global_child_pid;
@@ -47,7 +46,7 @@ run_aklog(const char *aklog, int verbose)
 **  interrupted.
 */
 static void
-child_handler(int signal)
+child_handler(int signal UNUSED)
 {
     /* Do nothing. */
 }

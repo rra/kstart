@@ -19,19 +19,13 @@
 **  supports more useful options, but -K and -H are still unique to it.
 */
 
-#include "config.h"
-#include "command.h"
+#include <config.h>
+#include <system.h>
 
 #include <errno.h>
 #include <netdb.h>
 #include <pwd.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -46,6 +40,8 @@
 
 #include <krb5.h>
 
+#include "command.h"
+
 #if HAVE_K_SETPAG
 # if HAVE_KAFS_H
 #  include <kafs.h>
@@ -59,19 +55,6 @@ int lsetpag(void);
 # define k_setpag() (0)
 #endif
 
-/* __attribute__ is available in gcc 2.5 and later, but only with gcc 2.7
-   could you use the __format__ form of the attributes, which is what we use
-   (to avoid confusion with other macros). */
-#ifndef __attribute__
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-#  define __attribute__(spec)   /* empty */
-# endif
-#endif
-
-#ifndef HAVE_DAEMON
-extern int daemon(int, int);
-#endif
-
 #ifndef HAVE_KRB5_ERR
 extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
                                 const char *, ...)
@@ -79,10 +62,6 @@ extern krb5_error_code krb5_err(krb5_context, int, krb5_error_code,
 extern krb5_error_code krb5_warn(krb5_context, krb5_error_code,
                                  const char *, ...)
     __attribute__((__format__(printf, 3, 4)));
-#endif
-
-#ifndef HAVE_MKSTEMP
-extern int mkstemp(char *);
 #endif
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -189,7 +168,7 @@ usage(int status)
 **  MIT Kerberos and Heimdal, unfortunately.
 */
 static char *
-get_realm(krb5_context ctx, krb5_principal princ)
+get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
 #ifdef HAVE_KRB5_REALM
     krb5_realm *realm;

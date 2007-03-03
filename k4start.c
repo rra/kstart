@@ -17,18 +17,12 @@
 **  It is based very heavily on a modified Kerberos v4 kinit.
 */
 
-#include "config.h"
-#include "command.h"
+#include <config.h>
+#include <system.h>
 
 #include <errno.h>
 #include <pwd.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -41,6 +35,14 @@
 # endif
 #endif
 
+#ifdef HAVE_KERBEROSIV_KRB_H
+# include <kerberosIV/krb.h>
+#else
+# include <krb.h>
+#endif
+
+#include "command.h"
+
 #if HAVE_K_SETPAG
 # if HAVE_KAFS_H
 #  include <kafs.h>
@@ -52,20 +54,6 @@ int lsetpag(void);
 #else
 # define k_hasafs() (1)
 # define k_setpag() (0)
-#endif
-
-#ifdef HAVE_KERBEROSIV_KRB_H
-# include <kerberosIV/krb.h>
-#else
-# include <krb.h>
-#endif
-
-#ifndef HAVE_DAEMON
-extern int daemon(int, int);
-#endif
-
-#ifndef HAVE_MKSTEMP
-extern int mkstemp(char *);
 #endif
 
 /* We default to a ten hour ticket lifetime if the Kerberos headers don't
@@ -262,7 +250,7 @@ main(int argc, char *argv[])
     struct options options;
     int k_errno, opt, result;
     char *username = NULL;
-    char *aklog = NULL;
+    const char *aklog = NULL;
     char **command = NULL;
     char *pidfile = NULL;
     int background = 0;

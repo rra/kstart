@@ -13,16 +13,10 @@
 **  renewed any longer.
 */
 
-#include "config.h"
-#include "command.h"
+#include <config.h>
+#include <system.h>
 
 #include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -37,6 +31,8 @@
 
 #include <krb5.h>
 
+#include "command.h"
+
 #if HAVE_K_SETPAG
 # if HAVE_KAFS_H
 #  include <kafs.h>
@@ -48,19 +44,6 @@ int lsetpag(void);
 #else
 # define k_hasafs() (1)
 # define k_setpag() (0)
-#endif
-
-/* __attribute__ is available in gcc 2.5 and later, but only with gcc 2.7
-   could you use the __format__ form of the attributes, which is what we use
-   (to avoid confusion with other macros). */
-#ifndef __attribute__
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-#  define __attribute__(spec)   /* empty */
-# endif
-#endif
-
-#ifndef HAVE_DAEMON
-extern int daemon(int, int);
 #endif
 
 #ifndef HAVE_KRB5_ERR
@@ -138,7 +121,7 @@ usage(int status)
 **  MIT Kerberos and Heimdal, unfortunately.
 */
 static char *
-get_realm(krb5_context ctx, krb5_principal princ)
+get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
 #ifdef HAVE_KRB5_REALM
     krb5_realm *realm;
@@ -305,7 +288,7 @@ main(int argc, char *argv[])
     int keep_ticket = 0;
     int run_aklog = 0;
     int verbose = 0;
-    char *aklog = NULL;
+    const char *aklog = NULL;
     krb5_context ctx;
     krb5_ccache cache;
     int status = 0;

@@ -48,8 +48,15 @@ MANPAGES	= $(srcdir)/k5start.1 $(srcdir)/krenew.1 $(K4START_MAN)
 
 all: k5start krenew $(K4START) $(MANPAGES)
 
+# A set of flags for warnings.  Add -O because gcc won't find some warnings
+# without optimization turned on, and add -DDEBUG=1 so we'll also compile all
+# debugging code and test it.
+WARNINGS = -g -O -DDEBUG=1 -Wall -W -Wendif-labels -Wpointer-arith \
+	-Wbad-function-cast -Wwrite-strings -Wstrict-prototypes \
+	-Wmissing-prototypes -Wnested-externs -Werror
+
 warnings:
-	$(MAKE) CFLAGS="-g -O -Wall"
+	$(MAKE) CFLAGS='$(WARNINGS)'
 
 install: k5start krenew $(K4START) $(MANPAGES)
 	$(INSTALL) -d $(bindir) $(mandir)/man1
