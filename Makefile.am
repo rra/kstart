@@ -62,9 +62,9 @@ $(srcdir)/krenew.1: $(srcdir)/krenew.pod
 	pod2man --release=$(VERSION) --center="User commands" \
 	    $(srcdir)/krenew.pod > $@
 
-# We shouldn't have to explicitly list $(LIBOBJS) and $(LTLIBOBJS) here.
-# This is a bug in the non-recursive support.
-MOSTLYCLEANFILES = $(LIBOBJS) $(LTLIBOBJS)
+# We shouldn't have to explicitly list $(LIBOBJS) here.  This is a bug in the
+# non-recursive support.
+MOSTLYCLEANFILES = $(LIBOBJS)
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
 
