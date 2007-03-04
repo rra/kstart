@@ -36,11 +36,11 @@ endif
 
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
-k4start_SOURCES = k4start.c command.c portable/krb4.h
+k4start_SOURCES = k4start.c command.c command.h portable/krb4.h
 k4start_LDADD = portable/libportable.a $(K4START_LIBS)
-k5start_SOURCES = k5start.c command.c
+k5start_SOURCES = k5start.c command.c command.h
 k5start_LDADD = portable/libportable.a $(K5START_LIBS)
-krenew_SOURCES = krenew.c command.c
+krenew_SOURCES = krenew.c command.c command.h
 krenew_LDADD = portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a
