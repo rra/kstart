@@ -149,16 +149,12 @@ ticket_expired(struct options *options)
 
 
 /*
-**  Authenticate, given a set of options.  Also handles running aklog if
-**  requested.  Normally dies on failure, but if authentication succeeds and
-**  aklog just failed, return the exit status of aklog instead (or 7 if it
-**  couldn't be run).
+**  Authenticate, given a set of options, and dies on failure.
 */
-static int
-authenticate(struct options *options, const char *aklog)
+static void
+authenticate(struct options *options)
 {
     int k_errno;
-    int status = 0;
 
     if (options->verbose) {
         printf("Principal: %s.%s@%s\n", options->aname, options->inst,
@@ -197,11 +193,6 @@ authenticate(struct options *options, const char *aklog)
         else
             die("Kerberos error: %s", krb_err_txt[k_errno]);
     }
-
-    /* If requested, run the aklog program. */
-    if (options->run_aklog && !options->no_aklog)
-        status = run_aklog(aklog, options->verbose);
-    return status;
 }
 
 
@@ -435,7 +426,11 @@ main(int argc, char *argv[])
        authenticate.  If -H was set, authenticate only if the ticket isn't
        expired. */
     if (options.happy_ticket == 0 || ticket_expired(&options))
-        status = authenticate(&options, aklog);
+        authenticate(&options);
+
+    /* If requested, run the aklog program. */
+    if (options.run_aklog && !options.no_aklog)
+        run_aklog(aklog, options.verbose);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
@@ -479,17 +474,19 @@ main(int argc, char *argv[])
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
                 if (result > 0)
-                    goto done;
+                    break;
             }
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(&options))
-                status = authenticate(&options, aklog);
+            if (ticket_expired(&options)) {
+                authenticate(&options);
+                if (options.run_aklog && !options.no_aklog)
+                    run_aklog(aklog, options.verbose);
+            }
         }
     }
 
-done:
     /* Otherwise, or when we're done, exit.  clean_cache is only set if we
        used mkstemp to generate the ticket cache name. */
     if (clean_cache)

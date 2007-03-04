@@ -163,11 +163,9 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 
 /*
 **  Renew the user's tickets, exiting with an error if this isn't possible.
-**  Normally dies on failure, but if authentication succeeds and aklog just
-**  failed, return the exit status of aklog instead.
 */
-static int
-renew(krb5_context ctx, krb5_ccache cache, const char *aklog, int verbose)
+static void
+renew(krb5_context ctx, krb5_ccache cache, int verbose)
 {
     int status;
     krb5_principal user;
@@ -230,12 +228,6 @@ renew(krb5_context ctx, krb5_ccache cache, const char *aklog, int verbose)
     if (out != NULL)
         krb5_free_creds(ctx, out);
 #endif
-
-    /* If requested, run the aklog program. */
-    if (aklog != NULL && aklog[0] != '\0')
-        status = run_aklog(aklog, verbose);
-
-    return status;
 }
 
 
@@ -248,7 +240,7 @@ main(int argc, char *argv[])
     char *pidfile = NULL;
     int background = 0;
     int keep_ticket = 0;
-    int run_aklog = 0;
+    int do_aklog = 0;
     int verbose = 0;
     const char *aklog = NULL;
     krb5_context ctx;
@@ -262,7 +254,7 @@ main(int argc, char *argv[])
         case 'b': background = 1;               break;
         case 'h': usage(0);                     break;
         case 'p': pidfile = optarg;             break;
-        case 't': run_aklog = 1;                break;
+        case 't': do_aklog = 1;                 break;
         case 'v': verbose = 1;                  break;
 
         case 'K':
@@ -296,7 +288,7 @@ main(int argc, char *argv[])
     aklog = getenv("KINIT_PROG");
     if (aklog == NULL)
         aklog = PATH_AKLOG;
-    if (aklog[0] == '\0' && run_aklog)
+    if (aklog[0] == '\0' && do_aklog)
         die("set KINIT_PROG to specify the path to aklog");
 
     /* Establish a K5 context and set the ticket cache. */
@@ -320,7 +312,7 @@ main(int argc, char *argv[])
 
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */
-    if (command != NULL && run_aklog) {
+    if (command != NULL && do_aklog) {
         if (k_hasafs()) {
             if (k_setpag() < 0)
                 die("unable to create PAG: %s", strerror(errno));
@@ -331,7 +323,11 @@ main(int argc, char *argv[])
 
     /* Now, do the initial ticket renewal even if it's not necessary so that
        we can catch any problems. */
-    status = renew(ctx, cache, run_aklog ? aklog : NULL, verbose);
+    renew(ctx, cache, verbose);
+
+    /* If requested, run the aklog program. */
+    if (do_aklog)
+        run_aklog(aklog, verbose);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
@@ -372,16 +368,19 @@ main(int argc, char *argv[])
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
                 if (result > 0)
-                    goto done;
+                    break;
             }
             timeout.tv_sec = keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(ctx, cache, keep_ticket))
-                status = renew(ctx, cache, run_aklog ? aklog : NULL, verbose);
+            if (ticket_expired(ctx, cache, keep_ticket)) {
+                renew(ctx, cache, verbose);
+                if (do_aklog)
+                    run_aklog(aklog, verbose);
+            }
         }
     }
 
-done:
+    /* All done. */
     exit(status);
 }

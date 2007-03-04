@@ -193,15 +193,12 @@ ticket_expired(krb5_context ctx, struct options *options)
 
 /*
 **  Authenticate, given the context and the processed command-line options.
-**  Also takes care of running aklog if requested.  Normally dies on failure,
-**  but if authentication succeeds and aklog just failed, return the exit
-**  status of aklog instead (or 7 if it couldn't be run).
+**  Dies on failure.
 */
-static int
+static void
 authenticate(krb5_context ctx, struct options *options)
 {
     int k5_errno;
-    int status = 0;
     krb5_keytab k5_keytab = NULL;
     krb5_creds creds;
 
@@ -264,14 +261,6 @@ authenticate(krb5_context ctx, struct options *options)
     krb5_free_cred_contents(ctx, &creds);
     if (k5_keytab != NULL)
         krb5_kt_close(ctx, k5_keytab);
-
-    /* If requested, run the aklog program.  IRIX 6.5's WEXITSTATUS() macro is
-       broken and can't cope with being called directly on the return value of
-       system().  If we can't execute the aklog program, set the exit status
-       to an arbitrary but distinct value. */
-    if (options->run_aklog)
-        status = run_aklog(options->aklog, options->verbose);
-    return status;
 }
 
 
@@ -584,7 +573,11 @@ main(int argc, char *argv[])
        authenticate.  If -H was set, authenticate only if the ticket isn't
        expired. */
     if (options.happy_ticket == 0 || ticket_expired(ctx, &options))
-        status = authenticate(ctx, &options);
+        authenticate(ctx, &options);
+
+    /* If requested, run the aklog program. */
+    if (options.run_aklog)
+        run_aklog(options.aklog, options.verbose);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
@@ -610,7 +603,7 @@ main(int argc, char *argv[])
        X our ticket cache isn't going to survive the setsid that daemon does
        and we've now lost our credentials. */
     if (background && ticket_expired(ctx, &options))
-        status = authenticate(ctx, &options);
+        authenticate(ctx, &options);
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
@@ -635,17 +628,19 @@ main(int argc, char *argv[])
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
                 if (result > 0)
-                    goto done;
+                    break;
             }
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(ctx, &options))
-                status = authenticate(ctx, &options);
+            if (ticket_expired(ctx, &options)) {
+                authenticate(ctx, &options);
+                if (options.run_aklog)
+                    run_aklog(options.aklog, options.verbose);
+            }
         }
     }
 
-done:
     /* Otherwise, or when we're done, exit.  clean_cache is only set if we
        used mkstemp to generate the ticket cache name. */
     if (clean_cache)

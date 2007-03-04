@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 3.9 (2007-03-02)
+
+    Separate authenticating from running aklog in k4start, k5start, and
+    krenew.  Just because we have a valid ticket cache doesn't mean that
+    we already have a token since we just created a new PAG.  If running
+    aklog was requested, always do so even if we didn't get new tickets.
+
 kstart 3.8 (2007-03-02)
 
     Allow -H to be used with a command in k4start and k5start.  In this

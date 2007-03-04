@@ -2,7 +2,7 @@
 **
 **  Shared command handling for k4start and k5start.
 **
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005
+**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007
 **      Board of Trustees, Leland Stanford Jr. University
 **
 **  For copying and distribution information, please see README.
@@ -27,16 +27,17 @@ static pid_t global_child_pid;
 **  Run the given aklog command, returning its exit status.  The command must
 **  be a fully-qualified path.
 */
-int
+void
 run_aklog(const char *aklog, int verbose)
 {
     int status;
 
+    /* IRIX 6.5's WEXITSTATUS() macro is  broken and can't cope with being
+       called directly on the return value of system(). */
     status = system(aklog);
     status = WEXITSTATUS(status);
     if (verbose)
         printf("%s exited with status %d\n", aklog, status);
-    return status;
 }
 
 

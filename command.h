@@ -8,7 +8,7 @@
 
 /* Run the given aklog command.  If verbose is true, print some more output to
    standard output about the exit status. */
-int run_aklog(const char *aklog, int verbose);
+void run_aklog(const char *aklog, int verbose);
 
 /* Start a command, executing the given command with the given argument vector
    (which includes argv[0]).  Returns the PID or -1 on error.  This function
