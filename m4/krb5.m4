@@ -71,10 +71,11 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 rra_krb5_uses_com_err=true
 if test x"$reduce_depends" = xtrue ; then
+    rra_krb5_uses_com_err=false
     AC_CHECK_FUNCS([krb5_err], ,
         [AC_LIBOBJ([krb5_err])
          AC_CHECK_FUNCS([krb5_get_error_message], ,
-            [rra_krb5_uses_com_err=false
+            [rra_krb5_uses_com_err=true
              AC_CHECK_HEADERS([et/com_err.h])
              AC_CHECK_LIB([com_err], [com_err], [LIBS="$LIBS -lcom_err"],
                 [AC_MSG_ERROR([cannot find usable com_err library])])])])
