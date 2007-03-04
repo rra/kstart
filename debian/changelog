@@ -1,3 +1,13 @@
+kstart (3.8-1) unstable; urgency=low
+
+  * New upstream release.
+    - Correctly honor the argument to -H for k4start and k5start.
+    - Allow -H to be used with commands.
+    - Support new MIT Kerberos error message functions.
+    - Improvements to -K documentation.
+
+ -- Russ Allbery <rra@debian.org>  Sat,  3 Mar 2007 16:27:42 -0800
+
 kstart (3.6-1) unstable; urgency=low
 
   * New upstream release.
