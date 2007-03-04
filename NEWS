@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 3.8 (unreleased)
+kstart 3.8 (2007-03-02)
 
     Allow -H to be used with a command in k4start and k5start.  In this
     case, check the existing ticket cache and authenticate if it's stale,
