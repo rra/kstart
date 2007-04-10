@@ -15,7 +15,7 @@
 #include <system.h>
 #include <portable/krb5.h>
 
-#ifndef KRB5_GET_ERROR_MESSAGE
+#ifndef HAVE_KRB5_GET_ERROR_MESSAGE
 # if HAVE_ET_COM_ERR_H
 #  include <et/com_err.h>
 # else
