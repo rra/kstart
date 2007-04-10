@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 3.10 (unreleased)
+kstart 3.10 (2007-04-10)
 
     Fix compilation error with a new enough MIT Kerberos to support
     krb5_get_error_message and with et/com_err.h instead of com_err.h
