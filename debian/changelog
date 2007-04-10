@@ -2,9 +2,10 @@ kstart (3.10-1) unstable; urgency=low
 
   * New upstream release.
     - Fix compilation issue with newer MIT Kerberos libraries.
+  * Update debhelper compatibility level to V5.
   * Stop mentioning kerberos4kth-clients in README.Debian.
 
- -- Russ Allbery <rra@debian.org>  Tue, 10 Apr 2007 11:40:07 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 10 Apr 2007 11:41:19 -0700
 
 kstart (3.9-1) unstable; urgency=low
 
