@@ -6,6 +6,9 @@ kstart 3.10 (unreleased)
     krb5_get_error_message and with et/com_err.h instead of com_err.h
     (such as Fedora Core 6).  Thanks, Stefan Foerster.
 
+    Rework the configure script to use AS_IF instead of explicit if
+    statements, which allows Autoconf to do better dependency analysis.
+
 kstart 3.9 (2007-03-02)
 
     Separate authenticating from running aklog in k4start, k5start, and

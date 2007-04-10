@@ -13,6 +13,12 @@ dnl libraries in the non-krb5-config, non-reduced-dependencies case and should
 dnl be either "true" (if the program doesn't otherwise use the networking
 dnl libraries) or "false" (if it is already probing for the networking
 dnl libraries separately).
+dnl
+dnl Written by Russ Allbery <rra@stanford.edu>
+dnl Copyright 2005, 2006, 2007
+dnl     Board of Trustees, Leland Stanford Jr. University
+dnl
+dnl See README for licensing terms.
 
 dnl Does the appropriate library checks for reduced-dependency krb5 linkage.
 AC_DEFUN([_RRA_LIB_KRB5_KRB5_REDUCED],
@@ -70,20 +76,18 @@ AC_DEFUN([_RRA_LIB_KRB5_KRB5_EXTRA],
                  krb5_get_renewed_creds])
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 rra_krb5_uses_com_err=true
-if test x"$reduce_depends" = xtrue ; then
-    rra_krb5_uses_com_err=false
-    AC_CHECK_FUNCS([krb5_err], ,
+AS_IF([test x"$reduce_depends" = xtrue],
+    [rra_krb5_uses_com_err=false
+     AC_CHECK_FUNCS([krb5_err], ,
         [AC_LIBOBJ([krb5_err])
          AC_CHECK_FUNCS([krb5_get_error_message], ,
             [rra_krb5_uses_com_err=true
              AC_CHECK_HEADERS([et/com_err.h])
              AC_CHECK_LIB([com_err], [com_err], [LIBS="$LIBS -lcom_err"],
-                [AC_MSG_ERROR([cannot find usable com_err library])])])])
-else
-    AC_CHECK_FUNCS([krb5_err], ,
+                [AC_MSG_ERROR([cannot find usable com_err library])])])])],
+    [AC_CHECK_FUNCS([krb5_err], ,
         [AC_LIBOBJ([krb5_err])
-         AC_CHECK_FUNCS([krb5_get_error_message])])
-fi
+         AC_CHECK_FUNCS([krb5_get_error_message])])])
 AM_CONDITIONAL([USES_COM_ERR], [test x"$rra_krb5_uses_com_err" = xtrue])])
 
 dnl Additional checks for portability if krb4 libraries were requested.
@@ -97,28 +101,23 @@ AC_DEFUN([RRA_LIB_KRB5],
 AC_ARG_WITH([kerberos],
     AC_HELP_STRING([--with-kerberos=DIR],
         [Location of Kerberos headers and libraries]),
-    [if test x"$withval" != xno ; then
-        KRBROOT="$withval"
-     fi])
+    [AS_IF([test x"$withval" != xno], [KRBROOT="$withval"])])
 
 reduce_depends=false
 AC_ARG_ENABLE([reduced-depends],
     AC_HELP_STRING([--enable-reduced-depends],
         [Try to minimize shared library dependencies]),
-    [if test x"$enableval" = xyes ; then
-         if test x"$KRBROOT" != x ; then
-             if test x"$KRBROOT" != x/usr ; then
-                 CPPFLAGS="-I$KRBROOT/include"
-             fi
-             LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
-         fi
-         case "$1" in
-         krb5)   _RRA_LIB_KRB5_KRB5_REDUCED   ;;
-         krb4)   _RRA_LIB_KRB5_KRB4_REDUCED   ;;
-         *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
-         esac
-         reduce_depends=true
-     fi])
+    [AS_IF([test x"$enableval" = xyes],
+         [AS_IF([test x"$KRBROOT" != x],
+             [AS_IF([test x"$KRBROOT" != x/usr],
+                 [CPPFLAGS="-I$KRBROOT/include"])
+              LDFLAGS="$LDFLAGS -L$KRBROOT/lib"])
+          case "$1" in
+          krb5)   _RRA_LIB_KRB5_KRB5_REDUCED   ;;
+          krb4)   _RRA_LIB_KRB5_KRB4_REDUCED   ;;
+          *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
+          esac
+          reduce_depends=true])])
 
 dnl Support static linkage as best we can.  Set a variable and do the
 dnl wrapping later on.
@@ -126,76 +125,59 @@ static=false
 AC_ARG_ENABLE([static],
     AC_HELP_STRING([--enable-static],
         [Link against the static Kerberos libraries]),
-    [if test x"$enableval" = xyes ; then
-         if test x"$reduce_depends" = xtrue ; then
-AC_MSG_ERROR([--enable-static cannot be used with --enable-reduced-depends])
-         fi
-         static=true
-     fi])
+    [AS_IF([test x"$enableval" = xyes],
+         [AS_IF([test x"$reduce_depends" = xtrue],
+[AC_MSG_ERROR([--enable-static conflicts with --enable-reduced-depends])])
+          static=true])])
 
 dnl Checking for the neworking libraries shouldn't be necessary for the
 dnl krb5-config case, but apparently it is at least for MIT Kerberos 1.2.
 dnl This will unfortunately mean multiple -lsocket -lnsl references when
 dnl building with current versions of Kerberos, but this shouldn't cause
 dnl any practical problems.
-if test x"$reduce_depends" != xtrue ; then
-    if test x"$2" = xtrue ; then
-        AC_SEARCH_LIBS([gethostbyname], [nsl])
-        AC_SEARCH_LIBS([socket], [socket], ,
+AS_IF([test x"$reduce_depends" != xtrue],
+    [AS_IF([test x"$2" = xtrue],
+        [AC_SEARCH_LIBS([gethostbyname], [nsl])
+         AC_SEARCH_LIBS([socket], [socket], ,
             [AC_CHECK_LIB([nsl], [socket],
-                [LIBS="-lnsl -lsocket $LIBS"], , [-lsocket])])
-    fi
+                [LIBS="-lnsl -lsocket $LIBS"], , [-lsocket])])])
     AC_ARG_VAR([KRB5_CONFIG], [Path to krb5-config])
-    if test x"$KRBROOT" != x ; then
-        if test -x "$KRBROOT/bin/krb5-config" ; then
-            KRB5_CONFIG="$KRBROOT/bin/krb5-config"
-        fi
-    else
-        AC_PATH_PROG([KRB5_CONFIG], [krb5-config])
-    fi
+    AS_IF([test x"$KRBROOT" != x],
+        [AS_IF([test -x "$KRBROOT/bin/krb5-config"],
+            [KRB5_CONFIG="$KRBROOT/bin/krb5-config"])],
+        [AC_PATH_PROG([KRB5_CONFIG], [krb5-config])])
 
     # We can't use krb5-config if building static since we can't tell what
     # of the libraries it gives us should be static and which should be
     # dynamic.
-    if test x"$KRB5_CONFIG" != x && test x"$static" != xtrue ; then
-        AC_MSG_CHECKING([for $1 support in krb5-config])
-        if "$KRB5_CONFIG" | grep '$1' > /dev/null 2>&1 ; then
-            AC_MSG_RESULT([yes])
-            KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags '$1'`
-            KRBLIBS=`"$KRB5_CONFIG" --libs '$1'`
-        else
-            AC_MSG_RESULT([no])
-            KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags`
-            KRBLIBS=`"$KRB5_CONFIG" --libs`
-        fi
-        KRBCPPFLAGS=`echo "$KRBCPPFLAGS" | sed 's%-I/usr/include ?%%'`
-    else
-        if test x"$KRBROOT" != x ; then
-            if test x"$KRBROOT" != x/usr ; then
-                KRBCPPFLAGS="-I$KRBROOT/include"
-            fi
-            LDFLAGS="$LDFLAGS -L$KRBROOT/lib"
-        fi
-        AC_SEARCH_LIBS([res_search], [resolv], ,
-            [AC_SEARCH_LIBS([__res_search], [resolv])])
-        AC_SEARCH_LIBS([crypt], [crypt])
-        case "$1" in
-        krb5)   _RRA_LIB_KRB5_KRB5   ;;
-        krb4)   _RRA_LIB_KRB5_KRB4   ;;
-        *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
-        esac
-    fi
-    if test x"$KRBCPPFLAGS" != x ; then
-        CPPFLAGS="$CPPFLAGS $KRBCPPFLAGS"
-    fi
-fi
+    AS_IF([test x"$KRB5_CONFIG" != x && test x"$static" != xtrue],
+        [AC_MSG_CHECKING([for $1 support in krb5-config])
+         AS_IF(["$KRB5_CONFIG" | grep '$1' > /dev/null 2>&1],
+            [AC_MSG_RESULT([yes])
+             KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags '$1'`
+             KRBLIBS=`"$KRB5_CONFIG" --libs '$1'`],
+            [AC_MSG_RESULT([no])
+             KRBCPPFLAGS=`"$KRB5_CONFIG" --cflags`
+             KRBLIBS=`"$KRB5_CONFIG" --libs`])
+         KRBCPPFLAGS=`echo "$KRBCPPFLAGS" | sed 's%-I/usr/include ?%%'`],
+        [AS_IF([test x"$KRBROOT" != x],
+            [AS_IF([test x"$KRBROOT" != x/usr],
+                [KRBCPPFLAGS="-I$KRBROOT/include"])
+             LDFLAGS="$LDFLAGS -L$KRBROOT/lib"])
+         AC_SEARCH_LIBS([res_search], [resolv], ,
+             [AC_SEARCH_LIBS([__res_search], [resolv])])
+         AC_SEARCH_LIBS([crypt], [crypt])
+         case "$1" in
+         krb5)   _RRA_LIB_KRB5_KRB5   ;;
+         krb4)   _RRA_LIB_KRB5_KRB4   ;;
+         *)      AC_MSG_ERROR([BUG: unknown library type $1]) ;;
+         esac])
+    AS_IF([test x"$KRBCPPFLAGS" != x], [CPPFLAGS="$CPPFLAGS $KRBCPPFLAGS"])])
 
 dnl Generate the final library list and put it into the standard variables.
-if test x"$static" = xtrue ; then
-    LIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic $LIBS"
-else
-    LIBS="$KRBLIBS $LIBS"
-fi
+AS_IF([test x"$static" = xtrue],
+    [LIBS="-Wl,-Bstatic $KRBLIBS -Wl,-Bdynamic $LIBS"],
+    [LIBS="$KRBLIBS $LIBS"])
 CPPFLAGS=`echo "$CPPFLAGS" | sed 's/^  *//'`
 LDFLAGS=`echo "$LDFLAGS" | sed 's/^  *//'`
 

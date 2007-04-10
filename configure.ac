@@ -8,7 +8,7 @@ dnl
 dnl See README for licensing terms.
 
 AC_REVISION([$Revision$])
-AC_PREREQ([2.60])
+AC_PREREQ([2.61])
 AC_INIT([kstart], [3.9], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([tools])
 AC_CONFIG_LIBOBJ_DIR([portable])
@@ -28,9 +28,7 @@ dnl either on the user's path or if the user specifies a default path.
 AC_ARG_WITH([aklog],
     AC_HELP_STRING([--with-aklog=PATH],
         [Path to aklog or other AFS token program]),
-    [if test x"$withval" != xno ; then
-        PATH_AKLOG=$withval
-    fi],
+    [AS_IF([test x"$withval" != xno], [PATH_AKLOG=$withval])],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
 AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
     [Full path to aklog binary.])
@@ -42,10 +40,9 @@ K4START_MAN='$(srcdir)/k4start.1'
 AC_ARG_ENABLE([k4start],
     AC_HELP_STRING([--disable-k4start],
         [Don't build k4start (Kerberos v4 support)]),
-    [if test x"$enableval" = xno ; then
-        K4START=
-        K4START_MAN=
-     fi])
+    [AS_IF([test x"$enableval" = xno],
+        [K4START=
+         K4START_MAN=])])
 AC_SUBST([K4START])
 AC_SUBST([K4START_MAN])
 
@@ -60,22 +57,20 @@ AC_SUBST([KRB5LIBS])
 dnl If we're building k4start, check for the Kerberos v4 libraries and add our
 dnl local lifetime implementation if needed.
 KRBLIBS=
-if test x"$K4START" != x ; then
-    save_LIBS=$LIBS
-    RRA_LIB_KRB5([krb4], [true])
-    KRB4LIBS=$LIBS
-    LIBS=$save_LIBS
-fi
+AS_IF([test x"$K4START" != x],
+    [save_LIBS=$LIBS
+     RRA_LIB_KRB5([krb4], [true])
+     KRB4LIBS=$LIBS
+     LIBS=$save_LIBS])
 AC_SUBST([KRB4LIBS])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_WITH([afs-setpag],
     AC_HELP_STRING([--with-afs-setpag@<:@=DIR@:>@],
         [Enable AFS setpag support, libraries at DIR]),
-    [if test x"$withval" != xno ; then
-        if test x"$withval" != xyes ; then
-            LDFLAGS="-L$withval/lib $LDFLAGS"
-        fi
+    [AS_IF([test x"$withval" != xno],
+        [AS_IF([test x"$withval" != xyes],
+            [LDFLAGS="-L$withval/lib $LDFLAGS"])
         AC_CHECK_LIB([afsauthent], [lsetpag],
             [AFSLIBS="-lafsauthent -lafsrpc"
              AC_DEFINE([HAVE_LSETPAG], 1,
@@ -87,8 +82,7 @@ AC_ARG_WITH([afs-setpag],
                      [Define to 1 if you have the k_setpag function.])],
                 [AC_MSG_ERROR([setpag function not found])])],
             [-lafsrpc])
-        AC_SUBST([AFSLIBS])
-     fi])
+        AC_SUBST([AFSLIBS])])])
 
 dnl Checks for header files.
 AC_HEADER_TIME
