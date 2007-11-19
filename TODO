@@ -1,0 +1,6 @@
+                            kstart To-Do List
+
+ * Add a test suite.  Given a keytab and/or srvtab and some configuration
+   about the realm, test obtaining tickets from a keytab, obtaining
+   tickets from a srvtab, creating a PAG, and running aklog.  Also check
+   all of the POD documentation source in the package for syntax errors.
