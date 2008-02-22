@@ -6,3 +6,6 @@
    about the realm, test obtaining tickets from a keytab, obtaining
    tickets from a srvtab, creating a PAG, and running aklog.  Also check
    all of the POD documentation source in the package for syntax errors.
+
+ * Add the -F and -P flags to k5start to override library defaults for
+   forwardable and proxiable tickets.
