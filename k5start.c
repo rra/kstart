@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 
 #include <command.h>
+#include <util/util.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)
@@ -70,6 +71,7 @@ Usage: k5start [options] [name [command]]\n\
 \n\
    -b                   Fork and run in the background\n\
    -f <keytab>          Use <keytab> for authentication rather than password\n\
+   -g <group>           Set ticket cache group to <group>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
                         otherwise obtain a ticket\n\
@@ -78,6 +80,8 @@ Usage: k5start [options] [name [command]]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
+   -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
+   -o <owner>           Set ticket cache owner to <owner>\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
@@ -90,23 +94,6 @@ Usage: k5start [options] [name [command]]\n\
 If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
 then this program will be executed when requested by the -t flag.\n\
 Otherwise, %s.\n";
-
-
-/*
-**  Report an error message to standard error and then exit.
-*/
-static void
-die(const char *format, ...)
-{
-    va_list args;
-
-    fprintf(stderr, "k5start: ");
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-    exit(1);
-}
 
 
 /*
@@ -317,7 +304,10 @@ main(int argc, char *argv[])
     const char *sname = NULL;
     const char *sinst = NULL;
     const char *srealm = NULL;
-    char *cache = NULL;
+    const char *owner = NULL;
+    const char *group = NULL;
+    const char *mode = NULL;
+    const char *cache = NULL;
     char *principal = NULL;
     char **command = NULL;
     char *pidfile = NULL;
@@ -329,16 +319,23 @@ main(int argc, char *argv[])
     pid_t child = 0;
     int clean_cache = 0;
     int search_keytab = 0;
+    static const char optstring[] = "bf:g:H:hI:i:K:k:l:m:no:p:qr:S:stUu:v";
+
+    /* Initialize logging. */
+    message_program_name = "k5start";
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:hI:i:K:k:l:np:qr:S:stUu:v")) != EOF)
+    while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
+        case 'm': mode = optarg;                break;
         case 'n': /* Ignored */                 break;
+        case 'o': owner = optarg;               break;
         case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
         case 'r': srealm = optarg;              break;
@@ -364,10 +361,7 @@ main(int argc, char *argv[])
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'k':
-            cache = malloc(strlen(optarg) + strlen("FILE:") + 1);
-            if (cache == NULL)
-                die("cannot allocate memory: %s", strerror(errno));
-            sprintf(cache, "FILE:%s", optarg);
+            cache = concat("FILE:", optarg, (char *) 0);
             break;
         case 'l':
             k5_errno = krb5_string_to_deltat(optarg, &life_secs);
@@ -419,6 +413,9 @@ main(int argc, char *argv[])
         die("-U option requires a keytab be specified with -f");
     if (options.happy_ticket > 0 && options.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
+    if (owner != NULL || group != NULL || mode != NULL)
+        if (options.keep_ticket || command != NULL)
+            die("-o/-g/-m cannot be used with -K or a command");
 
     /* Set aklog from KINIT_PROG or the compiled-in default. */
     options.aklog = getenv("KINIT_PROG");
@@ -452,21 +449,25 @@ main(int argc, char *argv[])
        up the cache in the Kerberos libraries. */
     if (cache == NULL && command != NULL) {
         int fd;
+        char *tmp;
 
-        cache = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
-        if (cache == NULL)
+        tmp = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
+        if (tmp == NULL)
             die("cannot allocate memory: %s", strerror(errno));
-        sprintf(cache, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
-        fd = mkstemp(cache);
+        sprintf(tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
+        fd = mkstemp(tmp);
         if (fd < 0)
             die("cannot create ticket cache file: %s", strerror(errno));
         if (fchmod(fd, 0600) < 0)
             die("cannot chmod ticket cache file: %s", strerror(errno));
+        cache = tmp;
         clean_cache = 1;
     }
-    if (cache == NULL)
+    if (cache == NULL) {
         k5_errno = krb5_cc_default(ctx, &options.ccache);
-    else {
+        if (k5_errno != 0)
+            cache = krb5_cc_get_name(ctx, options.ccache);
+    } else {
         char *env;
 
         env = malloc(strlen(cache) + 12);
@@ -579,6 +580,10 @@ main(int argc, char *argv[])
     /* If requested, run the aklog program. */
     if (options.run_aklog)
         run_aklog(options.aklog, options.verbose);
+
+    /* If requested, set the owner, group, and mode of the resulting cache. */
+    if (owner != NULL || group != NULL || mode != NULL)
+        file_permissions(cache, owner, group, mode);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the

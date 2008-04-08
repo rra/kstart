@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 
 #include <command.h>
+#include <util/util.h>
 
 /* The number of seconds of fudge to add to the check for whether we need to
    obtain a new ticket.  This is here to make sure that we don't wake up just
@@ -43,7 +44,7 @@ struct options {
     char sinst[INST_SZ];
     const char *aklog;
     const char *srvtab;
-    char *cache;
+    const char *cache;
     int lifetime;
     int happy_ticket;
     int keep_ticket;
@@ -65,6 +66,7 @@ Usage: k4start [options] [name]\n\
 \n\
    -b                   Fork and run in the background\n\
    -f <srvtab>          Read password from <srvtab>, as a srvtab key\n\
+   -g <group>           Set ticket cache group to <group>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
                         otherwise obtain a ticket\n\
@@ -73,6 +75,8 @@ Usage: k4start [options] [name]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
+   -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
+   -o <owner>           Set ticket cache owner to <owner>\n\
    -n                   Don't run aklog or KINIT_PROG\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
@@ -85,23 +89,6 @@ then this program will automatically be executed after the ticket granting\n\
 ticket has been retrieved unless -n is given.  Otherwise, the default is to\n\
 not run any aklog program.  If -t is given and KINIT_PROG is not set,\n\
 %s.\n";
-
-
-/*
-**  Report an error message to standard error and then exit.
-*/
-static void
-die(const char *format, ...)
-{
-    va_list args;
-
-    fprintf(stderr, "k4start: ");
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-    exit(1);
-}
 
 
 /*
@@ -203,6 +190,9 @@ main(int argc, char *argv[])
     int k_errno, opt, result;
     char *username = NULL;
     const char *aklog = NULL;
+    const char *owner = NULL;
+    const char *group = NULL;
+    const char *mode = NULL;
     char **command = NULL;
     char *pidfile = NULL;
     int background = 0;
@@ -210,15 +200,22 @@ main(int argc, char *argv[])
     pid_t child = 0;
     int status = 0;
     int clean_cache = 0;
+    static const char optstring[] = "bf:g:H:hI:i:K:k:l:m:no:p:qr:S:stu:v";
+
+    /* Initialize logging. */
+    message_program_name = "k4start";
 
     /* Parse command-line options. */
     memset(&options, 0, sizeof(options));
-    while ((opt = getopt(argc, argv, "bf:H:hI:i:K:k:l:np:qr:S:stu:v")) != EOF)
+    while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'k': options.cache = optarg;       break;
+        case 'm': mode = optarg;                break;
         case 'n': options.no_aklog = 1;         break;
+        case 'o': owner = optarg;               break;
         case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
         case 't': options.run_aklog = 1;        break;
@@ -311,6 +308,9 @@ main(int argc, char *argv[])
             options.keep_ticket, options.lifetime);
     if (options.happy_ticket > 0 && options.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
+    if (owner != NULL || group != NULL || mode != NULL)
+        if (options.keep_ticket || command != NULL)
+            die("-o/-g/-m cannot be used with -K or a command");
 
     /* Check to see if KINIT_PROG is set.  If it is, and no_aklog is not set,
        set run_aklog, since setting that environment variable changes the
@@ -339,17 +339,21 @@ main(int argc, char *argv[])
        going to run aklog or a command. */
     if (options.cache == NULL && command != NULL) {
         int fd;
+        char *cache;
 
-        options.cache = malloc(strlen("/tmp/tkt_XXXXXX") + 20 + 1);
-        sprintf(options.cache, "/tmp/tkt%d_XXXXXX", (int) getuid());
-        fd = mkstemp(options.cache);
+        cache = malloc(strlen("/tmp/tkt_XXXXXX") + 20 + 1);
+        sprintf(cache, "/tmp/tkt%d_XXXXXX", (int) getuid());
+        fd = mkstemp(cache);
         if (fd < 0)
             die("cannot create ticket cache file: %s", strerror(errno));
         if (fchmod(fd, 0600) < 0)
             die("cannot chmod ticket cache file: %s", strerror(errno));
+        options.cache = cache;
         clean_cache = 1;
     }
-    if (options.cache != NULL) {
+    if (options.cache == NULL)
+        options.cache = tkt_string();
+    else if (options.cache != NULL) {
         char *env;
 
         krb_set_tkt_string(options.cache);
@@ -431,6 +435,10 @@ main(int argc, char *argv[])
     /* If requested, run the aklog program. */
     if (options.run_aklog && !options.no_aklog)
         run_aklog(aklog, options.verbose);
+
+    /* If requested, set the owner, group, and mode of the resulting cache. */
+    if (owner != NULL || group != NULL || mode != NULL)
+        file_permissions(options.cache, owner, group, mode);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the

@@ -86,14 +86,19 @@ AC_ARG_WITH([afs-setpag],
 
 dnl Checks for header files.
 AC_HEADER_TIME
-AC_CHECK_HEADERS([sys/time.h])
+AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
+AC_CHECK_DECLS([snprintf, vsnprintf])
 
 dnl Checks for types.
 AC_CHECK_TYPES([long long])
 
 dnl Checks for functions.
-AC_CHECK_FUNCS([setsid])
-AC_REPLACE_FUNCS([daemon mkstemp])
+RRA_FUNC_SNPRINTF
+AC_CHECK_FUNCS([setrlimit setsid])
+AC_REPLACE_FUNCS([asprintf daemon mkstemp])
+
+dnl Needed to get prototypes for functions like asprintf on Linux.
+AC_DEFINE([_GNU_SOURCE], [1], [Define to 1 on Linux to get full prototypes.])
 
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])

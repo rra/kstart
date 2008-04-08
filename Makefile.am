@@ -2,10 +2,10 @@
 # $Id$
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 #    Board of Trustees, Leland Stanford Jr. University
 #
-# See README for licensing terms.
+# See LICENSE for licensing terms.
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
@@ -37,16 +37,18 @@ endif
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
 k4start_SOURCES = k4start.c command.c command.h portable/krb4.h
-k4start_LDADD = portable/libportable.a $(K4START_LIBS)
+k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
 k5start_SOURCES = k5start.c command.c command.h
-k5start_LDADD = portable/libportable.a $(K5START_LIBS)
+k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 krenew_SOURCES = krenew.c command.c command.h
-krenew_LDADD = portable/libportable.a $(K5START_LIBS)
+krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
-noinst_LIBRARIES = portable/libportable.a
+noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/kafs.h portable/krb5.h \
-	portable/time.h system.h
+	portable/macros.h portable/time.h system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
+util_libutil_a_SOURCES = util/concat.c util/messages.c util/perms.c \
+	util/util.h util/xmalloc.c
 
 man_MANS = @K4START_MAN@ k5start.1 krenew.1
 

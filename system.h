@@ -29,7 +29,20 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
-#include <unistd.h>
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
+#if HAVE_STDINT_H
+# include <stdint.h>
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+/* SCO OpenServer gets int32_t from here. */
+#if HAVE_SYS_BITYPES_H
+# include <sys/bitypes.h>
+#endif
 
 /* __attribute__ is available in gcc 2.5 and later, but only with gcc 2.7
    could you use the __format__ form of the attributes, which is what we use
@@ -60,13 +73,23 @@ BEGIN_DECLS
 /* Provide prototypes for functions not declared in system headers.  Use the
    HAVE_DECL macros for those functions that may be prototyped but
    implemented incorrectly or implemented without a prototype. */
+#if !HAVE_ASPRINTF
+extern int asprintf(char **, const char *, ...);
+extern int vasprintf(char **, const char *, va_list);
+#endif
 #if !HAVE_DAEMON
 extern int daemon(int, int);
 #endif
 #if !HAVE_MKSTEMP
 extern int mkstemp(char *);
 #endif
-
+#if !HAVE_DECL_SNPRINTF
+extern int snprintf(char *, size_t, const char *, ...)
+    __attribute__((__format__(printf, 3, 4)));
+#endif
+#if !HAVE_DECL_VSNPRINTF
+extern int vsnprintf(char *, size_t, const char *, va_list);
+#endif
 
 END_DECLS
 

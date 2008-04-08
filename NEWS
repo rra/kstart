@@ -2,6 +2,12 @@
 
 kstart 3.11 (unreleased)
 
+    Add -o, -g, and -m options to k4start and k5start to set the owner,
+    group, and mode of the ticket cache after creation.  These options
+    cannot be used with a specified command or with -K since, after making
+    those changes, the Kerberos library won't permit reading or writing to
+    the ticket cache.  Based on a patch by Howard Wilkinson.
+
     Close the keytab after determining the principal with k5start -U.
 
 kstart 3.10 (2007-04-10)

@@ -30,7 +30,7 @@ krb5_err(krb5_context context UNUSED, int eval, krb5_error_code code,
          const char *format, ...)
 {
     va_list args;
-    char *message;
+    const char *message;
 
     message = krb5_get_error_message(context, code);
     va_start(args, format);
@@ -46,7 +46,7 @@ krb5_warn(krb5_context context UNUSED, krb5_error_code code,
           const char *format, ...)
 {
     va_list args;
-    char *message;
+    const char *message;
 
     message = krb5_get_error_message(context, code);
     va_start(args, format);
