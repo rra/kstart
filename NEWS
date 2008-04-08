@@ -1,5 +1,9 @@
                        User-Visible kstart Changes
 
+kstart 3.11 (unreleased)
+
+    Close the keytab after determining the principal with k5start -U.
+
 kstart 3.10 (2007-04-10)
 
     Fix compilation error with a new enough MIT Kerberos to support

@@ -297,6 +297,7 @@ first_principal(krb5_context ctx, const char *path)
 #endif
     }
     krb5_kt_end_seq_get(ctx, keytab, &cursor);
+    krb5_kt_close(ctx, keytab);
     if (k5_errno == 0)
         return principal;
     else {
