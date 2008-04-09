@@ -35,6 +35,7 @@
 const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
    -b                   Fork and run in the background\n\
+   -c <file>            Write child process ID (PID) to <file>\n\
    -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
@@ -222,6 +223,7 @@ main(int argc, char *argv[])
     int option, result;
     char *cachename = NULL;
     char **command = NULL;
+    char *childfile = NULL;
     char *pidfile = NULL;
     int background = 0;
     int keep_ticket = 0;
@@ -238,9 +240,10 @@ main(int argc, char *argv[])
     message_program_name = "krenew";
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bhK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:hK:k:p:qtv")) != EOF)
         switch (option) {
         case 'b': background = 1;               break;
+        case 'c': childfile = optarg;           break;
         case 'h': usage(0);                     break;
         case 'p': pidfile = optarg;             break;
         case 't': do_aklog = 1;                 break;
@@ -269,6 +272,8 @@ main(int argc, char *argv[])
     /* Check the arguments for consistency. */
     if (background && keep_ticket == 0 && command == NULL)
         die("-b only makes sense with -K or a command to run");
+    if (childfile != NULL && command == NULL)
+        die("-c option only makes sense with a command to run");
 
     /* Set aklog from KINIT_PROG or the compiled-in default. */
     aklog = getenv("KINIT_PROG");
@@ -347,6 +352,17 @@ main(int argc, char *argv[])
             sysdie("unable to run command %s", command[0]);
         if (keep_ticket == 0)
             keep_ticket = 60;
+    }
+
+    /* Write out the child PID file.  Again, no useful error reporting. */
+    if (childfile != NULL) {
+        FILE *file;
+
+        file = fopen(childfile, "w");
+        if (file != NULL) {
+            fprintf(file, "%lu\n", (unsigned long) child);
+            fclose(file);
+        }
     }
 
     /* Loop if we're running as a daemon. */

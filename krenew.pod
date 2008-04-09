@@ -4,8 +4,8 @@ krenew - Renew a Kerberos v5 ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhtv>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
-    [B<-p> I<pid file>] [I<command> ...]
+B<krenew> [B<-bhtv>] [B<-c> I<child pid file>] [B<-K> I<minutes>]
+    [B<-k> I<ticket file>] [B<-p> I<pid file>] [I<command> ...]
 
 =head1 DESCRIPTION
 
@@ -67,12 +67,25 @@ like:
 
 to run B<krenew> in the background but within the current session.
 
+=item B<-c> I<child pid file>
+
+Save the process ID (PID) of the child process into I<child pid file>.
+I<child pid file> is created if it doesn't exist and overwritten if it
+does exist.  This option is only allowed when a command was given on the
+command line and is most useful in conjunction with B<-b> to allow
+management of the running child process.
+
+Note that, when used with B<-b>, the PID file is written out after
+B<k4start> is backgrounded and changes its working directory to F</>, so
+relative paths for the PID file will be relative to F</> (probably not
+what you want).
+
 =item B<-h>
 
 Display a usage message and exit.
 
 =item B<-K> I<minutes>
-	
+
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before the next wakeup, and renews the ticket if needed.  If this option
@@ -101,7 +114,7 @@ relative paths for the PID file will be relative to F</> (probably not
 what you want).
 
 =item B<-t>
-	
+
 Run an external program after getting a ticket.  The default use of this
 is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
 is set, it overrides the compiled-in default.
@@ -112,7 +125,7 @@ obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
 PAG.
 
 =item B<-v>
-	
+
 Be verbose.  This will print out a bit of additional information about
 what is being attempted and what the results are.
 

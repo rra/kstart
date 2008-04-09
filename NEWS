@@ -2,6 +2,17 @@
 
 kstart 3.11 (unreleased)
 
+    Add -c option to k4start, k5start, and krenew, which writes out the
+    PID of the child process when running a command.  This is similar to
+    -p, but writes out the command PID rather than the PID of k4start,
+    k5start, or krenew.
+
+    Add -o, -g, and -m options to k4start and k5start to set the owner,
+    group, and mode of the ticket cache after creation.  These options
+    cannot be used with a specified command or with -K since, after making
+    those changes, the Kerberos library won't permit reading or writing to
+    the ticket cache.  Based on a patch by Howard Wilkinson.
+
     Significantly update the AFS setpag support.  The option to build with
     AFS setpag support is now --enable-setpag.  On most platforms, if
     libkafs is not found, kstart uses an internal AFS system call
@@ -17,16 +28,10 @@ kstart 3.11 (unreleased)
     --with-krb5 to specify the path to the Kerberos v5 libraries and
     --with-krb4 to specify the path to the Kerberos v4 libraries.
 
+    Close the keytab after determining the principal with k5start -U.
+
     --enable-static is no longer supported.  This is generally unnecessary
     and complex to support in combination with other options.
-
-    Add -o, -g, and -m options to k4start and k5start to set the owner,
-    group, and mode of the ticket cache after creation.  These options
-    cannot be used with a specified command or with -K since, after making
-    those changes, the Kerberos library won't permit reading or writing to
-    the ticket cache.  Based on a patch by Howard Wilkinson.
-
-    Close the keytab after determining the principal with k5start -U.
 
 kstart 3.10 (2007-04-10)
 

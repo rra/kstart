@@ -74,6 +74,7 @@ Usage: k5start [options] [name [command]]\n\
    -r <service realm>           (default: local realm)\n\
 \n\
    -b                   Fork and run in the background\n\
+   -c <file>            Write child process ID (PID) to <file>\n\
    -f <keytab>          Use <keytab> for authentication rather than password\n\
    -g <group>           Set ticket cache group to <group>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
@@ -311,6 +312,7 @@ main(int argc, char *argv[])
     const char *cache = NULL;
     char *principal = NULL;
     char **command = NULL;
+    char *childfile = NULL;
     char *pidfile = NULL;
     int background = 0;
     int lifetime = DEFAULT_LIFETIME;
@@ -320,7 +322,7 @@ main(int argc, char *argv[])
     pid_t child = 0;
     int clean_cache = 0;
     int search_keytab = 0;
-    static const char optstring[] = "bf:g:H:hI:i:K:k:l:m:no:p:qr:S:stUu:v";
+    static const char optstring[] = "bc:f:g:H:hI:i:K:k:l:m:no:p:qr:S:stUu:v";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -330,6 +332,7 @@ main(int argc, char *argv[])
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'c': childfile = optarg;           break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
@@ -419,6 +422,8 @@ main(int argc, char *argv[])
     if (owner != NULL || group != NULL || mode != NULL)
         if (options.keep_ticket || command != NULL)
             die("-o/-g/-m cannot be used with -K or a command");
+    if (childfile != NULL && command == NULL)
+        die("-c option only makes sense with a command to run");
 
     /* Set aklog from KINIT_PROG or the compiled-in default. */
     options.aklog = getenv("KINIT_PROG");
@@ -630,6 +635,17 @@ main(int argc, char *argv[])
             options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
             if (options.keep_ticket <= 0)
                 options.keep_ticket = 1;
+        }
+    }
+
+    /* Write out the child PID file.  Again, no useful error reporting. */
+    if (childfile != NULL) {
+        FILE *file;
+
+        file = fopen(childfile, "w");
+        if (file != NULL) {
+            fprintf(file, "%lu\n", (unsigned long) child);
+            fclose(file);
         }
     }
 

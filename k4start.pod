@@ -4,8 +4,8 @@ k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
 =head1 SYNOPSIS
 
-B<k4start> [B<-bhnqstv>] [B<-f> I<srvtab>] [B<-g> I<group>]
-    [B<-H> I<minutes>] [B<-I> I<service instance>]
+B<k4start> [B<-bhnqstv>] [B<-c> I<child pid file>] [B<-f> I<srvtab>]
+    [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-l> I<minutes>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
@@ -71,8 +71,21 @@ in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
 for the errors to be seen.
 
+=item B<-c> I<child pid file>
+
+Save the process ID (PID) of the child process into I<child pid file>.
+I<child pid file> is created if it doesn't exist and overwritten if it
+does exist.  This option is only allowed when a command was given on the
+command line and is most useful in conjunction with B<-b> to allow
+management of the running child process.
+
+Note that, when used with B<-b>, the PID file is written out after
+B<k4start> is backgrounded and changes its working directory to F</>, so
+relative paths for the PID file will be relative to F</> (probably not
+what you want).
+
 =item B<-f> I<srvtab>
-	
+
 Authenticate using the srvtab I<srvtab> rather than asking for a password.
 
 =item B<-g> I<group>
@@ -114,7 +127,7 @@ appending a period and then the instance, so one never has to use this
 option.
 
 =item B<-K> I<minutes>
-	
+
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before or less than two minutes after the next wakeup, and gets a new
@@ -142,7 +155,7 @@ changing the permissions of the ticket cache will prevent B<k4start> from
 re-reading it or renewing it.
 
 =item B<-n>
-	
+
 Regardless of the setting of the environment variable KINIT_PROG, don't
 run the program.
 
@@ -170,7 +183,7 @@ relative paths for the PID file will be relative to F</> (probably not
 what you want).
 
 =item B<-q>
-	
+
 Quiet.  Suppresses the printing of the initial banner message saying what
 Kerberos principal tickets are being obtained for, and also suppresses the
 password prompt when the B<-s> option is given.
@@ -190,14 +203,14 @@ principal must be specified with both B<-S> and B<-I>; one cannot provide
 the instance portion as part of the argument to B<-S>.
 
 =item B<-s>
-	
+
 Read the password from standard input.  This bypasses the normal password
 prompt, which means echo isn't suppressed and input isn't forced to be
 from the controlling terminal.  Most uses of this option are a security
 risk.  You normally want to use a srvtab and the B<-f> option intead.
 
 =item B<-t>
-	
+
 Run an external program after getting a TGT.  The default use of this is
 to run B<aklog> to get a token.  If the environment variable KINIT_PROG is
 set, the program is run regardless of the B<-t> flag (unless the B<-n>
@@ -218,7 +231,7 @@ Note that there's normally no reason to use this flag rather than simply
 giving the principal on the command line as the first regular argument.
 
 =item B<-v>
-	
+
 Be verbose.  This will print out a bit of additional information about
 what is being attempted and what the results are.
 

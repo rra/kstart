@@ -68,6 +68,7 @@ Usage: k4start [options] [name]\n\
    -r <service realm>           (default: local realm)\n\
 \n\
    -b                   Fork and run in the background\n\
+   -c <file>            Write child process ID (PID) to <file>\n\
    -f <srvtab>          Read password from <srvtab>, as a srvtab key\n\
    -g <group>           Set ticket cache group to <group>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
@@ -196,13 +197,14 @@ main(int argc, char *argv[])
     const char *group = NULL;
     const char *mode = NULL;
     char **command = NULL;
+    char *childfile = NULL;
     char *pidfile = NULL;
     int background = 0;
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
     int status = 0;
     int clean_cache = 0;
-    static const char optstring[] = "bf:g:H:hI:i:K:k:l:m:no:p:qr:S:stu:v";
+    static const char optstring[] = "bc:f:g:H:hI:i:K:k:l:m:no:p:qr:S:stu:v";
 
     /* Initialize logging. */
     message_program_name = "k4start";
@@ -212,6 +214,7 @@ main(int argc, char *argv[])
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
         case 'b': background = 1;               break;
+        case 'c': childfile = optarg;           break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'k': options.cache = optarg;       break;
@@ -315,6 +318,8 @@ main(int argc, char *argv[])
     if (owner != NULL || group != NULL || mode != NULL)
         if (options.keep_ticket || command != NULL)
             die("-o/-g/-m cannot be used with -K or a command");
+    if (childfile != NULL && command == NULL)
+        die("-c option only makes sense with a command to run");
 
     /*
      * Check to see if KINIT_PROG is set.  If it is, and no_aklog is not set,
@@ -486,6 +491,17 @@ main(int argc, char *argv[])
             options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
             if (options.keep_ticket <= 0)
                 options.keep_ticket = 1;
+        }
+    }
+
+    /* Write out the child PID file.  Again, no useful error reporting. */
+    if (childfile != NULL) {
+        FILE *file;
+
+        file = fopen(childfile, "w");
+        if (file != NULL) {
+            fprintf(file, "%lu\n", (unsigned long) child);
+            fclose(file);
         }
     }
 
