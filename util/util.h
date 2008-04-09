@@ -22,6 +22,7 @@
 #include <config.h>
 #include <portable/macros.h>
 
+#include <krb5.h>
 #include <stdarg.h>
 #include <sys/types.h>
 
@@ -89,6 +90,15 @@ void die(const char *, ...)
     __attribute__((__noreturn__, __format__(printf, 1, 2)));
 void sysdie(const char *, ...)
     __attribute__((__noreturn__, __format__(printf, 1, 2)));
+
+/*
+ * The Kerberos versions of the reporting functions.  These take a context and
+ * an error code to get the Kerberos error.
+ */
+void die_krb5(krb5_context, krb5_error_code, const char *, ...)
+    __attribute__((__noreturn__, __format__(printf, 3, 4)));
+void warn_krb5(krb5_context, krb5_error_code, const char *, ...)
+    __attribute__((__format__(printf, 3, 4)));
 
 /*
  * Set the handlers for various message functions.  All of these functions

@@ -16,7 +16,6 @@
 #include <config.h>
 #include <system.h>
 #include <portable/kafs.h>
-#include <portable/krb5.h>
 #include <portable/time.h>
 
 #include <errno.h>
@@ -113,19 +112,19 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 {
     krb5_creds increds, *outcreds = NULL;
     time_t now, then;
-    int status;
+    krb5_error_code status;
 
     /* Obtain the ticket. */
     memset(&increds, 0, sizeof(increds));
     status = krb5_cc_get_principal(ctx, cache, &increds.client);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error reading cache");
+        die_krb5(ctx, status, "error reading cache");
     status = get_krbtgt_princ(ctx, increds.client, &increds.server);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error building ticket name");
+        die_krb5(ctx, status, "error building ticket name");
     status = krb5_get_credentials(ctx, 0, cache, &increds, &outcreds);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: cannot get current credentials");
+        die_krb5(ctx, status, "cannot get current credentials");
 
     /* Check the expiration time. */
     if (status == 0) {
@@ -150,7 +149,7 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 static void
 renew(krb5_context ctx, krb5_ccache cache, int verbose)
 {
-    int status;
+    krb5_error_code status;
     krb5_principal user;
     krb5_creds creds, *out;
 #ifndef HAVE_KRB5_GET_RENEWED_CREDS
@@ -161,13 +160,13 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
     memset(&creds, 0, sizeof(creds));
     status = krb5_cc_get_principal(ctx, cache, &user);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error reading cache");
+        die_krb5(ctx, status, "error reading cache");
     if (verbose) {
         char *name;
 
         status = krb5_unparse_name(ctx, user, &name);
         if (status != 0)
-            krb5_warn(ctx, status, "krenew: error unparsing name");
+            warn_krb5(ctx, status, "error unparsing name");
         else {
             printf("kstart: renewing credentials for %s\n", name);
             free(name);
@@ -183,24 +182,24 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
     memset(&in, 0, sizeof(in));
     status = krb5_copy_principal(ctx, user, &in.client);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error copying principal");
+        die_krb5(ctx, status, "error copying principal");
     status = get_krbtgt_princ(ctx, in.client, &in.server);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error building ticket name");
+        die_krb5(ctx, status, "error building ticket name");
     status = krb5_get_credentials(ctx, 0, cache, &in, &old);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: cannot get current credentials");
+        die_krb5(ctx, status, "cannot get current credentials");
     status = krb5_get_kdc_cred(ctx, cache, flags, NULL, NULL, old, &out);
 #endif
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error renewing credentials");
+        die_krb5(ctx, status, "error renewing credentials");
     
     status = krb5_cc_initialize(ctx, cache, user);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error reinitializing cache");
+        die_krb5(ctx, status, "error reinitializing cache");
     status = krb5_cc_store_cred(ctx, cache, out);
     if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error storing credentials");
+        die_krb5(ctx, status, "error storing credentials");
     krb5_free_principal(ctx, user);
 #ifdef HAVE_KRB5_GET_RENEWED_CREDS
     krb5_free_cred_contents(ctx, &creds);
@@ -229,6 +228,7 @@ main(int argc, char *argv[])
     krb5_context ctx;
     krb5_ccache cache;
     int status = 0;
+    krb5_error_code code;
     pid_t child = 0;
 
     /* Initialize logging. */
@@ -278,11 +278,11 @@ main(int argc, char *argv[])
         die("set KINIT_PROG to specify the path to aklog");
 
     /* Establish a K5 context and set the ticket cache. */
-    status = krb5_init_context(&ctx);
-    if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error initializing Kerberos");
+    code = krb5_init_context(&ctx);
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing Kerberos");
     if (cachename == NULL)
-        status = krb5_cc_default(ctx, &cache);
+        code = krb5_cc_default(ctx, &cache);
     else {
         char *env;
 
@@ -291,10 +291,10 @@ main(int argc, char *argv[])
             die("cannot allocate memory: %s", strerror(errno));
         sprintf(env, "KRB5CCNAME=%s", cachename);
         putenv(env);
-        status = krb5_cc_resolve(ctx, cachename, &cache);
+        code = krb5_cc_resolve(ctx, cachename, &cache);
     }
-    if (status != 0)
-        krb5_err(ctx, 1, status, "krenew: error initializing ticket cache");
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing ticket cache");
 
     /* If built with setpag support and we're running a command, create the
        new PAG now before the first authentication. */

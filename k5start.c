@@ -22,7 +22,6 @@
 #include <config.h>
 #include <system.h>
 #include <portable/kafs.h>
-#include <portable/krb5.h>
 #include <portable/time.h>
 
 #include <errno.h>
@@ -143,16 +142,15 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 static krb5_error_code
 ticket_expired(krb5_context ctx, struct options *options)
 {
-    krb5_creds increds, *outcreds = NULL;
+    krb5_creds in, *out = NULL;
     time_t now, then, offset;
-    int status;
+    krb5_error_code status;
 
     /* Obtain the ticket. */
-    memset(&increds, 0, sizeof(increds));
-    increds.client = options->kprinc;
-    increds.server = options->ksprinc;
-    status = krb5_get_credentials(ctx, 0, options->ccache, &increds,
-                                  &outcreds);
+    memset(&in, 0, sizeof(in));
+    in.client = options->kprinc;
+    in.server = options->ksprinc;
+    status = krb5_get_credentials(ctx, 0, options->ccache, &in, &out);
 
     /* Check the expiration time.  We may be looking for a ticket that lasts a
        particuliar length of time based on either keep_ticket or
@@ -160,7 +158,7 @@ ticket_expired(krb5_context ctx, struct options *options)
        them will always be zero. */
     if (status == 0) {
         now = time(NULL);
-        then = outcreds->times.endtime;
+        then = out->times.endtime;
         if (options->happy_ticket > 0)
             offset = 60 * options->happy_ticket;
         else
@@ -170,8 +168,8 @@ ticket_expired(krb5_context ctx, struct options *options)
     }
 
     /* Free memory. */
-    if (outcreds != NULL)
-        krb5_free_creds(ctx, outcreds);
+    if (out != NULL)
+        krb5_free_creds(ctx, out);
 
     return status;
 }
@@ -184,16 +182,16 @@ ticket_expired(krb5_context ctx, struct options *options)
 static void
 authenticate(krb5_context ctx, struct options *options)
 {
-    int k5_errno;
-    krb5_keytab k5_keytab = NULL;
+    krb5_error_code status;
+    krb5_keytab keytab = NULL;
     krb5_creds creds;
 
     if (options->verbose) {
         char *p;
 
-        k5_errno = krb5_unparse_name(ctx, options->kprinc, &p);
-        if (k5_errno != 0)
-            krb5_warn(ctx, k5_errno, "k5start: error unparsing name");
+        status = krb5_unparse_name(ctx, options->kprinc, &p);
+        if (status != 0)
+            warn_krb5(ctx, status, "error unparsing name");
         else {
             printf("Principal: %s\n", p);
             free(p);
@@ -201,20 +199,18 @@ authenticate(krb5_context ctx, struct options *options)
         printf("Service principal: %s\n", options->service);
     }
     if (options->keytab != NULL) {
-        k5_errno = krb5_kt_resolve(ctx, options->keytab, &k5_keytab);
-        if (k5_errno != 0)
-            krb5_err(ctx, 1, k5_errno, "k5start: error resolving keytab %s",
+        status = krb5_kt_resolve(ctx, options->keytab, &keytab);
+        if (status != 0)
+            die_krb5(ctx, status, "error resolving keytab %s",
                      options->keytab);
-        k5_errno = krb5_get_init_creds_keytab(ctx, &creds,
-                                              options->kprinc, k5_keytab,
+        status = krb5_get_init_creds_keytab(ctx, &creds, options->kprinc,
+                                            keytab, 0, options->service,
+                                            &options->kopts);
+    } else if (!options->stdin_passwd) {
+        status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
+                                              NULL, krb5_prompter_posix, NULL,
                                               0, options->service,
                                               &options->kopts);
-    } else if (!options->stdin_passwd) {
-        k5_errno = krb5_get_init_creds_password(ctx, &creds,
-                                                options->kprinc, NULL,
-                                                krb5_prompter_posix, NULL,
-                                                0, options->service,
-                                                &options->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
@@ -226,27 +222,26 @@ authenticate(krb5_context ctx, struct options *options)
             *p = '\0';
         else
             die("password too long");
-        k5_errno = krb5_get_init_creds_password(ctx, &creds,
-                                                options->kprinc, buffer,
-                                                NULL, NULL, 0,
-                                                options->service,
-                                                &options->kopts);
+        status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
+                                              buffer, NULL, NULL, 0,
+                                              options->service,
+                                              &options->kopts);
     }
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error getting credentials");
-    k5_errno = krb5_cc_initialize(ctx, options->ccache, options->kprinc);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error initializing ticket cache");
-    k5_errno = krb5_cc_store_cred(ctx, options->ccache, &creds);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error storing credentials");
+    if (status != 0)
+        die_krb5(ctx, status, "error getting credentials");
+    status = krb5_cc_initialize(ctx, options->ccache, options->kprinc);
+    if (status != 0)
+        die_krb5(ctx, status, "error initializing ticket cache");
+    status = krb5_cc_store_cred(ctx, options->ccache, &creds);
+    if (status != 0)
+        die_krb5(ctx, status, "error storing credentials");
 
     /* Make sure that we don't free princ; we use it later. */
     if (creds.client == options->kprinc)
         creds.client = NULL;
     krb5_free_cred_contents(ctx, &creds);
-    if (k5_keytab != NULL)
-        krb5_kt_close(ctx, k5_keytab);
+    if (keytab != NULL)
+        krb5_kt_close(ctx, keytab);
 }
 
 
@@ -261,21 +256,20 @@ first_principal(krb5_context ctx, const char *path)
     krb5_keytab keytab;
     krb5_kt_cursor cursor;
     krb5_keytab_entry entry;
-    int k5_errno;
+    krb5_error_code status;
     char *principal = NULL;
 
-    k5_errno = krb5_kt_resolve(ctx, path, &keytab);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error opening %s", path);
-    k5_errno = krb5_kt_start_seq_get(ctx, keytab, &cursor);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error reading %s", path);
-    k5_errno = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
-    if (k5_errno == 0) {
-        k5_errno = krb5_unparse_name(ctx, entry.principal, &principal);
-        if (k5_errno != 0)
-            krb5_err(ctx, 1, k5_errno,
-                     "k5start: error unparsing name from %s", path);
+    status = krb5_kt_resolve(ctx, path, &keytab);
+    if (status != 0)
+        die_krb5(ctx, status, "error opening %s", path);
+    status = krb5_kt_start_seq_get(ctx, keytab, &cursor);
+    if (status != 0)
+        die_krb5(ctx, status, "error reading %s", path);
+    status = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
+    if (status == 0) {
+        status = krb5_unparse_name(ctx, entry.principal, &principal);
+        if (status != 0)
+            die_krb5(ctx, status, "error unparsing name from %s", path);
 #ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
         krb5_free_keytab_entry_contents(ctx, &entry);
 #else
@@ -284,7 +278,7 @@ first_principal(krb5_context ctx, const char *path)
     }
     krb5_kt_end_seq_get(ctx, keytab, &cursor);
     krb5_kt_close(ctx, keytab);
-    if (k5_errno == 0)
+    if (status == 0)
         return principal;
     else {
         die("no principal found in keytab file %s", path);
@@ -297,7 +291,8 @@ int
 main(int argc, char *argv[])
 {
     struct options options;
-    int k5_errno, opt, result;
+    int opt, result;
+    krb5_error_code code;
     size_t length;
     const char *inst = NULL;
     const char *sname = NULL;
@@ -363,8 +358,8 @@ main(int argc, char *argv[])
             cache = concat("FILE:", optarg, (char *) 0);
             break;
         case 'l':
-            k5_errno = krb5_string_to_deltat(optarg, &life_secs);
-            if (k5_errno != 0 || life_secs == 0)
+            code = krb5_string_to_deltat(optarg, &life_secs);
+            if (code != 0 || life_secs == 0)
                 die("bad lifetime value %s, use 10h 10m format", optarg);
             lifetime = life_secs / 60;
             break;
@@ -424,9 +419,9 @@ main(int argc, char *argv[])
         die("set KINIT_PROG to specify the path to aklog");
 
     /* Establish a K5 context. */
-    k5_errno = krb5_init_context(&ctx);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error initializing Kerberos");
+    code = krb5_init_context(&ctx);
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing Kerberos");
 
     /* If the -U option was given, figure out the principal from the keytab. */
     if (search_keytab)
@@ -463,8 +458,8 @@ main(int argc, char *argv[])
         clean_cache = 1;
     }
     if (cache == NULL) {
-        k5_errno = krb5_cc_default(ctx, &options.ccache);
-        if (k5_errno != 0)
+        code = krb5_cc_default(ctx, &options.ccache);
+        if (code != 0)
             cache = krb5_cc_get_name(ctx, options.ccache);
     } else {
         char *env;
@@ -474,10 +469,10 @@ main(int argc, char *argv[])
             die("cannot allocate memory: %s", strerror(errno));
         sprintf(env, "KRB5CCNAME=%s", cache);
         putenv(env);
-        k5_errno = krb5_cc_resolve(ctx, cache, &options.ccache);
+        code = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error initializing ticket cache");
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing ticket cache");
 
     /* If -K, -H, or -b were given, set quiet automatically unless verbose was
        set. */
@@ -500,9 +495,9 @@ main(int argc, char *argv[])
         sprintf(p, "%s/%s", principal, inst);
         principal = p;
     }
-    k5_errno = krb5_parse_name(ctx, principal, &options.kprinc);
-    if (k5_errno != 0)
-        krb5_err(ctx, 1, k5_errno, "k5start: error parsing %s", principal);
+    code = krb5_parse_name(ctx, principal, &options.kprinc);
+    if (code != 0)
+        die_krb5(ctx, code, "error parsing %s", principal);
 
     /* Display the identity that we're obtaining Kerberos tickets for.  We do
        this by unparsing the principal rather than using username and inst
@@ -510,10 +505,9 @@ main(int argc, char *argv[])
     if (!options.quiet) {
         char *p;
 
-        k5_errno = krb5_unparse_name(ctx, options.kprinc, &p);
-        if (k5_errno != 0)
-            krb5_err(ctx, 1, k5_errno, "k5start: error unparsing name %s",
-                     principal);
+        code = krb5_unparse_name(ctx, options.kprinc, &p);
+        if (code != 0)
+            die_krb5(ctx, code, "error unparsing name %s", principal);
         printf("Kerberos initialization for %s", p);
         free(p);
         if (sname != NULL) {
@@ -538,11 +532,10 @@ main(int argc, char *argv[])
     if (options.service == NULL)
         die("unable to allocate memory: %s", strerror(errno));
     sprintf(options.service, "%s/%s@%s", sname, sinst, srealm);
-    status = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
+    code = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
                                   srealm, sname, sinst, (const char *) NULL);
-    if (status != 0)
-        krb5_err(ctx, 1, status,
-                 "k5start: error creating service principal name");
+    if (code != 0)
+        die_krb5(ctx, code, "error creating service principal name");
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
