@@ -99,11 +99,13 @@ INSTALLATION
   change the installation locations of the binaries and manual pages
   separately.
 
-  If your Kerberos libraries aren't installed in a location found by your
-  compiler by default, use the --with-kerberos=PATH option to configure.
+  If your Kerberos v5 libraries aren't installed in a location found by
+  your compiler by default, use the --with-krb5=PATH option to configure.
   The Kerberos libraries will then be expected in PATH/lib and the headers
-  in PATH/include.  If you only want to build k5start and krenew, pass the
-  --disable-k4start flag to configure.
+  in PATH/include.  Similarly, if your Kerberos v4 libraries aren't found
+  by dfeault, use the --with-krb4=PATH option to configure.  If you only
+  want to build k5start and krenew, pass the --disable-k4start flag to
+  configure.
 
   To specify a particular krb5-config script to use, either set the
   KRB5_CONFIG environment variable or pass it to configure like:
@@ -129,13 +131,6 @@ INSTALLATION
   When enabled, k4start, k5start, and krenew will always create a new PAG
   before authentication when running a specific command and when aklog is
   being run.
-
-  To link statically against the Kerberos libraries rather than
-  dynamically (so that the binaries can be used on systems without
-  Kerberos libraries installed, for example, or so that they're
-  independent of shared libraries installed in AFS or NFS), give the
-  --enable-static option to configure.  This has only been tested on
-  Solaris and Linux and may not work on all platforms.
 
   You can pass the --enable-reduced-depends flag to configure to try to
   minimize the shared library dependencies encoded in the binaries.  This

@@ -10,6 +10,16 @@ kstart 3.11 (unreleased)
     than Linux, pass --with-afs to configure to specify the location of
     the AFS include files and libraries.
 
+    Redo the build machinery for Kerberos v4 and Kerberos v5 libraries to
+    take advantage of portability improvements from other projects.
+    kstart will now hopefully build with AIX's Kerberos libraries and get
+    more of the edge cases right.  Instead of --with-kerberos, use
+    --with-krb5 to specify the path to the Kerberos v5 libraries and
+    --with-krb4 to specify the path to the Kerberos v4 libraries.
+
+    --enable-static is no longer supported.  This is generally unnecessary
+    and complex to support in combination with other options.
+
     Add -o, -g, and -m options to k4start and k5start to set the owner,
     group, and mode of the ticket cache after creation.  These options
     cannot be used with a specified command or with -K since, after making

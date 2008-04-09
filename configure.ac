@@ -15,11 +15,12 @@ AC_CONFIG_LIBOBJ_DIR([portable])
 AM_INIT_AUTOMAKE([1.10])
 AM_MAINTAINER_MODE
 
-dnl Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+AC_AIX
+AC_GNU_SOURCE
 
 dnl aklog is the standard name for the utility to get AFS tokens from Kerberos
 dnl tickets.  afslog is the name of the utility that comes with KTH Kerberos
@@ -46,45 +47,39 @@ AC_ARG_ENABLE([k4start],
 AC_SUBST([K4START])
 AC_SUBST([K4START_MAN])
 
-dnl Check for the Kerberos v5 libraries and for portability between krb5 and
-dnl Heimdal when getting initial tickets.
-save_LIBS=$LIBS
-RRA_LIB_KRB5([krb5], [true])
-KRB5LIBS=$LIBS
-LIBS=$save_LIBS
-AC_SUBST([KRB5LIBS])
+dnl Check for the Kerberos v5 libraries and for portability between MIT and
+dnl Heimdal.
+RRA_LIB_KRB5
+RRA_LIB_KRB5_SWITCH
+AC_CHECK_FUNCS([krb5_free_keytab_entry_contents \
+    krb5_get_init_creds_opt_set_default_flags \
+    krb5_get_renewed_creds])
+AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
+AC_REPLACE_FUNCS([krb5_err])
+RRA_LIB_KRB5_RESTORE
 
 dnl If we're building k4start, check for the Kerberos v4 libraries and add our
 dnl local lifetime implementation if needed.
-KRBLIBS=
 AS_IF([test x"$K4START" != x],
-    [save_LIBS=$LIBS
-     RRA_LIB_KRB5([krb4], [true])
-     KRB4LIBS=$LIBS
-     LIBS=$save_LIBS])
-AC_SUBST([KRB4LIBS])
+    [RRA_LIB_KRB4
+     RRA_LIB_KRB4_SWITCH
+     AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+     RRA_LIB_KRB4_RESTORE])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_ENABLE([setpag],
     [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 
-dnl Checks for header files.
+dnl Other portability checks.
 AC_HEADER_TIME
 AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
-
-dnl Checks for types.
 AC_TYPE_SIGNAL
 AC_CHECK_TYPES([long long])
-
-dnl Checks for functions.
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit setsid])
 AC_REPLACE_FUNCS([asprintf daemon mkstemp])
-
-dnl Needed to get prototypes for functions like asprintf on Linux.
-AC_DEFINE([_GNU_SOURCE], [1], [Define to 1 on Linux to get full prototypes.])
 
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
