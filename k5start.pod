@@ -348,10 +348,10 @@ the UID B<k5start> is running as and %s is a random string.
 
 =head1 SEE ALSO
 
-k4start(1), kinit(1)
+k4start(1), kinit(1), krenew(1)
 
 The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<k4start> and B<k5start>.
+will have the current version of B<k4start>, B<k5start>, and B<krenew>.
 
 =head1 AUTHORS
 
