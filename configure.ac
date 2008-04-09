@@ -2,10 +2,10 @@ dnl Process this file with autoconf to produce a configure script.
 dnl $Id$
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 dnl     Board of Trustees, Leland Stanford Jr. University
 dnl
-dnl See README for licensing terms.
+dnl See LICENSE for licensing terms.
 
 AC_REVISION([$Revision$])
 AC_PREREQ([2.61])
@@ -65,24 +65,9 @@ AS_IF([test x"$K4START" != x],
 AC_SUBST([KRB4LIBS])
 
 dnl See if AFS setpag support is desired.
-AC_ARG_WITH([afs-setpag],
-    AC_HELP_STRING([--with-afs-setpag@<:@=DIR@:>@],
-        [Enable AFS setpag support, libraries at DIR]),
-    [AS_IF([test x"$withval" != xno],
-        [AS_IF([test x"$withval" != xyes],
-            [LDFLAGS="-L$withval/lib $LDFLAGS"])
-        AC_CHECK_LIB([afsauthent], [lsetpag],
-            [AFSLIBS="-lafsauthent -lafsrpc"
-             AC_DEFINE([HAVE_LSETPAG], 1,
-                [Define to 1 if you have the AFS lsetpag function.])],
-            [AC_CHECK_LIB([kafs], [k_setpag],
-                [AFSLIBS="-lkafs"
-                 AC_CHECK_HEADERS([kafs.h])
-                 AC_DEFINE([HAVE_K_SETPAG], 1,
-                     [Define to 1 if you have the k_setpag function.])],
-                [AC_MSG_ERROR([setpag function not found])])],
-            [-lafsrpc])
-        AC_SUBST([AFSLIBS])])])
+AC_ARG_ENABLE([setpag],
+    [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
+    [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 
 dnl Checks for header files.
 AC_HEADER_TIME

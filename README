@@ -42,9 +42,9 @@ DESCRIPTION
   k4start and k5start can optionally run an external program whenever the
   ticket is refreshed to obtain an AFS token, and therefore can be used in
   conjunction with a program like aklog or afslog to maintain an AFS
-  token.  When built with the (currently somewhat experimental) support
-  for AFS PAGs, they can also put the program in its own PAG so that its
-  authentication doesn't affect any other programs.
+  token.  When built with support for AFS PAGs, they can also put the
+  program in its own PAG so that its authentication doesn't affect any
+  other programs.
 
   krenew is identical to k5start except that rather than obtaining new
   tickets from a password or keytab, it renews an existing renewable
@@ -72,15 +72,11 @@ REQUIREMENTS
   not given, the first of aklog or afslog that is found on your path at
   configure time will be used.
 
-  To enable support for AFS PAGs, pass the --with-afs-setpag flag to
-  configure.  It is not enabled by default.  This support requires either
-  the newer OpenAFS libraries (libafsauthent and libafsrpc) or the kafs
-  library that comes with either Heimdal or KTH Kerberos.  If these
-  libraries aren't in your standard search path, give the root the
-  installation (the directory above the lib directory) to
-  --with-afs-setpag as an argument.  When enabled, k4start, k5start, and
-  krenew will always create a new PAG before authentication when running a
-  specific command and when aklog is being run.
+  AFS PAG support on platforms other than Linux requires the kafs library
+  that comes with either Heimdal or KTH Kerberos, AFS header files (on any
+  other platform besides AIX or IRIX), or AFS libraries (on AIX and IRIX).
+  On Linux, kstart uses its own internal implementation of the AFS system
+  call interface and doesn't require any external libraries.
 
 INSTALLATION
 
@@ -122,11 +118,17 @@ INSTALLATION
   This program will be run when the -t option is given to k4start,
   k5start, or krenew.
 
-  To enable the AFS PAG support, pass --with-afs-setpag to configure.  You
-  may need to specify the root of your AFS client tree if the AFS
-  libraries aren't in the standard search path, such as with:
+  To enable support for AFS PAGs, pass the --enable-setpag flag to
+  configure.  It is not enabled by default.  On platforms other than Linux
+  and without the kafs library, you will need to add the --with-afs flag
+  specifying the location of your AFS includes and libraries unless
+  they're on your standard search path.  For example:
 
-      ./configure --with-afs-setpag=/usr/afsws
+      ./configure --enable-setpag --with-afs=/usr/afsws
+
+  When enabled, k4start, k5start, and krenew will always create a new PAG
+  before authentication when running a specific command and when aklog is
+  being run.
 
   To link statically against the Kerberos libraries rather than
   dynamically (so that the binaries can be used on systems without
@@ -173,6 +175,9 @@ THANKS
   To Thomas Weiss, for noticing that code restructuring caused the
   argument to -H to be ignored in both k4start and k5start and that -H and
   -K should be diagnosed as mutually exclusive.
+
+  To Howard Wilkinson, for the initial version of the -o, -g, and -m
+  support.
 
 LICENSE
 

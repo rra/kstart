@@ -24,23 +24,26 @@ EXTRA_DIST = autogen k4start.1 k4start.pod k5start.1 k5start.pod krenew.1 \
 # the AFS libraries last, after -lcom_err, so that we don't use its com_err
 # implementation.  If k5start doesn't call com_err functions, we want to do
 # the same thing we do with krb4 for the --enable-reduced-depends case.
-AFSLIBS      = @AFSLIBS@
-KRB4LIBS     = @KRB4LIBS@
-KRB5LIBS     = @KRB5LIBS@
-K4START_LIBS = $(AFSLIBS) $(KRB4LIBS)
+K4START_LIBS = $(KAFS_LIBS) $(KRB4LIBS)
 if USES_COM_ERR
-    K5START_LIBS = $(KRB5LIBS) $(AFSLIBS)
+    K5START_LIBS = $(KRB5LIBS) $(KAFS_LIBS)
 else
-    K5START_LIBS = $(AFSLIBS) $(KRB5LIBS)
+    K5START_LIBS = $(KAFS_LIBS) $(KRB5LIBS)
 endif
 
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
 k4start_SOURCES = k4start.c command.c command.h portable/krb4.h
+k4start_CPPFLAGS = $(KAFS_CPPFLAGS)
+k4start_LDFLAGS = $(KAFS_LDFLAGS)
 k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
 k5start_SOURCES = k5start.c command.c command.h
+k5start_CPPFLAGS = $(KAFS_CPPFLAGS)
+k5start_LDFLAGS = $(KAFS_LDFLAGS)
 k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 krenew_SOURCES = krenew.c command.c command.h
+krenew_CPPFLAGS = $(KAFS_CPPFLAGS)
+krenew_LDFLAGS = $(KAFS_LDFLAGS)
 krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a

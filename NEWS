@@ -2,6 +2,14 @@
 
 kstart 3.11 (unreleased)
 
+    Significantly update the AFS setpag support.  The option to build with
+    AFS setpag support is now --enable-setpag.  On most platforms, if
+    libkafs is not found, kstart uses an internal AFS system call
+    implementation that doesn't require linking with the AFS libraries.
+    The AFS libraries are used only on AIX and IRIX.  On platforms other
+    than Linux, pass --with-afs to configure to specify the location of
+    the AFS include files and libraries.
+
     Add -o, -g, and -m options to k4start and k5start to set the owner,
     group, and mode of the ticket cache after creation.  These options
     cannot be used with a specified command or with -K since, after making
