@@ -1,16 +1,16 @@
-/*  $Id$
-**
-**  Portability wrapper around <krb.h>.
-**
-**  This header file includes krb.h, wherever it was found, and then adjusts
-**  for various portability issues.
-*/
+/* $Id$
+ *
+ * Portability wrapper around krb.h.
+ *
+ * This header file includes krb.h, wherever it was found, and then adjusts
+ * for various portability issues.
+ */
 
 #ifndef PORTABLE_KRB4_H
 #define PORTABLE_KRB4_H 1
 
 #include <config.h>
-#include <system.h>
+#include <portable/macros.h>
 
 #ifdef HAVE_KERBEROSIV_KRB_H
 # include <kerberosIV/krb.h>
@@ -18,8 +18,10 @@
 # include <krb.h>
 #endif
 
-/* We default to a ten hour ticket lifetime if the Kerberos headers don't
-   provide a value. */
+/*
+ * We default to a ten hour ticket lifetime if the Kerberos headers don't
+ * provide a value.
+ */
 #ifndef DEFAULT_TKT_LIFE
 # define DEFAULT_TKT_LIFE 120
 #endif

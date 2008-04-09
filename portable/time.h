@@ -1,10 +1,10 @@
-/*  $Id$
-**
-**  Portability wrapper around <time.h> and <sys/time.h>.
-**
-**  This header includes <time.h> and <sys/time.h> as applicable, handling
-**  systems where one can't include both headers (per the Autoconf manual).
-*/
+/* $Id$
+ *
+ * Portability wrapper around <time.h> and <sys/time.h>.
+ *
+ * This header includes <time.h> and <sys/time.h> as applicable, handling
+ * systems where one can't include both headers (per the Autoconf manual).
+ */
 
 #ifndef PORTABLE_TIME_H
 #define PORTABLE_TIME_H 1

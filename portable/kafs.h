@@ -18,7 +18,12 @@
 #ifndef PORTABLE_KAFS_H
 #define PORTABLE_KAFS_H 1
 
+#include <config.h>
+#include <portable/macros.h>
+
 #include <errno.h>
+
+BEGIN_DECLS
 
 #if HAVE_K_HASAFS
 # if HAVE_KAFS_H
@@ -44,5 +49,7 @@ int k_unlog(void);
 # define k_setpag() (errno = ENOSYS, -1)
 # define k_unlog()  (errno = ENOSYS, -1)
 #endif
+
+END_DECLS
 
 #endif /* PORTABLE_KAFS_H */

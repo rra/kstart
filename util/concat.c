@@ -24,12 +24,12 @@
  */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 
 #include <util/util.h>
 
 /* Abbreviation for cleaner code. */
-#define VA_NEXT(var, type)      ((var) = (type) va_arg(args, type))
+#define VA_NEXT(var, type) ((var) = (type) va_arg(args, type))
 
 
 /*

@@ -1,18 +1,18 @@
-/*  $Id$
-**
-**  Shared command handling for k4start and k5start.
-**
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007
-**      Board of Trustees, Leland Stanford Jr. University
-**
-**  For copying and distribution information, please see README.
-**
-**  Contains the code for running aklog and an external command, used by both
-**  k4start and k5start.
-*/
+/* $Id$
+ *
+ * Shared command handling for k4start, k5start, and krenew.
+ *
+ * Run a command, possibly a long-running one for which we need to wait.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008
+ *     Board of Trustees, Leland Stanford Jr. University
+ *
+ * See LICENSE for licensing terms.
+ */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 
 #include <signal.h>
 #include <sys/wait.h>
@@ -24,16 +24,18 @@ static pid_t global_child_pid;
 
 
 /*
-**  Run the given aklog command, returning its exit status.  The command must
-**  be a fully-qualified path.
-*/
+ * Run the given aklog command, returning its exit status.  The command must
+ * be a fully-qualified path.
+ */
 void
 command_run(const char *aklog, int verbose)
 {
     int status;
 
-    /* IRIX 6.5's WEXITSTATUS() macro is  broken and can't cope with being
-       called directly on the return value of system(). */
+    /*
+     * IRIX 6.5's WEXITSTATUS() macro is  broken and can't cope with being
+     * called directly on the return value of system().
+     */
     status = system(aklog);
     status = WEXITSTATUS(status);
     if (verbose)
@@ -42,36 +44,36 @@ command_run(const char *aklog, int verbose)
 
 
 /*
-**  We need a signal handler for SIGCHLD to be received, but it doesn't do
-**  anything.  We just want the signal to be caught so that select will be
-**  interrupted.
-*/
+ * We need a signal handler for SIGCHLD to be received, but it doesn't do
+ * anything.  We just want the signal to be caught so that select will be
+ * interrupted.
+ */
 static RETSIGTYPE
-child_handler(int signal UNUSED)
+child_handler(int sig UNUSED)
 {
     /* Do nothing. */
 }
 
 
 /*
-**  This handler is installed for signals that should be propagated to the
-**  child (and ignored by kstart).
-*/
+ * This handler is installed for signals that should be propagated to the
+ * child (and ignored by kstart).
+ */
 static RETSIGTYPE
-propagate_handler(int signal)
+propagate_handler(int sig)
 {
-    kill(global_child_pid, signal);
+    kill(global_child_pid, sig);
 }
 
 
 /*
-**  Start a command, returning its PID.  Takes the command to run, which will
-**  be searched for on the path if not fully-qualified, and then the arguments
-**  to pass to it.  If execution fails for some reason, returns -1.
-**
-**  This function should only be called once before a call to finish_command;
-**  otherwise, the signal handler code won't work properly.
-*/
+ * Start a command, returning its PID.  Takes the command to run, which will
+ * be searched for on the path if not fully-qualified, and then the arguments
+ * to pass to it.  If execution fails for some reason, returns -1.
+ *
+ * This function should only be called once before a call to finish_command;
+ * otherwise, the signal handler code won't work properly.
+ */
 pid_t
 command_start(const char *command, char **argv)
 {
@@ -99,10 +101,10 @@ command_start(const char *command, char **argv)
 
 
 /*
-**  Check to see if the given pid is finished.  If it is, put its exit status
-**  into the second argument, if not NULL, and return 1.  Otherwise, return
-**  0, or -1 if waitpid failed.
-*/
+ * Check to see if the given pid is finished.  If it is, put its exit status
+ * into the second argument, if not NULL, and return 1.  Otherwise, return 0,
+ * or -1 if waitpid failed.
+ */
 int
 command_finish(pid_t child, int *status)
 {

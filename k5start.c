@@ -1,26 +1,28 @@
-/*  $Id$
-**
-**  Kerberos v5 kinit replacement suitable for daemon authentication.
-**
-**  Copyright 1987, 1988 by the Massachusetts Institute of Technology.
-**  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007
-**      Board of Trustees, Leland Stanford Jr. University
-**
-**  For copying and distribution information, please see README.
-**
-**  This is a replacement for the standard Kerberos v5 kinit that is more
-**  suitable for use with programs.  It can run as a daemon and renew a ticket
-**  periodically and can check the expiration of a ticket and only prompt to
-**  renew if it's too old.
-**
-**  It is based very heavily on a modified Kerberos v4 kinit, changed to call
-**  the Kerberos v5 initialization functions instead.  k5start is not as
-**  useful for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit
-**  supports more useful options, but -K and -H are still unique to it.
-*/
+/* $Id$
+ *
+ * Kerberos v5 kinit replacement suitable for daemon authentication.
+ *
+ * This is a replacement for the standard Kerberos v5 kinit that is more
+ * suitable for use with programs.  It can run as a daemon and renew a ticket
+ * periodically and can check the expiration of a ticket and only prompt to
+ * renew if it's too old.
+ *
+ * It is based very heavily on a modified Kerberos v4 kinit, changed to call
+ * the Kerberos v5 initialization functions instead.  k5start is not as useful
+ * for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit supports
+ * more useful options, but -K and -H are still unique to it.
+ *
+ * Originally written by Robert Morgan and Booker C. Bense.
+ * Substantial updates by Russ Allbery <rra@stanford.edu>
+ * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
+ * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
+ *     2008 Board of Trustees, Leland Stanford Jr. University
+ *
+ * See LICENSE for licensing terms.
+ */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 #include <portable/kafs.h>
 #include <portable/time.h>
 
@@ -34,14 +36,18 @@
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)
 
-/* The number of seconds of fudge to add to the check for whether we need to
-   obtain a new ticket.  This is here to make sure that we don't wake up just
-   as the ticket is expiring. */
+/*
+ * The number of seconds of fudge to add to the check for whether we need to
+ * obtain a new ticket.  This is here to make sure that we don't wake up just
+ * as the ticket is expiring.
+ */
 #define EXPIRE_FUDGE 120
 
-/* Holds the various command-line options for passing to functions, after
-   processing in the main routine and conversion to internal K5 data
-   structures where appropriate. */
+/*
+ * Holds the various command-line options for passing to functions, after
+ * processing in the main routine and conversion to internal K5 data
+ * structures where appropriate.
+ */
 struct options {
     krb5_principal kprinc;
     char *service;
@@ -95,10 +101,10 @@ Otherwise, %s.\n";
 
 
 /*
-**  Print out the usage message and then exit with the status given as the
-**  only argument.  If status is zero, the message is printed to standard
-**  output; otherwise, it is sent to standard error.
-*/
+ * Print out the usage message and then exit with the status given as the
+ * only argument.  If status is zero, the message is printed to standard
+ * output; otherwise, it is sent to standard error.
+ */
 static void
 usage(int status)
 {
@@ -111,9 +117,9 @@ usage(int status)
 
 
 /*
-**  Given a context and a principal, get the realm.  This works differently in
-**  MIT Kerberos and Heimdal, unfortunately.
-*/
+ * Given a context and a principal, get the realm.  This works differently in
+ * MIT Kerberos and Heimdal, unfortunately.
+ */
 static char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
@@ -136,9 +142,9 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 
 
 /*
-**  Check whether a ticket will expire within the given number of seconds.
-**  Takes the context and the options.  Returns a Kerberos status code.
-*/
+ * Check whether a ticket will expire within the given number of seconds.
+ * Takes the context and the options.  Returns a Kerberos status code.
+ */
 static krb5_error_code
 ticket_expired(krb5_context ctx, struct options *options)
 {
@@ -152,10 +158,12 @@ ticket_expired(krb5_context ctx, struct options *options)
     in.server = options->ksprinc;
     status = krb5_get_credentials(ctx, 0, options->ccache, &in, &out);
 
-    /* Check the expiration time.  We may be looking for a ticket that lasts a
-       particuliar length of time based on either keep_ticket or
-       happy_ticket.  Only one of those options will be set; at least one of
-       them will always be zero. */
+    /*
+     * Check the expiration time.  We may be looking for a ticket that lasts a
+     * particuliar length of time based on either keep_ticket or happy_ticket.
+     * Only one of those options will be set; at least one of them will always
+     * be zero.
+     */
     if (status == 0) {
         now = time(NULL);
         then = out->times.endtime;
@@ -176,9 +184,9 @@ ticket_expired(krb5_context ctx, struct options *options)
 
 
 /*
-**  Authenticate, given the context and the processed command-line options.
-**  Dies on failure.
-*/
+ * Authenticate, given the context and the processed command-line options.
+ * Dies on failure.
+ */
 static void
 authenticate(krb5_context ctx, struct options *options)
 {
@@ -246,10 +254,10 @@ authenticate(krb5_context ctx, struct options *options)
 
 
 /*
-**  Find the principal of the first entry of a keytab and return it as a
-**  string in newly allocated memory.  The caller is responsible for freeing.
-**  Exit on error.
-*/
+ * Find the principal of the first entry of a keytab and return it as a
+ * string in newly allocated memory.  The caller is responsible for freeing.
+ * Exit on error.
+ */
 static char *
 first_principal(krb5_context ctx, const char *path)
 {
@@ -293,7 +301,6 @@ main(int argc, char *argv[])
     struct options options;
     int opt, result;
     krb5_error_code code;
-    size_t length;
     const char *inst = NULL;
     const char *sname = NULL;
     const char *sinst = NULL;
@@ -374,8 +381,10 @@ main(int argc, char *argv[])
             break;
         }
 
-    /* Parse arguments.  There must be at most one argument, which will be
-       taken to be the username if the -u option wasn't already given. */
+    /*
+     * Parse arguments.  There must be at most one argument, which will be
+     * taken to be the username if the -u option wasn't already given.
+     */
     argc -= optind;
     argv += optind;
     if (argc >= 1 && !search_keytab) {
@@ -437,23 +446,23 @@ main(int argc, char *argv[])
         principal = pwd->pw_name;
     }
 
-    /* If requested, set a ticket cache.  Otherwise, if we're running a
-       command, set the ticket cache to a mkstemp-generated file.  Also put it
-       into the environment in case we're going to run aklog.  Either way, set
-       up the cache in the Kerberos libraries. */
+    /*
+     * If requested, set a ticket cache.  Otherwise, if we're running a
+     * command, set the ticket cache to a mkstemp-generated file.  Also put it
+     * into the environment in case we're going to run aklog.  Either way, set
+     * up the cache in the Kerberos libraries.
+     */
     if (cache == NULL && command != NULL) {
         int fd;
         char *tmp;
 
-        tmp = malloc(strlen("/tmp/krb5cc__XXXXXX") + 20 + 1);
-        if (tmp == NULL)
-            die("cannot allocate memory: %s", strerror(errno));
-        sprintf(tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
+        if (xasprintf(&tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
+            die("cannot format ticket cache name");
         fd = mkstemp(tmp);
         if (fd < 0)
-            die("cannot create ticket cache file: %s", strerror(errno));
+            sysdie("cannot create ticket cache file");
         if (fchmod(fd, 0600) < 0)
-            die("cannot chmod ticket cache file: %s", strerror(errno));
+            sysdie("cannot chmod ticket cache file");
         cache = tmp;
         clean_cache = 1;
     }
@@ -464,44 +473,46 @@ main(int argc, char *argv[])
     } else {
         char *env;
 
-        env = malloc(strlen(cache) + 12);
-        if (env == NULL)
-            die("cannot allocate memory: %s", strerror(errno));
-        sprintf(env, "KRB5CCNAME=%s", cache);
+        if (xasprintf(&env, "KRB5CCNAME=%s", cache) < 0)
+            die("cannot format KRB5CCNAME environment variable");
         putenv(env);
         code = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
     if (code != 0)
         die_krb5(ctx, code, "error initializing ticket cache");
 
-    /* If -K, -H, or -b were given, set quiet automatically unless verbose was
-       set. */
+    /*
+     * If -K, -H, or -b were given, set quiet automatically unless verbose was
+     * set.
+     */
     if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
             options.quiet = 1;
 
-    /* The easiest thing for us is if the user just specifies the full
-       principal on the command line.  For backward compatibility, though,
-       support the -u and -i flags being used independently by tacking the
-       instance onto the end of the username. */
+    /*
+     * The easiest thing for us is if the user just specifies the full
+     * principal on the command line.  For backward compatibility, though,
+     * support the -u and -i flags being used independently by tacking the
+     * instance onto the end of the username.
+     */
     if (inst != NULL) {
         size_t len;
         char *p;
 
         len = strlen(principal) + 1 + strlen(inst) + 1;
-        p = malloc(len);
-        if (p == NULL)
-            die("unable to allocate memory: %s", strerror(errno));
-        sprintf(p, "%s/%s", principal, inst);
+        if (xasprintf(&p, "%s/%s", principal, inst) < 0)
+            die("cannot format principal name");
         principal = p;
     }
     code = krb5_parse_name(ctx, principal, &options.kprinc);
     if (code != 0)
         die_krb5(ctx, code, "error parsing %s", principal);
 
-    /* Display the identity that we're obtaining Kerberos tickets for.  We do
-       this by unparsing the principal rather than using username and inst
-       since that way we get the default realm appended by K5. */
+    /*
+     * Display the identity that we're obtaining Kerberos tickets for.  We do
+     * this by unparsing the principal rather than using username and inst
+     * since that way we get the default realm appended by K5.
+     */
     if (!options.quiet) {
         char *p;
 
@@ -527,13 +538,10 @@ main(int argc, char *argv[])
         sname = "krbtgt";
     if (sinst == NULL)
         sinst = srealm;
-    length = strlen(sname) + 1 + strlen(sinst) + 1 + strlen(srealm) + 1;
-    options.service = malloc(length);
-    if (options.service == NULL)
-        die("unable to allocate memory: %s", strerror(errno));
-    sprintf(options.service, "%s/%s@%s", sname, sinst, srealm);
+    if (xasprintf(&options.service, "%s/%s@%s", sname, sinst, srealm) < 0)
+        die("cannot format service principal name");
     code = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
-                                  srealm, sname, sinst, (const char *) NULL);
+                                srealm, sname, sinst, (const char *) NULL);
     if (code != 0)
         die_krb5(ctx, code, "error creating service principal name");
 
@@ -552,20 +560,24 @@ main(int argc, char *argv[])
         if (!ticket_expired(ctx, &options))
             exit(0);
 
-    /* If built with setpag support and we're running a command, create the
-       new PAG now before the first authentication. */
+    /*
+     * If built with setpag support and we're running a command, create the
+     * new PAG now before the first authentication.
+     */
     if (command != NULL && options.run_aklog) {
         if (k_hasafs()) {
             if (k_setpag() < 0)
-                die("unable to create PAG: %s", strerror(errno));
+                sysdie("unable to create PAG");
         } else {
             die("cannot create PAG: AFS support is not available");
         }
     }
 
-    /* Now, the actual authentication part.  If -H wasn't set, always
-       authenticate.  If -H was set, authenticate only if the ticket isn't
-       expired. */
+    /*
+     * Now, the actual authentication part.  If -H wasn't set, always
+     * authenticate.  If -H was set, authenticate only if the ticket isn't
+     * expired.
+     */
     if (options.happy_ticket == 0 || ticket_expired(ctx, &options))
         authenticate(ctx, &options);
 
@@ -577,15 +589,19 @@ main(int argc, char *argv[])
     if (owner != NULL || group != NULL || mode != NULL)
         file_permissions(cache, owner, group, mode);
 
-    /* If told to background, background ourselves.  We do this late so that
-       we can report initial errors.  We have to do this before spawning the
-       command, though, since we want to background the command as well and
-       since otherwise we wouldn't be able to wait for the child process. */
+    /*
+     * If told to background, background ourselves.  We do this late so that
+     * we can report initial errors.  We have to do this before spawning the
+     * command, though, since we want to background the command as well and
+     * since otherwise we wouldn't be able to wait for the child process.
+     */
     if (background)
         daemon(0, 0);
 
-    /* Write out the PID file.  Note that we can't report failures usefully,
-       since this is generally used with -b. */
+    /*
+     * Write out the PID file.  Note that we can't report failures usefully,
+     * since this is generally used with -b.
+     */
     if (pidfile != NULL) {
         FILE *file;
 
@@ -596,10 +612,12 @@ main(int argc, char *argv[])
         }
     }
 
-    /* If we're backgrounded, check our ticket and possibly do the
-       authentication again.  Normally this will never trigger, but on Mac OS
-       X our ticket cache isn't going to survive the setsid that daemon does
-       and we've now lost our credentials. */
+    /*
+     * If we're backgrounded, check our ticket and possibly do the
+     * authentication again.  Normally this will never trigger, but on Mac OS
+     * X our ticket cache isn't going to survive the setsid that daemon does
+     * and we've now lost our credentials.
+     */
     if (background && ticket_expired(ctx, &options))
         authenticate(ctx, &options);
 
@@ -607,7 +625,7 @@ main(int argc, char *argv[])
     if (command != NULL) {
         child = command_start(command[0], command);
         if (child < 0)
-            die("unable to run command %s: %s", command[0], strerror(errno));
+            sysdie("unable to run command %s", command[0]);
         if (options.keep_ticket == 0) {
             options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
             if (options.keep_ticket <= 0)
@@ -623,8 +641,7 @@ main(int argc, char *argv[])
             if (command != NULL) {
                 result = command_finish(child, &status);
                 if (result < 0)
-                    die("waitpid for %lu failed: %s", (unsigned long) child,
-                        strerror(errno));
+                    sysdie("waitpid for %lu failed", (unsigned long) child);
                 if (result > 0)
                     break;
             }
@@ -639,11 +656,12 @@ main(int argc, char *argv[])
         }
     }
 
-    /* Otherwise, or when we're done, exit.  clean_cache is only set if we
-       used mkstemp to generate the ticket cache name. */
+    /*
+     * Otherwise, or when we're done, exit.  clean_cache is only set if we
+     * used mkstemp to generate the ticket cache name.
+     */
     if (clean_cache)
         if (unlink(cache) < 0)
-            fprintf(stderr, "k5start: unable to remove ticket cache %s: %s",
-                    cache, strerror(errno));
+            sysdie("unable to remove ticket cache %s", cache);
     exit(status);
 }

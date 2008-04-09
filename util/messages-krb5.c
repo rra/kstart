@@ -14,7 +14,7 @@
  */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 
 #include <krb5.h>
 #if !defined(HAVE_KRB5_GET_ERROR_MESSAGE) && !defined(HAVE_KRB5_GET_ERR_TEXT)

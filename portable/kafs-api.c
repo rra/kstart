@@ -22,7 +22,7 @@
  */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 #include <portable/kafs.h>
 
 #include <errno.h>

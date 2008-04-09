@@ -12,7 +12,7 @@
  */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 
 #include <errno.h>
 #include <grp.h>

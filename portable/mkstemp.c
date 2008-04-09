@@ -1,24 +1,26 @@
-/*  $Id$
-**
-**  Replacement for a missing mkstemp.
-**
-**  Written by Russ Allbery <rra@stanford.edu>
-**  This work is hereby placed in the public domain by its author.
-**
-**  Provides the same functionality as the library function mkstemp for those
-**  systems that don't have it.
-*/
+/* $Id$
+ *
+ * Replacement for a missing mkstemp.
+ *
+ * Provides the same functionality as the library function mkstemp for those
+ * systems that don't have it.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * This work is hereby placed in the public domain by its author.
+ */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/time.h>
 
-/* If we're running the test suite, rename mkstemp to avoid conflicts with the
-   system version.  #undef it first because some systems may define it to
-   another name. */
+/*
+ * If we're running the test suite, rename mkstemp to avoid conflicts with the
+ * system version.  #undef it first because some systems may define it to
+ * another name.
+ */
 #if TESTING
 # undef mkstemp
 # define mkstemp test_mkstemp
@@ -43,8 +45,10 @@ mkstemp(char *template)
     long_int_type randnum, working;
     int i, tries, fd;
 
-    /* Make sure we have a valid template and initialize p to point at the
-       beginning of the template portion of the string. */
+    /*
+     * Make sure we have a valid template and initialize p to point at the
+     * beginning of the template portion of the string.
+     */
     length = strlen(template);
     if (length < 6) {
         errno = EINVAL;
@@ -60,8 +64,10 @@ mkstemp(char *template)
     gettimeofday(&tv, NULL);
     randnum = ((long_int_type) tv.tv_usec << 16) ^ tv.tv_sec ^ getpid();
 
-    /* Now, try to find a working file name.  We try no more than TMP_MAX file
-       names. */
+    /*
+     * Now, try to find a working file name.  We try no more than TMP_MAX file
+     * names.
+     */
     for (tries = 0; tries < TMP_MAX; tries++) {
         for (working = randnum, i = 0; i < 6; i++) {
             XXXXXX[i] = letters[working % 62];
@@ -71,8 +77,10 @@ mkstemp(char *template)
         if (fd >= 0 || errno != EEXIST)
             return fd;
 
-        /* This is a relatively random increment.  Cut off the tail end of
-           tv_usec since it's often predictable. */
+        /*
+         * This is a relatively random increment.  Cut off the tail end of
+         * tv_usec since it's often predictable.
+         */
         randnum += (tv.tv_usec >> 10) & 0xfff;
     }
     errno = EEXIST;

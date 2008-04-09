@@ -1,20 +1,22 @@
-/*  $Id$
-**
-**  Automatically renew a Kerberos v5 ticket.
-**
-**  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
-**
-**  For copying and distribution information, please see README.
-**
-**  Similar to k5start, krenew can run as a daemon or run a specified program
-**  and wait until it completes.  Rather than obtaining fresh Kerberos
-**  credentials, however, it uses an existing Kerberos ticket cache and
-**  tries to renew the tickets until it exits or until the ticket cannot be
-**  renewed any longer.
+/* $Id$
+ *
+ * Automatically renew a Kerberos v5 ticket.
+ *
+ * Similar to k5start, krenew can run as a daemon or run a specified program
+ * and wait until it completes.  Rather than obtaining fresh Kerberos
+ * credentials, however, it uses an existing Kerberos ticket cache and tries
+ * to renew the tickets until it exits or until the ticket cannot be renewed
+ * any longer.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Copyright 2006, 2007, 2008
+ *     Board of Trustees, Leland Stanford Jr. University
+ *
+ * See LICENSE for licensing terms.
 */
 
 #include <config.h>
-#include <system.h>
+#include <portable/system.h>
 #include <portable/kafs.h>
 #include <portable/time.h>
 
@@ -22,9 +24,11 @@
 
 #include <util/util.h>
 
-/* The number of seconds of fudge to add to the check for whether we need to
-   obtain a new ticket.  This is here to make sure that we don't wake up just
-   as the ticket is expiring. */
+/*
+ * The number of seconds of fudge to add to the check for whether we need to
+ * obtain a new ticket.  This is here to make sure that we don't wake up just
+ * as the ticket is expiring.
+ */
 #define EXPIRE_FUDGE (2 * 60)
 
 /* The usage message. */
@@ -45,10 +49,10 @@ Otherwise, %s.\n";
 
 
 /*
-**  Print out the usage message and then exit with the status given as the
-**  only argument.  If status is zero, the message is printed to standard
-**  output; otherwise, it is sent to standard error.
-*/
+ * Print out the usage message and then exit with the status given as the
+ * only argument.  If status is zero, the message is printed to standard
+ * output; otherwise, it is sent to standard error.
+ */
 static void
 usage(int status)
 {
@@ -61,9 +65,9 @@ usage(int status)
 
 
 /*
-**  Given a context and a principal, get the realm.  This works differently in
-**  MIT Kerberos and Heimdal, unfortunately.
-*/
+ * Given a context and a principal, get the realm.  This works differently in
+ * MIT Kerberos and Heimdal, unfortunately.
+ */
 static char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
@@ -86,12 +90,12 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 
 
 /*
-**  Get the principal name for the krbtgt ticket for the local realm.  The
-**  caller is responsible for freeing the principal.  Takes an existing
-**  principal to get the realm from and returns a Kerberos v5 error on
-**  failure.
-*/
-static int
+ * Get the principal name for the krbtgt ticket for the local realm.  The
+ * caller is responsible for freeing the principal.  Takes an existing
+ * principal to get the realm from and returns a Kerberos v5 error on
+ * failure.
+ */
+static krb5_error_code
 get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 {
     char *realm;
@@ -103,10 +107,9 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 
 
 /*
-**  Check whether a ticket will expire within the given number of minutes.
-**  Takes the cache and the number of minutes.  Returns a Kerberos status
-**  code.
-*/
+ * Check whether a ticket will expire within the given number of minutes.
+ * Takes the cache and the number of minutes.  Returns a Kerberos status code.
+ */
 static krb5_error_code
 ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 {
@@ -144,8 +147,8 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 
 
 /*
-**  Renew the user's tickets, exiting with an error if this isn't possible.
-*/
+ * Renew the user's tickets, exiting with an error if this isn't possible.
+ */
 static void
 renew(krb5_context ctx, krb5_ccache cache, int verbose)
 {
@@ -168,7 +171,7 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
         if (status != 0)
             warn_krb5(ctx, status, "error unparsing name");
         else {
-            printf("kstart: renewing credentials for %s\n", name);
+            notice("renewing credentials for %s", name);
             free(name);
         }
     }
@@ -249,10 +252,7 @@ main(int argc, char *argv[])
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'k':
-            cachename = malloc(strlen(optarg) + strlen("FILE:") + 1);
-            if (cachename == NULL)
-                die("cannot allocate memory: %s", strerror(errno));
-            sprintf(cachename, "FILE:%s", optarg);
+            cachename = concat("FILE:", optarg, (char *) 0);
             break;
 
         default:
@@ -286,44 +286,50 @@ main(int argc, char *argv[])
     else {
         char *env;
 
-        env = malloc(strlen(cachename) + strlen("KRB5CCNAME=") + 1);
-        if (env == NULL)
-            die("cannot allocate memory: %s", strerror(errno));
-        sprintf(env, "KRB5CCNAME=%s", cachename);
+        if (xasprintf(&env, "KRB5CCNAME=%s", cachename) < 0)
+            die("cannot format KRB5CCNAME environment variable");
         putenv(env);
         code = krb5_cc_resolve(ctx, cachename, &cache);
     }
     if (code != 0)
         die_krb5(ctx, code, "error initializing ticket cache");
 
-    /* If built with setpag support and we're running a command, create the
-       new PAG now before the first authentication. */
+    /*
+     * If built with setpag support and we're running a command, create the
+     * new PAG now before the first authentication.
+     */
     if (command != NULL && do_aklog) {
         if (k_hasafs()) {
             if (k_setpag() < 0)
-                die("unable to create PAG: %s", strerror(errno));
+                sysdie("unable to create PAG");
         } else {
             die("cannot create PAG: AFS support is not available");
         }
     }
 
-    /* Now, do the initial ticket renewal even if it's not necessary so that
-       we can catch any problems. */
+    /*
+     * Now, do the initial ticket renewal even if it's not necessary so that
+     * we can catch any problems.
+     */
     renew(ctx, cache, verbose);
 
     /* If requested, run the aklog program. */
     if (do_aklog)
         command_run(aklog, verbose);
 
-    /* If told to background, background ourselves.  We do this late so that
-       we can report initial errors.  We have to do this before spawning the
-       command, though, since we want to background the command as well and
-       since otherwise we wouldn't be able to wait for the child process. */
+    /*
+     * If told to background, background ourselves.  We do this late so that
+     * we can report initial errors.  We have to do this before spawning the
+     * command, though, since we want to background the command as well and
+     * since otherwise we wouldn't be able to wait for the child process.
+     */
     if (background)
         daemon(0, 0);
 
-    /* Write out the PID file.  Note that we can't report failures usefully,
-       since this is generally used with -b. */
+    /*
+     * Write out the PID file.  Note that we can't report failures usefully,
+     * since this is generally used with -b.
+     */
     if (pidfile != NULL) {
         FILE *file;
 
@@ -338,7 +344,7 @@ main(int argc, char *argv[])
     if (command != NULL) {
         child = command_start(command[0], command);
         if (child < 0)
-            die("unable to run command %s: %s", command[0], strerror(errno));
+            sysdie("unable to run command %s", command[0]);
         if (keep_ticket == 0)
             keep_ticket = 60;
     }
@@ -351,8 +357,7 @@ main(int argc, char *argv[])
             if (command != NULL) {
                 result = command_finish(child, &status);
                 if (result < 0)
-                    die("waitpid for %lu failed: %s", (unsigned long) child,
-                        strerror(errno));
+                    sysdie("waitpid for %lu failed", (unsigned long) child);
                 if (result > 0)
                     break;
             }

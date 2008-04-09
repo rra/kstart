@@ -1,12 +1,17 @@
-/*  $Id$
-**
-**  Lifetime conversion routine for Kerberos libraries that don't have it.
-**
-**  This file contains an implementation of krb_life_to_time for Kerberos
-**  libraries that don't have it.  This implements the Kerberos v4 long
-**  lifetime semantics unless SHORT_LIFETIME is defined.  If SHORT_LIFETIME is
-**  defined, the normal Kerberos v4 lifetime semantics are used.
-*/
+/* $Id$
+ *
+ * Lifetime conversion routine for Kerberos libraries that don't have it.
+ *
+ * This file contains an implementation of krb_life_to_time for Kerberos
+ * libraries that don't have it.  This implements the Kerberos v4 long
+ * lifetime semantics unless SHORT_LIFETIME is defined.  If SHORT_LIFETIME is
+ * defined, the normal Kerberos v4 lifetime semantics are used.
+ *
+ * Copyright 2003, 2004, 2007, 2008
+ *     Board of Trustees, Leland Stanford Jr. University
+ *
+ * See LICENSE for licensing terms.
+ */
 
 #include <config.h>
 #include <portable/krb4.h>
@@ -24,17 +29,19 @@
 #ifdef SHORT_LIFETIME
 
 /*
-**  Convert a Kerberos v4 lifetime to the expiration time in seconds.  The
-**  conversion without long lifetime support is trivial.  Just multiply the
-**  lifetime by five to get minutes.  Takes the starting point for the
-**  calculation and the lifetime and returns the expiration time in seconds
-**  since epoch.
-*/
+ * Convert a Kerberos v4 lifetime to the expiration time in seconds.  The
+ * conversion without long lifetime support is trivial: just multiply the
+ * lifetime by five to get minutes.  Takes the starting point for the
+ * calculation and the lifetime and returns the expiration time in seconds
+ * since epoch.
+ */
 time_t
 krb_life_to_time(time_t start, int life)
 {
-    /* Lifetime semantics require wrapping at 255, which can be implemented by
-       forcing the lifetime into an unsigned char. */
+    /*
+     * Lifetime semantics require wrapping at 255, which can be implemented by
+     * forcing the lifetime into an unsigned char.
+     */
     life = (unsigned char) life;
     if (life == TKTLIFENOEXPIRE)
         return NEVERDATE;
@@ -44,11 +51,10 @@ krb_life_to_time(time_t start, int life)
 
 
 /*
-**  Convert a start and end time for a ticket to a Kerberos ticket lifetime
-**  char.  The conversion without long lifetime support is trivial; just
-**  round up to the next highest five minute interval after doing range
-**  checking.
-*/
+ * Convert a start and end time for a ticket to a Kerberos ticket lifetime
+ * char.  The conversion without long lifetime support is trivial: just round
+ * up to the next highest five minute interval after doing range checking.
+ */
 int
 krb_time_to_life(KRB4_32 start, KRB4_32 end)
 {
@@ -63,7 +69,7 @@ krb_time_to_life(KRB4_32 start, KRB4_32 end)
     return (lifetime + 5 * 60 - 1) / (5 * 60);
 }
 
-#else /* SHORT LIFETIME */
+#else /* !SHORT LIFETIME */
 
 #define TKTLIFENUMFIXED 64      /* Size of the lifetime table. */
 #define TKTLIFEMINFIXED 0x80    /* The first special lifetime. */
@@ -73,17 +79,18 @@ krb_time_to_life(KRB4_32 start, KRB4_32 end)
 #define MAXTKTLIFETIME (30*24*3600)
 
 /* Lookup table for long ticket lifetimes.
-
-   This defines the table used to lookup lifetime for the fixed part of rande
-   of the one byte lifetime field.  Values less than 0x80 are intrpreted as
-   the number of 5 minute intervals.  Values from 0x80 to 0xBF should be
-   looked up in this table.  The value of 0x80 is the same using both methods:
-   10 and two-thirds hours.  The lifetime of 0xBF is 30 days.  The intervening
-   values of have a fixed ratio of roughly 1.06914.
-
-   The value 0xFF is defined to mean a ticket has no expiration time.  This
-   should be used advisedly since individual servers may impose defacto
-   upper bounds on ticket lifetimes. */
+ *
+ * This defines the table used to lookup lifetime for the fixed part of the
+ * one byte lifetime field.  Values less than 0x80 are intrpreted as the
+ * number of 5 minute intervals.  Values from 0x80 to 0xBF should be looked up
+ * in this table.  The value of 0x80 is the same using both methods:  10 and
+ * two-thirds hours.  The lifetime of 0xBF is 30 days.  The intervening values
+ * of have a fixed ratio of roughly 1.06914.
+ *
+ * The value 0xFF is defined to mean a ticket has no expiration time.  This
+ * should be used advisedly since individual servers may impose defacto upper
+ * bounds on ticket lifetimes.
+ */
 static int tkt_lifetimes[TKTLIFENUMFIXED] = {
     38400,                      /* 10.67 hours, 0.44 days */
     41055,                      /* 11.40 hours, 0.48 days */
@@ -153,27 +160,29 @@ static int tkt_lifetimes[TKTLIFENUMFIXED] = {
 
 
 /*
-**  Convert a Kerberos v4 lifetime to the expiration time in seconds.  Takes a
-**  start time and a Kerberos standard lifetime char and returns the
-**  corresponding end time.
-**
-**  There are four simple cases to be handled.  The first is a life of 0xff,
-**  meaning no expiration, and results in an end time of 0xffffffff.  The
-**  second is when life is less than the values covered by the table; in this
-**  case, the end time is the start time plus the number of 5 minute intervals
-**  specified by life.  The third case returns start plus the MAXTKTLIFETIME
-**  if life is greater than TKTLIFEMAXFIXED.  The last case uses the life
-**  value (minus TKTLIFEMINFIXED) as an index into the table to extract the
-**  lifetime in seconds, which is added to start to produce the end time.
-**
-**  Takes the starting point for the calculation and the lifetime and returns
-**  the expiration time in seconds since epoch.
-*/
+ * Convert a Kerberos v4 lifetime to the expiration time in seconds.  Takes a
+ * start time and a Kerberos standard lifetime char and returns the
+ * corresponding end time.
+ *
+ * There are four simple cases to be handled.  The first is a life of 0xff,
+ * meaning no expiration, and results in an end time of 0xffffffff.  The
+ * second is when life is less than the values covered by the table; in this
+ * case, the end time is the start time plus the number of 5 minute intervals
+ * specified by life.  The third case returns start plus the MAXTKTLIFETIME if
+ * life is greater than TKTLIFEMAXFIXED.  The last case uses the life value
+ * (minus TKTLIFEMINFIXED) as an index into the table to extract the lifetime
+ * in seconds, which is added to start to produce the end time.
+ *
+ * Takes the starting point for the calculation and the lifetime and returns
+ * the expiration time in seconds since epoch.
+ */
 time_t
 krb_life_to_time(time_t start, int life)
 {
-    /* Lifetime semantics require wrapping at 255, which can be implemented by
-       forcing the lifetime into an unsigned char. */
+    /*
+     * Lifetime semantics require wrapping at 255, which can be implemented by
+     * forcing the lifetime into an unsigned char.
+     */
     life = (unsigned char) life;
     if (life == TKTLIFENOEXPIRE)
         return NEVERDATE;
@@ -186,17 +195,17 @@ krb_life_to_time(time_t start, int life)
 
 
 /*
-**  Given the start and end times for a ticket, return a Kerberos standard
-**  lifetime char, possibly using the tkt_lifetimes table for lifetimes above
-**  127 * 5 minutes.
-**
-**  First, the special case of end == NEVERDATE is mapped to no expiration.
-**  Then, negative lifetimes and those greater than the maximum ticket
-**  lifetime are rejected.  then lifetimes less than the first tame entry are
-**  handled by rounding the requested lifetime up to the next five minute
-**  interval.  Finally, for lifetimes that map into the table, search for the
-**  smallest entry greater than or equal to the requested lifetime.
-*/
+ * Given the start and end times for a ticket, return a Kerberos standard
+ * lifetime char, possibly using the tkt_lifetimes table for lifetimes above
+ * 127 * 5 minutes.
+ *
+ * First, the special case of end == NEVERDATE is mapped to no expiration.
+ * Then, negative lifetimes and those greater than the maximum ticket lifetime
+ * are rejected.  then lifetimes less than the first tame entry are handled by
+ * rounding the requested lifetime up to the next five minute interval.
+ * Finally, for lifetimes that map into the table, search for the smallest
+ * entry greater than or equal to the requested lifetime.
+ */
 int
 krb_time_to_life(KRB4_32 start, KRB4_32 end)
 {
