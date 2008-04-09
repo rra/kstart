@@ -33,15 +33,13 @@ endif
 
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
-k4start_SOURCES = k4start.c command.c command.h portable/krb4.h
+k4start_SOURCES = k4start.c portable/krb4.h
 k4start_CPPFLAGS = $(KAFS_CPPFLAGS)
 k4start_LDFLAGS = $(KAFS_LDFLAGS)
 k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
-k5start_SOURCES = k5start.c command.c command.h
 k5start_CPPFLAGS = $(KAFS_CPPFLAGS)
 k5start_LDFLAGS = $(KAFS_LDFLAGS)
 k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
-krenew_SOURCES = krenew.c command.c command.h
 krenew_CPPFLAGS = $(KAFS_CPPFLAGS)
 krenew_LDFLAGS = $(KAFS_LDFLAGS)
 krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
@@ -50,8 +48,8 @@ noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/kafs.h portable/krb5.h \
 	portable/macros.h portable/time.h system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
-util_libutil_a_SOURCES = util/concat.c util/messages.c util/perms.c \
-	util/util.h util/xmalloc.c
+util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
+	util/perms.c util/util.h util/xmalloc.c
 
 man_MANS = @K4START_MAN@ k5start.1 krenew.1
 

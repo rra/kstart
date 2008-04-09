@@ -82,6 +82,7 @@ AC_DEFUN([_RRA_LIB_KAFS_LSETPAG],
 dnl The public entry point.  Sets up the --with options.
 AC_DEFUN([RRA_LIB_KAFS],
 [AC_REQUIRE([AC_CANONICAL_HOST])
+ AC_REQUIRE([AC_TYPE_SIGNAL])
  libkafs=true
  KAFS_CPPFLAGS=
  KAFS_LDFLAGS=
@@ -109,7 +110,6 @@ AC_DEFUN([RRA_LIB_KAFS],
         AC_LIBOBJ([kafs-api])
         AC_LIBOBJ([kafs-linux])
         AC_CHECK_HEADERS([sys/ioccom.h])
-        AC_TYPE_SIGNAL
         AC_DEFINE([HAVE_LINUX_AFS], [1],
             [Define to 1 to use the Linux AFS /proc interface.])
         ;;

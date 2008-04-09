@@ -17,7 +17,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "command.h"
+#include <util/util.h>
 
 /* Global so that it can be used in signal handlers. */
 static pid_t global_child_pid;
@@ -28,7 +28,7 @@ static pid_t global_child_pid;
 **  be a fully-qualified path.
 */
 void
-run_aklog(const char *aklog, int verbose)
+command_run(const char *aklog, int verbose)
 {
     int status;
 
@@ -46,7 +46,7 @@ run_aklog(const char *aklog, int verbose)
 **  anything.  We just want the signal to be caught so that select will be
 **  interrupted.
 */
-static void
+static RETSIGTYPE
 child_handler(int signal UNUSED)
 {
     /* Do nothing. */
@@ -57,7 +57,7 @@ child_handler(int signal UNUSED)
 **  This handler is installed for signals that should be propagated to the
 **  child (and ignored by kstart).
 */
-static void
+static RETSIGTYPE
 propagate_handler(int signal)
 {
     kill(global_child_pid, signal);
@@ -73,7 +73,7 @@ propagate_handler(int signal)
 **  otherwise, the signal handler code won't work properly.
 */
 pid_t
-start_command(const char *command, char **argv)
+command_start(const char *command, char **argv)
 {
     pid_t child;
 
@@ -104,7 +104,7 @@ start_command(const char *command, char **argv)
 **  0, or -1 if waitpid failed.
 */
 int
-finish_command(pid_t child, int *status)
+command_finish(pid_t child, int *status)
 {
     int result;
 

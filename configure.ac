@@ -75,6 +75,7 @@ AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 
 dnl Checks for types.
+AC_TYPE_SIGNAL
 AC_CHECK_TYPES([long long])
 
 dnl Checks for functions.

@@ -21,7 +21,7 @@
 
 #include <errno.h>
 
-#include <command.h>
+#include <util/util.h>
 
 /* The number of seconds of fudge to add to the check for whether we need to
    obtain a new ticket.  This is here to make sure that we don't wake up just
@@ -43,23 +43,6 @@ Usage: krenew [options] [command]\n\
 If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
 then this program will be executed when requested by the -t flag.\n\
 Otherwise, %s.\n";
-
-
-/*
-**  Report an error message to standard error and then exit.
-*/
-static void
-die(const char *format, ...)
-{
-    va_list args;
-
-    fprintf(stderr, "k5start: ");
-    va_start(args, format);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-    exit(1);
-}
 
 
 /*
@@ -248,6 +231,9 @@ main(int argc, char *argv[])
     int status = 0;
     pid_t child = 0;
 
+    /* Initialize logging. */
+    message_program_name = "krenew";
+
     /* Parse command-line options. */
     while ((option = getopt(argc, argv, "bhK:k:p:qtv")) != EOF)
         switch (option) {
@@ -327,7 +313,7 @@ main(int argc, char *argv[])
 
     /* If requested, run the aklog program. */
     if (do_aklog)
-        run_aklog(aklog, verbose);
+        command_run(aklog, verbose);
 
     /* If told to background, background ourselves.  We do this late so that
        we can report initial errors.  We have to do this before spawning the
@@ -350,7 +336,7 @@ main(int argc, char *argv[])
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
-        child = start_command(command[0], command);
+        child = command_start(command[0], command);
         if (child < 0)
             die("unable to run command %s: %s", command[0], strerror(errno));
         if (keep_ticket == 0)
@@ -363,7 +349,7 @@ main(int argc, char *argv[])
 
         while (1) {
             if (command != NULL) {
-                result = finish_command(child, &status);
+                result = command_finish(child, &status);
                 if (result < 0)
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
@@ -376,7 +362,7 @@ main(int argc, char *argv[])
             if (ticket_expired(ctx, cache, keep_ticket)) {
                 renew(ctx, cache, verbose);
                 if (do_aklog)
-                    run_aklog(aklog, verbose);
+                    command_run(aklog, verbose);
             }
         }
     }

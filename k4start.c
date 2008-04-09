@@ -27,7 +27,6 @@
 #include <pwd.h>
 #include <sys/stat.h>
 
-#include <command.h>
 #include <util/util.h>
 
 /* The number of seconds of fudge to add to the check for whether we need to
@@ -434,7 +433,7 @@ main(int argc, char *argv[])
 
     /* If requested, run the aklog program. */
     if (options.run_aklog && !options.no_aklog)
-        run_aklog(aklog, options.verbose);
+        command_run(aklog, options.verbose);
 
     /* If requested, set the owner, group, and mode of the resulting cache. */
     if (owner != NULL || group != NULL || mode != NULL)
@@ -461,7 +460,7 @@ main(int argc, char *argv[])
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
-        child = start_command(command[0], command);
+        child = command_start(command[0], command);
         if (child < 0)
             die("unable to run command %s: %s", command[0], strerror(errno));
         if (options.keep_ticket == 0) {
@@ -477,7 +476,7 @@ main(int argc, char *argv[])
 
         while (1) {
             if (command != NULL) {
-                result = finish_command(child, &status);
+                result = command_finish(child, &status);
                 if (result < 0)
                     die("waitpid for %lu failed: %s", (unsigned long) child,
                         strerror(errno));
@@ -490,7 +489,7 @@ main(int argc, char *argv[])
             if (ticket_expired(&options)) {
                 authenticate(&options);
                 if (options.run_aklog && !options.no_aklog)
-                    run_aklog(aklog, options.verbose);
+                    command_run(aklog, options.verbose);
             }
         }
     }
