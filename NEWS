@@ -28,6 +28,9 @@ kstart 3.11 (unreleased)
     --with-krb5 to specify the path to the Kerberos v5 libraries and
     --with-krb4 to specify the path to the Kerberos v4 libraries.
 
+    After backgrounding, reauthenticate if necessary before writing out
+    the PID file in case we need tickets or tokens to write the file.
+
     Close the keytab after determining the principal with k5start -U.
 
     --enable-static is no longer supported.  This is generally unnecessary

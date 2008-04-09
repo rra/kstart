@@ -604,6 +604,15 @@ main(int argc, char *argv[])
         daemon(0, 0);
 
     /*
+     * If we're backgrounded, check our ticket and possibly do the
+     * authentication again.  Normally this will never trigger, but on Mac OS
+     * X our ticket cache isn't going to survive the setsid that daemon does
+     * and we've now lost our credentials.
+     */
+    if (background && ticket_expired(ctx, &options))
+        authenticate(ctx, &options);
+
+    /*
      * Write out the PID file.  Note that we can't report failures usefully,
      * since this is generally used with -b.
      */
@@ -616,15 +625,6 @@ main(int argc, char *argv[])
             fclose(file);
         }
     }
-
-    /*
-     * If we're backgrounded, check our ticket and possibly do the
-     * authentication again.  Normally this will never trigger, but on Mac OS
-     * X our ticket cache isn't going to survive the setsid that daemon does
-     * and we've now lost our credentials.
-     */
-    if (background && ticket_expired(ctx, &options))
-        authenticate(ctx, &options);
 
     /* Spawn the external command, if we were told to run one. */
     if (command != NULL) {
