@@ -24,7 +24,6 @@
 /* The interface we implement. */
 int k_syscall(long, long, long, long, long, int *);
 
-
 /* 
  * The struct passed to ioctl to do an AFS system call.  Definition taken from
  * the afs/afs_args.h OpenAFS header.

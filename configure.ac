@@ -72,6 +72,7 @@ AC_ARG_ENABLE([setpag],
 
 dnl Other portability checks.
 AC_HEADER_TIME
+AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 AC_TYPE_SIGNAL

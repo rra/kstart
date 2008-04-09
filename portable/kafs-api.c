@@ -34,6 +34,9 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
+/* Used for unused parameters to silence gcc warnings. */
+#define UNUSED __attribute__((__unused__))
+
 /* Provided by the relevant sys-*.c file. */
 extern int k_syscall(long, long, long, long, long, int *);
 
