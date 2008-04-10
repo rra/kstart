@@ -33,7 +33,8 @@ SKIP: {
     my ($out, $err, $status)
         = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
     skip 'not built with AFS support', $total
-        if ($err eq "cannot create PAG: AFS support is not available\n");
+        if ($err eq
+            "k5start: cannot create PAG: AFS support is not available\n");
     is ($status, 0, 'k5start -t succeeds');
     is ($err, '', ' with no errors');
     like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,

@@ -36,7 +36,8 @@ SKIP: {
         = command ($K4START, '-tqf', "$DATA/test.srvtab", $principal, '--',
                    'tokens');
     skip 'not built with AFS support', $total
-        if ($err eq "cannot create PAG: AFS support is not available\n");
+        if ($err eq
+            "k4start: cannot create PAG: AFS support is not available\n");
     is ($status, 0, 'k4start -t succeeds');
     is ($err, '', ' with no errors');
     like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
