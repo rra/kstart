@@ -46,7 +46,7 @@ SKIP: {
     $ENV{KINIT_PROG} = '/bin/true';
     ($out, $err, $status)
         = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
-    is ($status, 0, 'k5start -t succeeds');
+    is ($status, 0, 'k5start -t succeeds with no aklog');
     is ($err, '', ' with no errors');
     unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
             ' and we have no tokens');
