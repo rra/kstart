@@ -84,6 +84,7 @@ AC_REPLACE_FUNCS([asprintf daemon mkstemp])
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([tests/k4start/afs-t], [chmod +x tests/k4start/afs-t])
 AC_CONFIG_FILES([tests/k4start/basic-t], [chmod +x tests/k4start/basic-t])
 AC_CONFIG_FILES([tests/k4start/pod-t], [chmod +x tests/k4start/pod-t])
 AC_CONFIG_FILES([tests/k5start/afs-t], [chmod +x tests/k5start/afs-t])
