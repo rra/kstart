@@ -1,0 +1,147 @@
+#!/usr/bin/perl -w
+# $Id$
+#
+# Tests for basic k4start functionality.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+BEGIN { our $total = 37 }
+use Test::More tests => $total;
+
+# Load our test utility programs.
+require '@abs_top_builddir@/tests/libtest.pl';
+
+# The full path to the newly-built k4start client.
+our $K4START = '@abs_top_builddir@/k4start';
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = '@abs_top_builddir@/tests/data';
+
+SKIP: {
+    skip 'no srvtab configuration', $total unless -f "$DATA/test.srvtab";
+    my $principal = contents ("$DATA/test.principal");
+    $principal =~ s/\..*//;
+    $principal =~ tr%/%.%;
+
+    # Don't overwrite the user's ticket cache.
+    $ENV{KRBTKFILE} = 'tkt_test';
+
+    # Basic authentication test.
+    unlink 'tkt_test';
+    my ($out, $err, $status)
+        = command ($K4START, '-f', "$DATA/test.srvtab", $principal);
+    is ($status, 0, 'Basic k4start command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    my ($default, $service) = klist ('-4');
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr/^krbtgt\./, ' and the right service');
+
+    # Specify the full principal with -u.
+    unlink 'tkt_test';
+    ($out, $err, $status)
+        = command ($K4START, '-u', $principal, '-f', "$DATA/test.srvtab");
+    is ($status, 0, 'k4start -u succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service) = klist ('-4');
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr/^krbtgt\./, ' and the right service');
+
+    # If we have a principal with an instance, try -u and -i.
+    my ($name, $inst) = ($principal =~ m%^([^.\@]+)(?:\.([^\@]+))%);
+  SKIP: {
+        skip 'test principal has no instance', 5 unless $inst;
+        unlink 'tkt_test';
+        ($out, $err, $status)
+            = command ($K4START, '-u', $name, '-i', $inst, '-f',
+                       "$DATA/test.srvtab");
+        is ($status, 0, 'k4start -u -i succeeds');
+        is ($err, '', ' with no errors');
+        like ($out,
+              qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+              ' and the right output');
+        ($default, $service) = klist ('-4');
+        like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' for the right principal');
+        like ($service, qr/^krbtgt\./, ' and the right service');
+    }
+
+    # Test quiet and an explicit ticket cache.
+    unlink 'tkt_test';
+    ($out, $err, $status)
+        = command ($K4START, '-k', 'tkt_test2', '-qf', "$DATA/test.srvtab",
+                   $principal);
+    is ($status, 0, 'k4start -k -q succeeds');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ('-4');
+    is ($default, undef, ' and the normal ticket cache is untouched');
+    $ENV{KRBTKFILE} = 'tkt_test2';
+    ($default, $service) = klist ('-4');
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' but the other has the right principal');
+    like ($service, qr/^krbtgt\./, ' and the right service');
+    unlink 'tkt_test2';
+    $ENV{KRBTKFILE} = 'tkt_test';
+
+    # Test lifetime.  Hopefully even a test principal can get a five minute
+    # ticket lifetime.  We don't bother to try to parse klist output to figure
+    # out the lifetime, but instead check it using the -H option.
+    unlink 'tkt_test';
+    ($out, $err, $status)
+        = command ($K4START, '-l', '5', '-qf', "$DATA/test.srvtab",
+                   $principal);
+    is ($status, 0, 'k4start -l 5 succeeds');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ('-4');
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' and the right principal');
+    like ($service, qr/^krbtgt\./, ' and the right service');
+    ($out, $err, $status)
+        = command ($K4START, '-H', '4', '-f', '/nonexistent', $principal);
+    is ($status, 0, ' and k4start -H succeeds without reauthenticating');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($out, $err, $status)
+        = command ($K4START, '-H', '10', '-f', '/nonexistent', $principal);
+    is ($status, 1, ' but fails if we need a 10 minute ticket');
+    like ($err, qr/^k4start: Kerberos error: Incorrect password /,
+          ' with the right error');
+    is ($out, '', ' and no output');
+
+    # Get a ticket for ourselves rather than a krbtgt and test verbose.  We
+    # need an instance here or we get weird results due to the defaults if -I
+    # isn't provided.
+  SKIP: {
+        skip 'test principal has no instance', 5 unless $inst;
+        unlink 'tkt_test';
+        ($out, $err, $status)
+            = command ($K4START, '-S', $name, '-I', $inst, '-vf',
+                       "$DATA/test.srvtab", $principal);
+        is ($status, 0, 'k4start -S -I succeeds');
+        is ($err, '', ' with no errors');
+        like ($out,
+              qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
+                 \ for\ service\ \Q$principal\E(\@\S+)?\n
+                 Principal:\ \Q$principal\E(\@\S+)?\n
+                 Service\ principal:\ \Q$principal\E(\@\S+)?\n\z/x,
+              ' and the right output');
+        ($default, $service) = klist ('-4');
+        like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' for the right principal');
+        like ($service, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' and the right service');
+    }
+
+    # Clean up.
+    unlink 'tkt_test';
+}

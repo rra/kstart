@@ -53,13 +53,16 @@ sub contents {
     return $data;
 }
 
-# Run klist -5 and return the default principal and the first service
-# principal found.  Returns both as undef if klist fails.
+# Run klist and return the default principal and the first service principal
+# found.  If the first argument is true, runs klist -4 and looks for a K4
+# ticket cache instead of a K5 one.  Returns both as undef if klist fails.
 sub klist {
-    my $output = `klist -5 2>&1`;
+    my ($k4) = @_;
+    my $flag = $k4 ? '-4' : '-5';
+    my $output = `klist $flag 2>&1`;
     return unless $? == 0;
-    my ($default) = ($output =~ /^Default principal: (\S+)/m);
-    my ($service) = ($output =~ /Service principal\n(?:\S+\s+){4}(\S+)/);
+    my ($default) = ($output =~ /^(?:Default p|P)rincipal: (\S+)/m);
+    my ($service) = ($output =~ / [Pp]rincipal\n(?:\S+\s+){4}(\S+)/);
     return ($default, $service);
 }
 
