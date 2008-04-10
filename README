@@ -178,6 +178,8 @@ THANKS
   build problems when the AFS libauthent and libafsrpc libraries didn't
   work.
 
+  To Gautam Iyer, for the initial version of -H support in krenew.
+
 LICENSE
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,

@@ -36,6 +36,9 @@ const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
    -b                   Fork and run in the background\n\
    -c <file>            Write child process ID (PID) to <file>\n\
+   -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
+                        less than <limit> minutes, and exit 0 if it's okay,\n\
+                        otherwise renew the ticket\n\
    -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
@@ -136,6 +139,9 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
         then = outcreds->times.endtime;
         if (then < now + 60 * keep_ticket + EXPIRE_FUDGE)
             status = KRB5KRB_AP_ERR_TKT_EXPIRED;
+        then = outcreds->times.renew_till;
+        if (then < now + 60 * keep_ticket + EXPIRE_FUDGE)
+            die("ticket cannot be renewed for long enough");
     }
 
     /* Free memory. */
@@ -226,6 +232,7 @@ main(int argc, char *argv[])
     char *childfile = NULL;
     char *pidfile = NULL;
     int background = 0;
+    int happy_ticket = 0;
     int keep_ticket = 0;
     int do_aklog = 0;
     int verbose = 0;
@@ -240,7 +247,7 @@ main(int argc, char *argv[])
     message_program_name = "krenew";
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bc:hK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:H:hK:k:p:qtv")) != EOF)
         switch (option) {
         case 'b': background = 1;               break;
         case 'c': childfile = optarg;           break;
@@ -249,6 +256,11 @@ main(int argc, char *argv[])
         case 't': do_aklog = 1;                 break;
         case 'v': verbose = 1;                  break;
 
+        case 'H':
+            happy_ticket = atoi(optarg);
+            if (happy_ticket <= 0)
+                die("-H limit argument %s out of range", optarg);
+            break;
         case 'K':
             keep_ticket = atoi(optarg);
             if (keep_ticket <= 0)
@@ -272,6 +284,8 @@ main(int argc, char *argv[])
     /* Check the arguments for consistency. */
     if (background && keep_ticket == 0 && command == NULL)
         die("-b only makes sense with -K or a command to run");
+    if (happy_ticket > 0 && keep_ticket > 0)
+        die("-H and -K options cannot be used at the same time");
     if (childfile != NULL && command == NULL)
         die("-c option only makes sense with a command to run");
 
@@ -314,9 +328,11 @@ main(int argc, char *argv[])
 
     /*
      * Now, do the initial ticket renewal even if it's not necessary so that
-     * we can catch any problems.
+     * we can catch any problems.  If -H wasn't set, always authenticate.  If
+     * -H was set, authenticate only if the ticket isn't expired.
      */
-    renew(ctx, cache, verbose);
+    if (happy_ticket == 0 || ticket_expired(ctx, cache, happy_ticket))
+        renew(ctx, cache, verbose);
 
     /* If requested, run the aklog program. */
     if (do_aklog)

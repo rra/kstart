@@ -4,8 +4,9 @@ krenew - Renew a Kerberos v5 ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhtv>] [B<-c> I<child pid file>] [B<-K> I<minutes>]
-    [B<-k> I<ticket file>] [B<-p> I<pid file>] [I<command> ...]
+B<krenew> [B<-bhtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+    [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-p> I<pid file>]
+    [I<command> ...]
 
 =head1 DESCRIPTION
 
@@ -79,6 +80,16 @@ Note that, when used with B<-b>, the PID file is written out after
 B<k4start> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
+
+=item B<-H> I<minutes>
+
+Only renew the ticket if it has a remaining lifetime of less than
+I<minutes> minutes.  If either the ticket already has a sufficiently long
+remaining lifetime or renewal was successful, run the command (if one was
+specified) or exit immediately with status 0 (if none was).  Otherwise,
+try to renew the ticket so that it will have a remaining lifetime of at
+least I<minutes>, exit with an error if unsuccessful, and then run the
+command, if any.  Cannot be used with B<-K>.
 
 =item B<-h>
 

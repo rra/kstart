@@ -2,10 +2,16 @@
 
 kstart 3.11 (unreleased)
 
-    Add -c option to k4start, k5start, and krenew, which writes out the
+    Add a -c option to k4start, k5start, and krenew, which writes out the
     PID of the child process when running a command.  This is similar to
     -p, but writes out the command PID rather than the PID of k4start,
-    k5start, or krenew.
+    k5start, or krenew.  Based on a patch by Sascha Tandel.
+
+    Add a -H option to krenew that works similarly to the -H option for
+    k5start: checking whether the remaining lifetime of the ticket is
+    already long enough, only renewing if it isn't, and exiting with a
+    status indicating whether the resulting ticket had a sufficiently long
+    lifetime.  Based on a patch by Gautam Iyer.
 
     Add -o, -g, and -m options to k4start and k5start to set the owner,
     group, and mode of the ticket cache after creation.  These options
