@@ -43,6 +43,16 @@ sub command {
     return ($output, $error, $status);
 }
 
+# Returns the one-line contents of a file as a string, removing the newline.
+sub contents {
+    my ($file) = @_;
+    open (FILE, '<', $file) or die "cannot open $file: $!\n";
+    my $data = <FILE>;
+    close FILE;
+    chomp $data;
+    return $data;
+}
+
 # Run klist -5 and return the default principal and the first service
 # principal found.  Returns both as undef if klist fails.
 sub klist {
@@ -53,12 +63,9 @@ sub klist {
     return ($default, $service);
 }
 
-# Returns the one-line contents of a file as a string, removing the newline.
-sub contents {
-    my ($file) = @_;
-    open (FILE, '<', $file) or die "cannot open $file: $!\n";
-    my $data = <FILE>;
-    close FILE;
-    chomp $data;
-    return $data;
+# Run tokens and return true if we have an AFS token, false otherwise.
+sub tokens {
+    my $output = `tokens 2>&1`;
+    return unless $? == 0;
+    return ($output =~ /^(User\'s \([^\)]+\) )?[Tt]okens for /m) ? 1 : 0;
 }
