@@ -174,6 +174,10 @@ THANKS
   To Howard Wilkinson, for the initial version of the -o, -g, and -m
   support.
 
+  To Sascha Tandel, for the initial version of -c support and reports of
+  build problems when the AFS libauthent and libafsrpc libraries didn't
+  work.
+
 LICENSE
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
