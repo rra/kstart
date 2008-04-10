@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+# $Id$
+#
+# Test POD formatting for k4start documentation.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+my @files = qw(k4start.pod);
+my $total = scalar (@files);
+plan tests => $total;
+
+eval 'use Test::Pod 1.00';
+SKIP: {
+    skip $total, 'Test::Pod 1.00 required for testing POD' if $@;
+    for my $file (@files) {
+        pod_file_ok ("@abs_top_srcdir@/$file", $file);
+    }
+}
