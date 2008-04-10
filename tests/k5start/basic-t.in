@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 42 }
+BEGIN { our $total = 50 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -125,6 +125,22 @@ SKIP: {
     is ($status, 1, ' but fails if we need a 10 minute ticket');
     like ($err, qr/^k5start: error getting credentials: /,
           ' with the right error');
+    is ($out, '', ' and no output');
+
+    # Test obtaining new tickets with -H.
+    ($out, $err, $status)
+        = command ($K5START, '-qH', '10', '-Uf', "$DATA/test.keytab");
+    is ($status, 0, 'k5start -H succeeds with new tickets');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' and the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    ($out, $err, $status)
+        = command ($K5START, '-H', '10', '-f', '/nonexistent', $principal);
+    is ($status, 0, ' and k5start -H 10 succeeds without reauthenticating');
+    is ($err, '', ' with no errors');
     is ($out, '', ' and no output');
 
     # Get a ticket for ourselves rather than a krbtgt and test verbose.  We

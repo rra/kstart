@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 37 }
+BEGIN { our $total = 45 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -116,6 +116,23 @@ SKIP: {
     is ($status, 1, ' but fails if we need a 10 minute ticket');
     like ($err, qr/^k4start: Kerberos error: Incorrect password /,
           ' with the right error');
+    is ($out, '', ' and no output');
+
+    # Test obtaining new tickets with -H.
+    ($out, $err, $status)
+        = command ($K4START, '-qH', '10', '-f', "$DATA/test.srvtab",
+                   $principal);
+    is ($status, 0, 'k4start -H succeeds with new tickets');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ('-4');
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' and the right principal');
+    like ($service, qr/^krbtgt\./, ' and the right service');
+    ($out, $err, $status)
+        = command ($K4START, '-H', '10', '-f', '/nonexistent', $principal);
+    is ($status, 0, ' and k4start -H 10 succeeds without reauthenticating');
+    is ($err, '', ' with no errors');
     is ($out, '', ' and no output');
 
     # Get a ticket for ourselves rather than a krbtgt and test verbose.  We
