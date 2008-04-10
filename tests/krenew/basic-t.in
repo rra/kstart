@@ -1,0 +1,60 @@
+#!/usr/bin/perl -w
+# $Id$
+#
+# Tests for basic krenew functionality.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+BEGIN { our $total = 9 }
+use Test::More tests => $total;
+
+# Load our test utility programs.
+require '@abs_top_builddir@/tests/libtest.pl';
+
+# The full path to the newly-built krenew client.
+our $KRENEW = '@abs_top_builddir@/krenew';
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = '@abs_top_builddir@/tests/data';
+
+SKIP: {
+    skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
+    my $principal = contents ("$DATA/test.principal");
+
+    # Don't overwrite the user's ticket cache.
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+
+    # Obtain renewable tickets and bail if we can't.
+    unlink 'krb5cc_test';
+    unless (kinit ("$DATA/test.keytab", $principal, '-r', '1h', '-l', '10m')) {
+        skip 'cannot get renewable tickets', $total;
+    }
+
+    # We should be okay for five minute tickets without doing anything.
+    ($out, $err, $status) = command ($KRENEW, '-vH', '5');
+    is ($status, 0, 'krenew -H succeeds without reauthenticating');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+
+    # We should be able to renew to get 30 minute tickets.
+    ($out, $err, $status) = command ($KRENEW, '-vH', '30');
+    is ($status, 0, 'krenew -H 30 succeeds with authentication');
+    is ($err, '', ' with no errors');
+    like ($out,
+          qr/^krenew: renewing credentials for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+
+    # But we fail if we try to get 2 hour tickets, since we can't renew for
+    # that long.
+    ($out, $err, $status) = command ($KRENEW, '-vH', '120');
+    is ($status, 1, 'krenew -H 120 fails');
+    is ($err, "krenew: ticket cannot be renewed for long enough\n",
+        ' with the right error');
+    is ($out, '', ' and no output');
+
+    # Clean up.
+    unlink 'krb5cc_test';
+}
