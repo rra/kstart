@@ -1,0 +1,56 @@
+#!/usr/bin/perl -w
+# $Id: afs-t.in 4092 2008-04-10 23:14:39Z rra $
+#
+# Tests for krenew with AFS.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+BEGIN { our $total = 6 }
+use Test::More tests => $total;
+
+# Load our test utility programs.
+require '@abs_top_builddir@/tests/libtest.pl';
+
+# The full path to the newly-built krenew client.
+our $KRENEW = '@abs_top_builddir@/krenew';
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = '@abs_top_builddir@/tests/data';
+
+SKIP: {
+    skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
+    skip 'no current AFS tokens', $total unless tokens();
+    my $principal = contents ("$DATA/test.principal");
+
+    # Don't overwrite the user's ticket cache.
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+
+    # Obtain renewable tickets and bail if we can't.
+    unlink 'krb5cc_test';
+    unless (kinit ("$DATA/test.keytab", $principal, '-r', '1h', '-l', '5m')) {
+        skip 'cannot get renewable tickets', $total;
+    }
+
+    # Now, see if we can renew tickets and get a token.
+    my ($out, $err, $status) = command ($KRENEW, '-t', '--', 'tokens');
+    skip 'not built with AFS support', $total
+        if ($err eq
+            "krenew: cannot create PAG: AFS support is not available\n");
+    is ($status, 0, 'krenew -t succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+          ' and the right output');
+
+    # Set the token program to something that doesn't obtain tokens.
+    # Everything should still work, but we should have no tokens.
+    $ENV{KINIT_PROG} = '/bin/true';
+    ($out, $err, $status) = command ($KRENEW, '-t', '--', 'tokens');
+    is ($status, 0, 'krenew -t succeeds with no aklog');
+    is ($err, '', ' with no errors');
+    unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+            ' and we have no tokens');
+    unlink 'krb5cc_test';
+}

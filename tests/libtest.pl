@@ -53,6 +53,24 @@ sub contents {
     return $data;
 }
 
+# Given a keytab file, a principal, and additional options for kinit, try
+# authenticating with kinit.  This is used to do things like get renewable
+# tickets.  Returns true if successful, false otherwise.
+sub kinit {
+    my ($file, $principal, @opts) = @_;
+    my @commands = (
+        "kinit -k -t $file @opts $principal ",
+        "kinit -t $file @opts $principal ",
+        "kinit -T /bin/true -k -K $file @opts $principal",
+    );
+    for my $command (@commands) {
+        if (system ("$command >/dev/null 2>&1 </dev/null") == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 # Run klist and return the default principal and the first service principal
 # found.  If the first argument is true, runs klist -4 and looks for a K4
 # ticket cache instead of a K5 one.  Returns both as undef if klist fails.
