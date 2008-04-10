@@ -1,0 +1,6 @@
+portable/asprintf
+portable/mkstemp
+portable/snprintf
+util/concat
+util/messages
+util/xmalloc

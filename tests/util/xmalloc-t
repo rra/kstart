@@ -1,0 +1,130 @@
+#! /bin/sh
+# $Id$
+#
+# Test suite for xmalloc and friends.
+#
+# Copyright 2004, 2005, 2006
+#     by Internet Systems Consortium, Inc. ("ISC")
+# Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+#     2003 by The Internet Software Consortium and Rich Salz
+#
+# This code is derived from software contributed to the Internet Software
+# Consortium by Rich Salz.
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+# The count starts at 1 and is updated each time ok is printed.  printcount
+# takes "ok" or "not ok".
+count=1
+printcount () {
+    echo "$1 $count $2"
+    count=`expr $count + 1`
+}
+
+# Run a program expected to succeed, and print ok if it does.
+runsuccess () {
+    output=`$xmalloc "$1" "$2" "$3" 2>&1 >/dev/null`
+    status=$?
+    if test $status = 0 && test -z "$output" ; then
+        printcount "ok"
+    else
+        if test $status = 2 ; then
+            printcount "ok" "# skip - no data limit support"
+        else
+            printcount "not ok"
+            echo "  $output"
+        fi
+    fi
+}
+
+# Run a program expected to fail and make sure it fails with an exit status
+# of 2 and the right failure message.  Strip the colon and everything after
+# it off the error message since it's system-specific.
+runfailure () {
+    output=`$xmalloc "$1" "$2" "$3" 2>&1 >/dev/null`
+    status=$?
+    output=`echo "$output" | sed 's/:.*//' \
+                | sed 's% [^ ]*/xmalloc.c% xmalloc.c%'`
+    if test $status = 1 && test x"$output" = x"$4" ; then
+        printcount "ok"
+    else
+        if test $status = 2 ; then
+            printcount "ok" "# skip - no data limit support"
+        else
+            printcount "not ok"
+            echo "  saw: $output"
+            echo "  not: $4"
+        fi
+    fi
+}
+
+# Find where the helper program is.
+xmalloc=xmalloc
+for file in ./xmalloc util/xmalloc tests/util/xmalloc ; do
+    [ -x $file ] && xmalloc=$file
+done
+
+# Total tests.
+echo 36
+
+# First run the tests expected to succeed.
+runsuccess "m" "21"     "0"
+runsuccess "m" "128000" "0"
+runsuccess "m" "0"      "0"
+runsuccess "r" "21"     "0"
+runsuccess "r" "128000" "0"
+runsuccess "s" "21"     "0"
+runsuccess "s" "128000" "0"
+runsuccess "n" "21"     "0"
+runsuccess "n" "128000" "0"
+runsuccess "c" "24"     "0"
+runsuccess "c" "128000" "0"
+runsuccess "a" "24"     "0"
+runsuccess "a" "128000" "0"
+runsuccess "v" "24"     "0"
+runsuccess "v" "128000" "0"
+
+# Now limit our memory to 120KB and then try the large ones again, all of
+# which should fail.
+runfailure "m" "128000" "120000" \
+    "failed to malloc 128000 bytes at xmalloc.c line 54"
+runfailure "r" "128000" "120000" \
+    "failed to realloc 128000 bytes at xmalloc.c line 80"
+runfailure "s" "64000"  "120000" \
+    "failed to strdup 64000 bytes at xmalloc.c line 109"
+runfailure "n" "64000"  "120000" \
+    "failed to strndup 64000 bytes at xmalloc.c line 133"
+runfailure "c" "128000" "120000" \
+    "failed to calloc 128000 bytes at xmalloc.c line 155"
+runfailure "a" "64000" "120000" \
+    "failed to asprintf 64000 bytes at xmalloc.c line 177"
+runfailure "v" "64000" "120000" \
+    "failed to vasprintf 64000 bytes at xmalloc.c line 196"
+
+# Check our custom error handler.
+runfailure "M" "128000" "120000" "malloc 128000 xmalloc.c 54"
+runfailure "R" "128000" "120000" "realloc 128000 xmalloc.c 80"
+runfailure "S" "64000"  "120000" "strdup 64000 xmalloc.c 109"
+runfailure "N" "64000"  "120000" "strndup 64000 xmalloc.c 133"
+runfailure "C" "128000" "120000" "calloc 128000 xmalloc.c 155"
+runfailure "A" "64000"  "120000" "asprintf 64000 xmalloc.c 177"
+runfailure "V" "64000"  "120000" "vasprintf 64000 xmalloc.c 196"
+
+# Check the smaller ones again just for grins.
+runsuccess "m" "21" "96000"
+runsuccess "r" "32" "96000"
+runsuccess "s" "64" "96000"
+runsuccess "n" "20" "96000"
+runsuccess "c" "24" "96000"
+runsuccess "a" "30" "96000"
+runsuccess "v" "35" "96000"

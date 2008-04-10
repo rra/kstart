@@ -7,10 +7,14 @@
 #
 # See LICENSE for licensing terms.
 
+# Test suite files that are not generated or touched by configure that need to
+# be copied over for builddir != srcdir builds.
+TEST_FILES = tests/TESTS tests/data/README tests/util/xmalloc-t
+
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen k4start.1 k4start.pod k5start.1 k5start.pod krenew.1 \
-	krenew.pod kstart.spec
+	krenew.pod kstart.spec $(TEST_FILES)
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
@@ -85,3 +89,38 @@ WARNINGS = -g -O -DDEBUG=1 -Wall -W -Wendif-labels -Wpointer-arith \
 
 warnings:
 	$(MAKE) CFLAGS='$(WARNINGS)'
+	$(MAKE) CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
+
+# The bits below are for the test suite, not for the main package.
+check_PROGRAMS = tests/runtests tests/portable/asprintf-t \
+	tests/portable/mkstemp-t tests/portable/snprintf-t \
+	tests/util/concat-t tests/util/messages-t tests/util/xmalloc
+check_LIBRARIES = tests/libtest.a
+tests_libtest_a_SOURCES = tests/libtest.c tests/libtest.h
+
+# All of the test programs.
+tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
+	tests/portable/asprintf.c
+tests_portable_asprintf_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_portable_mkstemp_t_SOURCES = tests/portable/mkstemp-t.c \
+	tests/portable/mkstemp.c
+tests_portable_mkstemp_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
+	tests/portable/snprintf.c
+tests_portable_snprintf_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_util_concat_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_util_messages_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
+
+check-local: $(noinst_PROGRAMS)
+	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
+	    for f in $(TEST_FILES) ; do \
+		cp "$(srcdir)/$$f" "$(builddir)/$$f" ; \
+	    done \
+	fi
+	cd tests && ./runtests TESTS
