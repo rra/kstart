@@ -56,10 +56,10 @@
  * header file defines macros named xmalloc, etc. that pass the file name and
  * line number to these functions.
  *
- * Copyright (c) 2004, 2005, 2006
+ * Copyright 2004, 2005, 2006
  *     by Internet Systems Consortium, Inc. ("ISC")
- * Copyright (c) 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
- *     2002, 2003 by The Internet Software Consortium and Rich Salz
+ * Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+ *     2003 by The Internet Software Consortium and Rich Salz
  *
  * This code is derived from software contributed to the Internet Software
  * Consortium by Rich Salz.
