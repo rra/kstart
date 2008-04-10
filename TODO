@@ -9,3 +9,8 @@
 
  * Add the -F and -P flags to k5start to override library defaults for
    forwardable and proxiable tickets.
+
+ * k4start, k5start, and krenew have almost identical structure.  Redesign
+   them to use a standard driver frontend with callbacks for the things
+   that differ between the three programs, which will significantly reduce
+   code duplication.
