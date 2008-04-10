@@ -14,3 +14,6 @@
    them to use a standard driver frontend with callbacks for the things
    that differ between the three programs, which will significantly reduce
    code duplication.
+
+ * Add support to k5start for obtaining K4 tickets in addition to K5
+   tickets, using the DES key in a keytab.
