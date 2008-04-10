@@ -5,12 +5,10 @@
          Currently maintained by Russ Allbery <rra@stanford.edu>
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
-  2007 Board of Trustees, Leland Stanford Jr. University.  This software
-  is distributed under a BSD-style license.  Please see the section
-  LICENSE below for terms of use and redistribution.
-
-  Based on code copyright 1987, 1988, 1989 by the Massachusetts Institute
-  of Technology.
+  2007, 2008 Board of Trustees, Leland Stanford Jr. University.  Based on
+  code copyright 1987, 1988, 1989 by the Massachusetts Institute of
+  Technology.  This software is distributed under a BSD-style license.
+  Please see the file LICENSE in the distribution for more information.
 
 BLURB
 
@@ -179,51 +177,3 @@ THANKS
   work.
 
   To Gautam Iyer, for the initial version of -H support in krenew.
-
-LICENSE
-
-  Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
-  2007 Board of Trustees, Leland Stanford Jr. University.  All rights
-  reserved.
-  
-  Permission to use, copy, modify, and distribute this software and its
-  documentation for any purpose and without fee is hereby granted,
-  provided that the above copyright notice appear in all copies and that
-  both that copyright notice and this permission notice appear in
-  supporting documentation, and that the name of Stanford University not
-  be used in advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.  Stanford
-  University makes no representations about the suitability of this
-  software for any purpose.  It is provided "as is" without express or
-  implied warranty.
-
-  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-  Portions of this code was based on the original kinit from the MIT
-  Kerberos distribution, which is covered by the following license:
-
-  Copyright (C) 1987, 1988, 1989 by the Massachusetts Institute of
-  Technology
-
-  Export of this software from the United States of America may require a
-  specific license from the United States Government.  It is the
-  responsibility of any person or organization contemplating export to
-  obtain such a license before exporting.
-
-  WITHIN THAT CONSTRAINT, Permission to use, copy, modify, and distribute
-  this software and its documentation for any purpose and without fee is
-  hereby granted, provided that the above copyright notice appear in all
-  copies and that both that copyright notice and this permission notice
-  appear in supporting documentation, and that the name of M.I.T. not be
-  used in advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.  Furthermore if you
-  modify this software you must label your software as modified software
-  and not distribute it in such a fashion that it might be confused with
-  the original M.I.T. software.  M.I.T. makes no representations about the
-  suitability of this software for any purpose.  It is provided "as is"
-  without express or implied warranty.
-
-  (The portions taken from MIT Kerberos do not include any encryption
-  code covered by the US export restrictions.)
