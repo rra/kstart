@@ -31,7 +31,7 @@ SKIP: {
     # Basic token test.
     unlink 'krb5cc_test';
     my ($out, $err, $status)
-        = command ('k5start', '-tqUf', "$DATA/test.keytab", '--', 'tokens');
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
     skip 'not built with AFS support', $total
         if ($err eq "cannot create PAG: AFS support is not available\n");
     is ($status, 0, 'k5start -t succeeds');
@@ -45,7 +45,7 @@ SKIP: {
     # Everything should still work, but we should have no tokens.
     $ENV{KINIT_PROG} = '/bin/true';
     ($out, $err, $status)
-        = command ('k5start', '-tqUf', "$DATA/test.keytab", '--', 'tokens');
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
     is ($status, 0, 'k5start -t succeeds');
     is ($err, '', ' with no errors');
     unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,

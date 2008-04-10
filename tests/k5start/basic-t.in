@@ -30,7 +30,7 @@ SKIP: {
     # Basic authentication test.
     unlink 'krb5cc_test';
     my ($out, $err, $status)
-        = command ('k5start', '-f', "$DATA/test.keytab", $principal);
+        = command ($K5START, '-f', "$DATA/test.keytab", $principal);
     is ($status, 0, 'Basic k5start command succeeds');
     is ($err, '', ' with no errors');
     like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
@@ -43,7 +43,7 @@ SKIP: {
     # Specify the full principal with -u.
     unlink 'krb5cc_test';
     ($out, $err, $status)
-        = command ('k5start', '-u', $principal, '-f', "$DATA/test.keytab");
+        = command ($K5START, '-u', $principal, '-f', "$DATA/test.keytab");
     is ($status, 0, 'k5start -u succeeds');
     is ($err, '', ' with no errors');
     like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
@@ -59,7 +59,7 @@ SKIP: {
         skip 'test principal has no instance', 5 unless $inst;
         unlink 'krb5cc_test';
         ($out, $err, $status)
-            = command ('k5start', '-u', $name, '-i', $inst, '-f',
+            = command ($K5START, '-u', $name, '-i', $inst, '-f',
                        "$DATA/test.keytab");
         is ($status, 0, 'k5start -u -i succeeds');
         is ($err, '', ' with no errors');
@@ -74,7 +74,7 @@ SKIP: {
 
     # Now with -U it should figure out the principal itself.
     unlink 'krb5cc_test';
-    ($out, $err, $status) = command ('k5start', '-Uf', "$DATA/test.keytab");
+    ($out, $err, $status) = command ($K5START, '-Uf', "$DATA/test.keytab");
     is ($status, 0, 'k5start -U succeeds');
     is ($err, '', ' with no errors');
     like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
@@ -87,7 +87,7 @@ SKIP: {
     # Test quiet and an explicit ticket cache.
     unlink 'krb5cc_test';
     ($out, $err, $status)
-        = command ('k5start', '-k', 'krb5cc_test2', '-qUf',
+        = command ($K5START, '-k', 'krb5cc_test2', '-qUf',
                    "$DATA/test.keytab");
     is ($status, 0, 'k5start -k -q succeeds');
     is ($err, '', ' with no errors');
@@ -107,7 +107,7 @@ SKIP: {
     # out the lifetime, but instead check it using the -H option.
     unlink 'krb5cc_test';
     ($out, $err, $status)
-        = command ('k5start', '-l', '5m', '-qUf', "$DATA/test.keytab");
+        = command ($K5START, '-l', '5m', '-qUf', "$DATA/test.keytab");
     is ($status, 0, 'k5start -l 5m succeeds');
     is ($err, '', ' with no errors');
     is ($out, '', ' and no output');
@@ -116,12 +116,12 @@ SKIP: {
           ' and the right principal');
     like ($service, qr%^krbtgt/%, ' and the right service');
     ($out, $err, $status)
-        = command ('k5start', '-H', '4', '-f', '/nonexistent', $principal);
+        = command ($K5START, '-H', '4', '-f', '/nonexistent', $principal);
     is ($status, 0, ' and k5start -H succeeds without reauthenticating');
     is ($err, '', ' with no errors');
     is ($out, '', ' and no output');
     ($out, $err, $status)
-        = command ('k5start', '-H', '10', '-f', '/nonexistent', $principal);
+        = command ($K5START, '-H', '10', '-f', '/nonexistent', $principal);
     is ($status, 1, ' but fails if we need a 10 minute ticket');
     like ($err, qr/^k5start: error getting credentials: /,
           ' with the right error');
@@ -134,7 +134,7 @@ SKIP: {
         skip 'test principal has no instance', 5 unless $inst;
         unlink 'krb5cc_test';
         ($out, $err, $status)
-            = command ('k5start', '-S', $name, '-I', $inst, '-vUf',
+            = command ($K5START, '-S', $name, '-I', $inst, '-vUf',
                        "$DATA/test.keytab");
         is ($status, 0, 'k5start -S -I succeeds');
         is ($err, '', ' with no errors');
