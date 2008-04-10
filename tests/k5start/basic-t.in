@@ -24,7 +24,7 @@ SKIP: {
     skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
     my $principal = contents ("$DATA/test.principal");
 
-    # Don't overrite the user's ticket cache.
+    # Don't overwrite the user's ticket cache.
     $ENV{KRB5CCNAME} = 'krb5cc_test';
 
     # Basic authentication test.
