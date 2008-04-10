@@ -1,7 +1,5 @@
                             kstart To-Do List
 
- * Add to the krenew man page an example that requires using sh -c.
-
  * Given a keytab and/or srvtab and some configuration about the realm,
    test obtaining tickets from a keytab, obtaining tickets from a srvtab,
    creating a PAG, and running aklog.

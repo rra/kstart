@@ -170,6 +170,22 @@ If you wanted to pass options to F</usr/local/bin/compute-job>, putting a
 C<--> argument before it would be necessary to keep B<krenew> from
 interpreting those options as its own.
 
+If you want to redirect output to a file that requires authentication to
+write to, you will need to do that redirection in a subshell.  In other
+words, the following command:
+
+    krenew -t compute-job > /afs/local/data/output
+
+won't work if /afs/local/data/output requires an AFS token to write to.
+The job, while running, will have an AFS token, but the output redirection
+is done in the parent shell and doesn't benefit from B<krenew>.  The above
+should instead be written as:
+
+    krenew -t -- sh -c 'compute-job > /afs/local/data/output'
+
+With this command, the shell doing the redirection will also be run under
+B<krenew> and have the benefit of the AFS token it obtains.
+
 =head1 ENVIRONMENT
 
 If the environment variable KINIT_PROG is set to a program (such as
