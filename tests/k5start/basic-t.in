@@ -1,0 +1,156 @@
+#!/usr/bin/perl -w
+# $Id$
+#
+# Tests for basic k5start functionality.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+BEGIN { our $total = 42 }
+use Test::More tests => $total;
+
+# Load our test utility programs.
+require '@abs_top_builddir@/tests/libtest.pl';
+
+# The full path to the newly-built k5start client.
+our $K5START = '@abs_top_builddir@/k5start';
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = '@abs_top_builddir@/tests/data';
+
+SKIP: {
+    skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
+    my $principal = contents ("$DATA/test.principal");
+
+    # Don't overrite the user's ticket cache.
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+
+    # Basic authentication test.
+    unlink 'krb5cc_test';
+    my ($out, $err, $status)
+        = command ('k5start', '-f', "$DATA/test.keytab", $principal);
+    is ($status, 0, 'Basic k5start command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    my ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+
+    # Specify the full principal with -u.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ('k5start', '-u', $principal, '-f', "$DATA/test.keytab");
+    is ($status, 0, 'k5start -u succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+
+    # If we have a principal with an instance, try -u and -i.
+    my ($name, $inst) = ($principal =~ m%^([^/\@]+)(?:/([^\@]+))%);
+  SKIP: {
+        skip 'test principal has no instance', 5 unless $inst;
+        unlink 'krb5cc_test';
+        ($out, $err, $status)
+            = command ('k5start', '-u', $name, '-i', $inst, '-f',
+                       "$DATA/test.keytab");
+        is ($status, 0, 'k5start -u -i succeeds');
+        is ($err, '', ' with no errors');
+        like ($out,
+              qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+              ' and the right output');
+        ($default, $service) = klist ();
+        like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' for the right principal');
+        like ($service, qr%^krbtgt/%, ' and the right service');
+    }
+
+    # Now with -U it should figure out the principal itself.
+    unlink 'krb5cc_test';
+    ($out, $err, $status) = command ('k5start', '-Uf', "$DATA/test.keytab");
+    is ($status, 0, 'k5start -U succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+
+    # Test quiet and an explicit ticket cache.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ('k5start', '-k', 'krb5cc_test2', '-qUf',
+                   "$DATA/test.keytab");
+    is ($status, 0, 'k5start -k -q succeeds');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ();
+    is ($default, undef, ' and the normal ticket cache is untouched');
+    $ENV{KRB5CCNAME} = 'krb5cc_test2';
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' but the other has the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    unlink 'krb5cc_test2';
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+
+    # Test lifetime.  Hopefully even a test principal can get a five minute
+    # ticket lifetime.  We don't bother to try to parse klist output to figure
+    # out the lifetime, but instead check it using the -H option.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ('k5start', '-l', '5m', '-qUf', "$DATA/test.keytab");
+    is ($status, 0, 'k5start -l 5m succeeds');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' and the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    ($out, $err, $status)
+        = command ('k5start', '-H', '4', '-f', '/nonexistent', $principal);
+    is ($status, 0, ' and k5start -H succeeds without reauthenticating');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($out, $err, $status)
+        = command ('k5start', '-H', '10', '-f', '/nonexistent', $principal);
+    is ($status, 1, ' but fails if we need a 10 minute ticket');
+    like ($err, qr/^k5start: error getting credentials: /,
+          ' with the right error');
+    is ($out, '', ' and no output');
+
+    # Get a ticket for ourselves rather than a krbtgt and test verbose.  We
+    # need an instance here or we get weird results due to the defaults if -I
+    # isn't provided.
+  SKIP: {
+        skip 'test principal has no instance', 5 unless $inst;
+        unlink 'krb5cc_test';
+        ($out, $err, $status)
+            = command ('k5start', '-S', $name, '-I', $inst, '-vUf',
+                       "$DATA/test.keytab");
+        is ($status, 0, 'k5start -S -I succeeds');
+        is ($err, '', ' with no errors');
+        like ($out,
+              qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
+                 \ for\ service\ \Q$principal\E(\@\S+)?\n
+                 Principal:\ \Q$principal\E(\@\S+)?\n
+                 Service\ principal:\ \Q$principal\E(\@\S+)?\n\z/x,
+              ' and the right output');
+        ($default, $service) = klist ();
+        like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' for the right principal');
+        like ($service, qr/^\Q$principal\E(\@\S+)?\z/,
+              ' and the right service');
+    }
+
+    # Clean up.
+    unlink 'krb5cc_test';
+}

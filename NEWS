@@ -42,6 +42,10 @@ kstart 3.11 (unreleased)
     --enable-static is no longer supported.  This is generally unnecessary
     and complex to support in combination with other options.
 
+    kstart now has a basic test suite, although not all functionality is
+    tested yet.  See README and tests/data/README for information on how
+    to enable the tests that are there.
+
 kstart 3.10 (2007-04-10)
 
     Fix compilation error with a new enough MIT Kerberos to support

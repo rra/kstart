@@ -76,6 +76,15 @@ REQUIREMENTS
   On Linux, kstart uses its own internal implementation of the AFS system
   call interface and doesn't require any external libraries.
 
+  To run the test suite, you must have the Perl 5.006 or later and the
+  modules Test::More and Test::Pod installed.  Test::More comes with Perl
+  5.8 or later and Test::Pod is available from CPAN.
+
+  If you change the Automake files and need to regenerate Makefile.in, you
+  will need Automake 1.10 or later.  If you change configure.ac or any of
+  the m4 files it includes and need to regenerate configure or
+  config.h.in, you will need Autoconf 2.61 or later.
+
 INSTALLATION
 
   Basic installation is simple.  Just run:
@@ -141,6 +150,33 @@ INSTALLATION
   to avoid encoding unnecessary shared library dependencies that make
   shared library migrations more difficult.  If none of the above made any
   sense to you, don't bother with this flag.
+
+TESTING
+
+  kstart comes with the beginnings of a test suite, which you can run
+  with:
+
+      make check
+
+  In order to test the client in a meaningful way, you will need to do
+  some preparatory work before running the test suite.  Review the files:
+
+      tests/data/README
+      perl/t/data/README
+
+  and follow the instructions in those files to enable the full test
+  suite.
+
+  The test suite also requires some additional software be installed that
+  isn't otherwise used by the wallet.  See REQUIREMENTS above for the full
+  list of requirements for the test suite.  The test driver attempts to
+  selectively skip those tests for which the necessary configuration is
+  not available, but this has not yet been fully tested in all of its
+  possible permutations (and the test suite cannot cope with a missing
+  Test::More module).
+
+  If a test case fails, please run that individual test program directly
+  and send me the output when reporting the problem.
 
 THANKS
 
