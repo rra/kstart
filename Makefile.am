@@ -77,9 +77,9 @@ MOSTLYCLEANFILES = $(LIBOBJS)
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
 
-# More bugs in the non-recursive support.
+# More bugs in the non-recursive support, plus a file created by configure.
 distclean-local:
-	-rm -rf .deps
+	-rm -rf .deps tests/data/.placeholder
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all

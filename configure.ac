@@ -81,6 +81,9 @@ RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit setsid])
 AC_REPLACE_FUNCS([asprintf daemon mkstemp])
 
+dnl Create the tests/data directory.
+AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])
+
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
