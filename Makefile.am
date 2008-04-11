@@ -51,7 +51,7 @@ krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/kafs.h portable/macros.h \
-	portable/system.h portable/time.h
+	portable/stdbool.h portable/system.h portable/time.h
 portable_libportable_a_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS)
 portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
@@ -74,12 +74,13 @@ $(srcdir)/krenew.1: $(srcdir)/krenew.pod
 # We shouldn't have to explicitly list $(LIBOBJS) here.  This is a bug in the
 # non-recursive support.
 MOSTLYCLEANFILES = $(LIBOBJS)
+DISTCLEANFILES = tests/data/.placeholder $(TEST_FILES)
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
 
-# More bugs in the non-recursive support, plus a file created by configure.
+# More bugs in the non-recursive support.
 distclean-local:
-	-rm -rf .deps tests/data/.placeholder
+	-rm -rf .deps
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all
