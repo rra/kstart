@@ -1,4 +1,4 @@
-kstart (3.11-1) UNRELEASED; urgency=low
+kstart (3.11-1) unstable; urgency=low
 
   * New upstream release.
     - New -c option to all programs for a child PID file.
@@ -18,7 +18,7 @@ kstart (3.11-1) UNRELEASED; urgency=low
   * Update standards version to 3.7.3 (no changes required).
   * Update watch version to 3.
 
- -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 17:42:18 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 17:49:45 -0700
 
 kstart (3.10-1) unstable; urgency=low
 
