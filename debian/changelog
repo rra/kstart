@@ -1,3 +1,18 @@
+kstart (3.11-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - New -c option to all programs for a child PID file.
+    - New -H option to krenew similar to k5start's -H.
+    - New -o, -g, and -m options to k4start and k5start to set the
+      ownership and permissions of the created cache file.
+    - New internal AFS setpag support.
+    - Reauthenticate before writing out the PID file when backgrounding.
+    - Close the keytab after determining the principal with k5start -U.
+  * kstart can now use internal setpag support and hence doesn't need to
+    depend on libopenafs-dev.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 17:42:18 -0700
+
 kstart (3.10-1) unstable; urgency=low
 
   * New upstream release.

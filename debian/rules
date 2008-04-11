@@ -17,18 +17,6 @@ else
     SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
 
-# These architectures are supported by OpenAFS and therefore should get setpag
-# support.  Other architectures will not.  This list must be kept in sync with
-# debian/control (and probably should be extracted automatically).
-AFS_ARCHES = alpha amd64 hppa i386 ia64 powerpc s390 sparc
-
-# Determine whether to attempt setpag support.
-ifeq (,$(findstring $(DEB_HOST_ARCH),$(AFS_ARCHES)))
-    SETPAG =
-else
-    SETPAG = --with-afs-setpag
-endif
-
 # Set up compiler flags.
 CFLAGS = -Wall -g
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -41,7 +29,7 @@ config.status: configure
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure $(SYSTEM) --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
-	    --enable-reduced-depends $(SETPAG)
+	    --enable-reduced-depends --enable-setpag --without-libkafs
 
 build: build-arch build-indep
 build-arch: build-stamp
