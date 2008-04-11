@@ -51,7 +51,7 @@ krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/kafs.h portable/macros.h \
-	portable/time.h system.h
+	portable/system.h portable/time.h
 portable_libportable_a_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS)
 portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
