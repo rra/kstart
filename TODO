@@ -1,16 +1,31 @@
                             kstart To-Do List
 
- * Given a keytab and/or srvtab and some configuration about the realm,
-   test obtaining tickets from a keytab, obtaining tickets from a srvtab,
-   creating a PAG, and running aklog.
-
- * Add the -F and -P flags to k5start to override library defaults for
-   forwardable and proxiable tickets.
+General:
 
  * k4start, k5start, and krenew have almost identical structure.  Redesign
    them to use a standard driver frontend with callbacks for the things
    that differ between the three programs, which will significantly reduce
    code duplication.
 
+k5start:
+
+ * Add the -F and -P flags to k5start to override library defaults for
+   forwardable and proxiable tickets.
+
  * Add support to k5start for obtaining K4 tickets in addition to K5
    tickets, using the DES key in a keytab.
+
+Test suite:
+
+ * Test more of krenew's basic functionality, preferrably by parsing klist
+   output more thoroughly and seeing if tickets really were renewed.
+
+ * Add tests for the daemon functionality (-b and -K) in k4start, k5start,
+   and krenew.  Also test PID handling (-p and -c).
+
+ * Add tests for running commands in k4start, k5start, and krenew,
+   particularly propagation of signals, propagation of exit status, and
+   waking up periodically while the command is running.
+
+ * Add error tests for invalid combinations of command-line options or
+   invalid settings for those options in k4start, k5start, and krenew.
