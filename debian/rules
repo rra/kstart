@@ -25,45 +25,50 @@ else
     CFLAGS += -O2
 endif
 
-config.status: configure
+configure: configure-stamp
+configure-stamp: configure
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure $(SYSTEM) --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
 	    --enable-reduced-depends --enable-setpag --without-libkafs
+	touch $@
 
 build: build-arch build-indep
 build-arch: build-stamp
 build-indep:
-build-stamp: config.status
+build-stamp: configure-stamp
 	dh_testdir
 	$(MAKE)
-	touch build-stamp
+	$(MAKE) check
+	touch $@
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
+	rm -f configure-stamp build-stamp install-stamp
 	[ ! -f Makefile ] || $(MAKE) distclean
 	dh_clean
 
-install: build-stamp
+install: install-stamp
+install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean
-	$(MAKE) install prefix=$(CURDIR)/debian/kstart/usr
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/kstart
+	touch $@
 
 binary: binary-arch binary-indep
 binary-indep:
-binary-arch: install
+binary-arch: install-stamp
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs NEWS
-	dh_installdocs README
+	dh_installdocs README TODO
 	dh_installman
 	dh_link
+	dh_fixperms
 	dh_strip
 	dh_compress
-	dh_fixperms
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol

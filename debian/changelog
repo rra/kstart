@@ -10,6 +10,9 @@ kstart (3.11-1) UNRELEASED; urgency=low
     - Close the keytab after determining the principal with k5start -U.
   * kstart can now use internal setpag support and hence doesn't need to
     depend on libopenafs-dev.
+  * Use touch $@ to create stamp files and use explicit stamp files for
+    configure and install.
+  * Install TODO as a documentation file.
 
  -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 17:42:18 -0700
 
