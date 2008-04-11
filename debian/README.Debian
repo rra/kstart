@@ -10,8 +10,8 @@ If you also use AFS, k4start, k5start, and krenew are compiled to run
 The openafs-krb5 and arla packages both provide this program.  If you want
 to use afslog from heimdal-clients instead, set the environment variable
 KINIT_PROG (named this for legacy reasons) to the full path to that
-program.  (You can also set that environment variable to the full path to
+program.  You can also set that environment variable to the full path to
 any other local program you have for obtaining an AFS token from a
-Kerberos ticket.)
+Kerberos ticket.
 
- -- Russ Allbery <rra@debian.org>, Tue, 10 Apr 2007 11:39:32 z
+ -- Russ Allbery <rra@debian.org>, Thu, 10 Apr 2008 17:49:14 -0700
