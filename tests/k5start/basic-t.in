@@ -154,9 +154,11 @@ SKIP: {
                        "$DATA/test.keytab");
         is ($status, 0, 'k5start -S -I succeeds');
         is ($err, '', ' with no errors');
+        my $short = $principal;
+        $short =~ s/\@stanford\.edu$//;
         like ($out,
               qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
-                 \ for\ service\ \Q$principal\E(\@\S+)?\n
+                 \ for\ service\ \Q$short\E(\@\S+)?\n
                  Principal:\ \Q$principal\E(\@\S+)?\n
                  Service\ principal:\ \Q$principal\E(\@\S+)?\n\z/x,
               ' and the right output');
