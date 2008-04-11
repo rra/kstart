@@ -10,6 +10,7 @@ kstart (3.11-1) unstable; urgency=low
     - Close the keytab after determining the principal with k5start -U.
   * kstart can now use internal setpag support and hence doesn't need to
     depend on libopenafs-dev.
+  * Build-depend on perl and libtest-pod-perl for the test suite.
   * Use touch $@ to create stamp files and use explicit stamp files for
     configure and install.
   * Install TODO as a documentation file.
