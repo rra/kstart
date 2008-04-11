@@ -5,6 +5,7 @@ k5start/afs
 k5start/basic
 k5start/pod
 krenew/afs
+krenew/basic
 krenew/pod
 portable/asprintf
 portable/mkstemp
