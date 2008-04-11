@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 5), libkrb5-dev
 Standards-Version: 3.7.2
+Homepage: http://www.eyrie.org/~eagle/software/kstart/
 
 Package: kstart
 Architecture: any
@@ -17,5 +18,3 @@ Description: Kerberos kinit variant supporting ticket refreshing
  refreshing the ticket periodically, checking to see if an existing ticket
  has expired, or obtaining an AFS token along with the ticket by running
  an external program automatically.
- .
-  Homepage: http://www.eyrie.org/~eagle/software/kstart/
