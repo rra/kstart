@@ -30,5 +30,8 @@ Test suite:
    particularly propagation of signals, propagation of exit status, and
    waking up periodically while the command is running.
 
+ * Add tests for k4start and k5start password prompting, either from
+   standard input or from a TTY.
+
  * Add error tests for invalid combinations of command-line options or
    invalid settings for those options in k4start, k5start, and krenew.
