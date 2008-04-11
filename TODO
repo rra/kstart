@@ -18,6 +18,13 @@ k5start:
  * Add support to k5start for obtaining K4 tickets in addition to K5
    tickets, using the DES key in a keytab.
 
+Documentation:
+
+ * Document how to start Apache with tickets and AFS tokens, either using
+   k5start in the init script or the non-PAG method we use at Stanford.
+   Probably take some information from the Stanford web page documenting
+   using tokens with servers.
+
 Test suite:
 
  * Test more of krenew's basic functionality, preferrably by parsing klist
