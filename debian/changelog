@@ -16,6 +16,7 @@ kstart (3.11-1) UNRELEASED; urgency=low
   * Move Homepage to a real control header.
   * Update debian/copyright based on the upstream LICENSE file.
   * Update standards version to 3.7.3 (no changes required).
+  * Update watch version to 3.
 
  -- Russ Allbery <rra@debian.org>  Thu, 10 Apr 2008 17:42:18 -0700
 
