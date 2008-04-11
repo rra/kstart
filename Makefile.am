@@ -71,16 +71,15 @@ $(srcdir)/krenew.1: $(srcdir)/krenew.pod
 	pod2man --release=$(VERSION) --center="User commands" \
 	    $(srcdir)/krenew.pod > $@
 
-# We shouldn't have to explicitly list $(LIBOBJS) here.  This is a bug in the
-# non-recursive support.
-MOSTLYCLEANFILES = $(LIBOBJS)
-DISTCLEANFILES = tests/data/.placeholder $(TEST_FILES)
+DISTCLEANFILES = tests/data/.placeholder
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
 
-# More bugs in the non-recursive support.
+# Remove the files that we copy over if and only if builddir != srcdir.
 distclean-local:
-	-rm -rf .deps
+	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
+	    rm $(TEST_FILES) ; \
+	fi
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all
