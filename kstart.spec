@@ -1,6 +1,6 @@
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 3.9
+Version: 3.11
 Release: 1
 License: MIT, BSD
 Group: System Environment/Base
@@ -25,7 +25,7 @@ running an external program automatically.
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
-%configure
+%configure --enable-setpag
 %{__make}
 
 %install
@@ -37,11 +37,16 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 
 %files
 %defattr(-, root, root, 0755)
-%doc NEWS README
+%doc LICENSE NEWS README TODO
 %{_bindir}/*
 %{_mandir}/*/*
 
 %changelog
+* Tue Apr 10 2008 Russ Allbery <rra@stanford.edu> 3.11-1
+- New version for 3.11 release.
+- Add LICENSE and TODO to documentation.
+- Build with --enable-setpag now that it no longer requires extra libraries.
+
 * Sat Mar 3 2007 Russ Allbery <rra@stanford.edu> 3.9-1
 - New version for 3.9 release.
 
