@@ -78,7 +78,7 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 # Remove the files that we copy over if and only if builddir != srcdir.
 distclean-local:
 	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
-	    rm $(TEST_FILES) ; \
+	    rm -f $(TEST_FILES) ; \
 	fi
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
