@@ -1,5 +1,10 @@
                        User-Visible kstart Changes
 
+kstart 3.12 (unreleased)
+
+    Fix Autoconf syntax error when probing for libkrb5support.  Thanks,
+    Mike Garrison.
+
 kstart 3.11 (2008-04-10)
 
     Add a -c option to k4start, k5start, and krenew, which writes out the
