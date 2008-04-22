@@ -30,7 +30,7 @@ SKIP: {
 
     # Obtain renewable tickets and bail if we can't.
     unlink 'krb5cc_test';
-    unless (kinit ("$DATA/test.keytab", $principal, '-r', '1h', '-l', '5m')) {
+    unless (kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '5m')) {
         skip 'cannot get renewable tickets', $total;
     }
 
