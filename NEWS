@@ -2,6 +2,12 @@
 
 kstart 3.12 (unreleased)
 
+    If KRB5_CONFIG was explicitly set in the environment, don't use a
+    different krb5-config based on --with-krb4 or --with-krb5.  If
+    krb5-config isn't executable, don't use it.  This allows one to
+    force library probing by setting KRB5_CONFIG to point to a
+    nonexistent file.
+
     Fix Autoconf syntax error when probing for libkrb5support.  Thanks,
     Mike Garrison.
 

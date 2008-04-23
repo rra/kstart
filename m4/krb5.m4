@@ -141,11 +141,11 @@ AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
     [_RRA_LIB_KRB5_PATHS
      _RRA_LIB_KRB5_REDUCED([$1])],
     [AC_ARG_VAR([KRB5_CONFIG], [Path to krb5-config])
-     AS_IF([test x"$rra_krb5_root" != x],
+     AS_IF([test x"$rra_krb5_root" != x && test -z "$KRB5_CONFIG"],
          [AS_IF([test -x "${rra_krb5_root}/bin/krb5-config"],
              [KRB5_CONFIG="${rra_krb5_root}/bin/krb5-config"])],
          [AC_PATH_PROG([KRB5_CONFIG], [krb5-config])])
-     AS_IF([test x"$KRB5_CONFIG" != x],
+     AS_IF([test x"$KRB5_CONFIG" != x && test -x "$KRB5_CONFIG"],
          [AC_CACHE_CHECK([for krb5 support in krb5-config],
              [rra_cv_lib_krb5_config],
              [AS_IF(["$KRB5_CONFIG" | grep krb5 > /dev/null 2>&1],
