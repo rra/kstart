@@ -119,6 +119,11 @@ INSTALLATION
 
       ./configure KRB5_CONFIG=/path/to/krb5-config
 
+  To not use krb5-config and force library probing even if there is a
+  krb5-config script on your path, set KRB5_CONFIG to a nonexistent path:
+
+      ./configure KRB5_CONFIG=/nonexistent
+
   If you are using aklog, afslog, or some other program to obtain AFS
   tokens, give its path to configure with the --with-aklog option, as in:
 
@@ -213,3 +218,7 @@ THANKS
   work.
 
   To Gautam Iyer, for the initial version of -H support in krenew.
+
+  To Mike Horansky, for the idea of copying the current ticket cache when
+  running krenew with a command, thereby saving the ticket cache from
+  destruction when the user logs out.

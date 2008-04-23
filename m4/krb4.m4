@@ -104,6 +104,14 @@ AC_DEFUN([_RRA_LIB_KRB4_EXTRA],
  AC_CHECK_HEADERS([kerberosIV/krb.h])
  RRA_LIB_KRB4_RESTORE])
 
+dnl Sanity-check the results of krb5-config and be sure we can really link a
+dnl Kerberos program.
+AC_DEFUN([_RRA_LIB_KRB4_CHECK],
+[RRA_LIB_KRB4_SWITCH
+ AC_CHECK_FUNC([krb_get_svc_in_tkt], ,
+    [AC_MSG_FAILURE([krb5-config results fail for Kerberos v4])])
+ RRA_LIB_KRB4_RESTORE])
+
 dnl The main macro.
 AC_DEFUN([RRA_LIB_KRB4],
 [AC_REQUIRE([RRA_ENABLE_REDUCED_DEPENDS])
@@ -138,7 +146,8 @@ AS_IF([test x"$rra_reduced_depends" = xtrue],
                KRB4_LIBS=`"$KRB5_CONFIG" --libs krb4`],
               [_RRA_LIB_KRB4_PATHS
                _RRA_LIB_KRB4_MANUAL])
-          KRB4_CPPFLAGS=`echo "$KRB5_CPPFLAGS" | sed 's%-I/usr/include ?%%'`],
+          KRB4_CPPFLAGS=`echo "$KRB5_CPPFLAGS" | sed 's%-I/usr/include ?%%'`
+          _RRA_LIB_KRB4_CHECK],
          [_RRA_LIB_KRB4_PATHS
           _RRA_LIB_KRB4_MANUAL])])
  _RRA_LIB_KRB4_EXTRA])

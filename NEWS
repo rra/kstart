@@ -31,6 +31,9 @@ kstart 3.12 (unreleased)
     force library probing by setting KRB5_CONFIG to point to a
     nonexistent file.
 
+    Sanity-check the results of krb5-config before proceeding and error
+    out in configure if they don't work.
+
     Fix Autoconf syntax error when probing for libkrb5support.  Thanks,
     Mike Garrison.
 
