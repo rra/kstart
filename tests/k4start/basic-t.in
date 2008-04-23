@@ -159,12 +159,15 @@ SKIP: {
               ' and the right service');
     }
 
-    # Test running a command.
+    # Test running a command.  klist may fail if we have no K5 tickets since
+    # we're not giving the -4 option; allow for that (we'll catch real
+    # failures in the regex match on the output).
     unlink 'tkt_test';
     ($out, $err, $status)
         = command ($K4START, '-qf', "$DATA/test.srvtab", $principal, 'klist');
-    is ($status, 0, 'k4start with command succeeds');
-    is ($err, '', ' with no errors');
+    ok ($status == 0 || $status == 1, 'k4start with command succeeds');
+    ok ($err eq '' || $err =~ /^klist: No credentials cache found /,
+        ' with no or expected errors');
     like ($out, qr,^Kerberos\ 4\ ticket\ cache:\ /tmp/tkt\d+_\S{6}\n
                    Principal:\ \Q$principal\E(\@\S+)?\n,xm,
           ' and the right output');
