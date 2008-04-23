@@ -16,7 +16,7 @@ plan tests => $total;
 
 eval 'use Test::Pod 1.00';
 SKIP: {
-    skip $total, 'Test::Pod 1.00 required for testing POD' if $@;
+    skip 'Test::Pod 1.00 required for testing POD', $total if $@;
     for my $file (@files) {
         pod_file_ok ("@abs_top_srcdir@/$file", $file);
     }
