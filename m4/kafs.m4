@@ -30,7 +30,7 @@ AC_DEFUN([RRA_LIB_KAFS_SET],
 dnl Save the current CPPFLAGS, LDFLAGS, and LIBS settings and switch to
 dnl versions that include the libkafs flags.  Used as a wrapper, with
 dnl RRA_LIB_KAFS_RESTORE, around tests.
-AC_DEFUN([RRA_LIB_AFS_SWITCH],
+AC_DEFUN([RRA_LIB_KAFS_SWITCH],
 [rra_kafs_save_CPPFLAGS="$CPPFLAGS"
  rra_kafs_save_LDFLAGS="$LDFLAGS"
  rra_kafs_save_LIBS="$LIBS"
@@ -38,7 +38,7 @@ AC_DEFUN([RRA_LIB_AFS_SWITCH],
 
 dnl Restore CPPFLAGS, LDFLAGS, and LIBS to their previous values (before
 dnl RRA_LIB_KAFS_SWITCH was called).
-AC_DEFUN([RRA_LIB_AFS_RESTORE],
+AC_DEFUN([RRA_LIB_KAFS_RESTORE],
 [CPPFLAGS="$rra_kafs_save_CPPFLAGS"
  LDFLAGS="$rra_kafs_save_LDFLAGS"
  LIBS="$rra_kafs_save_LIBS"])
@@ -57,7 +57,7 @@ dnl Probe for lsetpag in the AFS libraries.  This is required on AIX and IRIX
 dnl since we can't use the regular syscall interface there.
 AC_DEFUN([_RRA_LIB_KAFS_LSETPAG],
 [_RRA_LIB_KAFS_WITH
- RRA_LIB_KAFS_SET
+ RRA_LIB_KAFS_SWITCH
  LIBS=
  AC_SEARCH_LIBS([pthread_getspecific], [pthread])
  AC_SEARCH_LIBS([res_search], [resolv], ,
@@ -95,13 +95,15 @@ AC_DEFUN([RRA_LIB_KAFS],
         [Always use internal AFS syscall code]),
     [AS_IF([test x"$withval" = xno], [libkafs=false])])
  AS_IF([test x"$libkafs" != xfalse],
-    [AC_CHECK_LIB([kafs], [k_hasafs],
-        [LIBS="-lkafs $LIBS"
+    [RRA_LIB_KAFS_SWITCH
+     AC_CHECK_LIB([kafs], [k_hasafs],
+        [KAFS_LIBS="-lkafs"
          AC_CHECK_HEADERS([kafs.h])],
         [AC_CHECK_LIB([kopenafs], [k_hasafs],
-            [LIBS="-lkopenafs $LIBS"
+            [KAFS_LIBS="-lkopenafs"
              AC_CHECK_HEADERS([kopenafs.h])],
-            [libkafs=false])])])
+            [libkafs=false])])
+     RRA_LIB_KAFS_RESTORE])
  AS_IF([test x"$libkafs" = xtrue],
     [AC_DEFINE([HAVE_K_HASAFS], 1,
         [Define to 1 if you have the k_hasafs function.])],
@@ -118,9 +120,11 @@ AC_DEFUN([RRA_LIB_KAFS],
         ;;
      *)
         _RRA_LIB_KAFS_WITH
-        AC_CHECK_HEADERS([afs/param.h],
+        RRA_LIB_KAFS_SWITCH
+        AC_CHECK_HEADERS([afs/param.h sys/ioccom.h],
             [AC_LIBOBJ([kafs-api])
              AC_LIBOBJ([kafs-syscall])])
+        RRA_LIB_KAFS_RESTORE
         AC_DEFINE([_REENTRANT], [1],
             [Define to 1 on Solaris for correct errno handling with threads.])
         ;;
