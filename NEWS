@@ -13,7 +13,7 @@ kstart 3.12 (unreleased)
     if it occurs after the first non-option (such as on at least older
     Solaris).
 
-    k5start uses krb5_cc_destroy() rather than unlink to clean up the
+    k5start now uses krb5_cc_destroy() rather than unlink to clean up the
     ticket cache when necessary.
 
     Fix multiple problems with the libkafs and AFS system call checks
