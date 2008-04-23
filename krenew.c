@@ -452,9 +452,9 @@ main(int argc, char *argv[])
 
     /* All done. */
     if (command != NULL) {
-        status = krb5_cc_destroy(ctx, cache);
-        if (status != 0)
-            die_krb5(ctx, status, "cannot destroy ticket cache");
+        code = krb5_cc_destroy(ctx, cache);
+        if (code != 0)
+            die_krb5(ctx, code, "cannot destroy ticket cache");
     }
     exit(status);
 }
