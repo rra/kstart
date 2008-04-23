@@ -55,10 +55,13 @@ SKIP: {
         ' with the right error');
     is ($out, '', ' and no output');
 
-    # Test running a command.
+    # Test running a command.  klist may fail if we have no K4 tickets since
+    # we're not giving the -5 option; allow for that (we'll catch real
+    # failures in the regex match on the output).
     ($out, $err, $status) = command ($KRENEW, 'klist');
-    is ($status, 0, 'krenew with command succeeds');
-    is ($err, '', ' with no errors');
+    ok ($status == 0 || $status == 1, 'krenew with command succeeds');
+    ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
+        ' with no or expected errors');
     like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
                    Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
           ' and the right output');

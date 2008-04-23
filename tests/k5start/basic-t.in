@@ -169,12 +169,16 @@ SKIP: {
               ' and the right service');
     }
 
-    # Test running a command without the principal.
+    # Test running a command without the principal.  klist may fail if we have
+    # no K4 tickets since we're not giving the -5 option; allow for that
+    # (we'll catch real failures in the regex match on the output).  Test
+    # running a
     unlink 'krb5cc_test';
     ($out, $err, $status)
         = command ($K5START, '-qUf', "$DATA/test.keytab", 'klist');
-    is ($status, 0, 'k5start with command succeeds');
-    is ($err, '', ' with no errors');
+    ok ($status == 0 || $status == 1, 'k5start with command succeeds');
+    ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
+        ' with no or expected errors');
     like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
                    Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
           ' and the right output');
@@ -199,8 +203,10 @@ SKIP: {
     unlink 'krb5cc_test';
     ($out, $err, $status)
         = command ($K5START, '-qf', "$DATA/test.keytab", $principal, 'klist');
-    is ($status, 0, 'k5start with command and principal succeeds');
-    is ($err, '', ' with no errors');
+    ok ($status == 0 || $status == 1,
+        'k5start with command and principal succeeds');
+    ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
+        ' with no or expected errors');
     like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
                    Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
           ' and the right output');
@@ -227,8 +233,9 @@ SKIP: {
     ($out, $err, $status)
         = command ($K5START, '-u', $principal, '-qf', "$DATA/test.keytab",
                    'klist');
-    is ($status, 0, 'k5start with command and -u succeeds');
-    is ($err, '', ' with no errors');
+    ok ($status == 0 || $status == 1, 'k5start with command and -u succeeds');
+    ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
+        ' with no or expected errors');
     like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
                    Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
           ' and the right output');
