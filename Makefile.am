@@ -36,23 +36,23 @@ else
     K5START_LIBS = $(KAFS_LIBS) $(KRB5_LIBS)
 endif
 
+# We potentially need these for everything and there's no other way to
+# set CPPFLAGS for use with LIBOBJS.
+CPPFLAGS += $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
+
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
 k4start_SOURCES = k4start.c portable/krb4.h
-k4start_CPPFLAGS = $(KAFS_CPPFLAGS) $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS)
-k4start_LDFLAGS = $(KAFS_LDFLAGS) $(KRB4_LDFLAGS)
+k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
 k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
-k5start_CPPFLAGS = $(KAFS_CPPFLAGS) $(KRB5_CPPFLAGS)
-k5start_LDFLAGS = $(KAFS_LDFLAGS) $(KRB5_LDFLAGS)
+k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
-krenew_CPPFLAGS = $(KAFS_CPPFLAGS) $(KRB5_CPPFLAGS)
-krenew_LDFLAGS = $(KAFS_LDFLAGS) $(KRB4_LDFLAGS)
+krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/kafs.h portable/macros.h \
 	portable/stdbool.h portable/system.h portable/time.h
-portable_libportable_a_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS)
 portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
 	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
@@ -118,7 +118,7 @@ tests_util_messages_t_LDADD = tests/libtest.a util/libutil.a \
 	portable/libportable.a
 tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
-check-local: $(noinst_PROGRAMS)
+check-local: $(check_PROGRAMS)
 	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
 	    for f in $(TEST_FILES) ; do \
 		cp "$(srcdir)/$$f" "$(builddir)/$$f" ; \
