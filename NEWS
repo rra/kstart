@@ -2,6 +2,11 @@
 
 kstart 3.12 (unreleased)
 
+    krenew, when running a command, first copies the current ticket cache
+    to a private cache for that command so that it will be unaffected by
+    later destruction of the cache (such as by user logout).  The private
+    cache is deleted when the command exits.
+
     Fix problems with command-line parsing in k4start and k5start that
     led to treating a provided command as a principal in some situations.
     Allow for getopt() implementations that don't strip the -- argument

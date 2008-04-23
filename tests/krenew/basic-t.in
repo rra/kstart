@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 9 }
+BEGIN { our $total = 19 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -54,6 +54,28 @@ SKIP: {
     is ($err, "krenew: ticket cannot be renewed for long enough\n",
         ' with the right error');
     is ($out, '', ' and no output');
+
+    # Test running a command.
+    ($out, $err, $status) = command ($KRENEW, 'klist');
+    is ($status, 0, 'krenew with command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+    ok (-f 'krb5cc_test', ' but the default one was unaffected');
+
+    # Test running a command with --.
+    ($out, $err, $status) = command ($KRENEW, '--', 'klist', '-5');
+    is ($status, 0, 'krenew with command and -- succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+    ok (-f 'krb5cc_test', ' but the default one was unaffected');
 
     # Clean up.
     unlink 'krb5cc_test';

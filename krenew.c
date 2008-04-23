@@ -20,7 +20,7 @@
 #include <portable/kafs.h>
 #include <portable/time.h>
 
-#include <errno.h>
+#include <sys/stat.h>
 
 #include <util/util.h>
 
@@ -150,6 +150,49 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
         krb5_free_creds(ctx, outcreds);
 
     return status;
+}
+
+
+/*
+ * Given the Kerberos context and a pointer to the ticket cache, copy that
+ * ticket cache to a new cache and return a newly allocated string for the
+ * name of the cache.
+ */
+static char *
+copy_cache(krb5_context ctx, krb5_ccache *cache)
+{
+    krb5_error_code status;
+    krb5_ccache old, new;
+    krb5_principal princ = NULL;
+    char *name;
+    int fd;
+
+    if (xasprintf(&name, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
+        die("cannot format ticket cache name");
+    fd = mkstemp(name);
+    if (fd < 0)
+        sysdie("cannot create ticket cache file");
+    if (fchmod(fd, 0600) < 0)
+        sysdie("cannot chmod ticket cache file");
+    status = krb5_cc_resolve(ctx, name, &new);
+    if (status != 0)
+        die_krb5(ctx, status, "error initializing new ticket cache");
+    old = *cache;
+    status = krb5_cc_get_principal(ctx, old, &princ);
+    if (status != 0)
+        die_krb5(ctx, status, "error getting principal from old cache");
+    status = krb5_cc_initialize(ctx, new, princ);
+    if (status != 0)
+        die_krb5(ctx, status, "error initializing new cache");
+    krb5_free_principal(ctx, princ);
+    status = krb5_cc_copy_creds(ctx, old, new);
+    if (status != 0)
+        die_krb5(ctx, status, "error copying credentials");
+    status = krb5_cc_close(ctx, old);
+    if (status != 0)
+        die_krb5(ctx, status, "error closing old ticket cache");
+    *cache = new;
+    return name;
 }
 
 
@@ -302,16 +345,19 @@ main(int argc, char *argv[])
         die_krb5(ctx, code, "error initializing Kerberos");
     if (cachename == NULL)
         code = krb5_cc_default(ctx, &cache);
-    else {
+    else
+        code = krb5_cc_resolve(ctx, cachename, &cache);
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing ticket cache");
+    if (command != NULL)
+        cachename = copy_cache(ctx, &cache);
+    if (cachename != NULL) {
         char *env;
 
         if (xasprintf(&env, "KRB5CCNAME=%s", cachename) < 0)
             die("cannot format KRB5CCNAME environment variable");
         putenv(env);
-        code = krb5_cc_resolve(ctx, cachename, &cache);
     }
-    if (code != 0)
-        die_krb5(ctx, code, "error initializing ticket cache");
 
     /*
      * If built with setpag support and we're running a command, create the
@@ -405,5 +451,10 @@ main(int argc, char *argv[])
     }
 
     /* All done. */
+    if (command != NULL) {
+        status = krb5_cc_destroy(ctx, cache);
+        if (status != 0)
+            die_krb5(ctx, status, "cannot destroy ticket cache");
+    }
     exit(status);
 }

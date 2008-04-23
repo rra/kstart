@@ -20,10 +20,17 @@ finishes (or renewal is no longer possible).  If a command is specified,
 B<krenew> by default wakes up every 60 minutes (1 hour) to check the
 ticket cache.
 
+If a command is given, B<krenew> makes a copy of the ticket cache and
+creates a private ticket cache just for that command, thus isolating it
+from later destruction of the original ticket cache.  This allows krenew
+to maintain authentication for a command even if, for example, the user
+running the command logs out and OpenSSH destroys their original ticket
+cache.
+
 If a command is given, it will not be run using the shell, so if you want
 to use shell metacharacters in the command with their special meaning,
 give C<sh -c I<command>> as the command to run and quote I<command>.  If
-the command contains command-line options (like C<-c>), put -- on the
+the command contains command-line options (like C<-c>), put C<--> on the
 command line before the beginning of the command to tell B<krenew> to not
 parse those options as its own.
 
