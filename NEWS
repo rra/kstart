@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 3.12 (unreleased)
+kstart 3.12 (2008-04-23)
 
     krenew, when running a command, first copies the current ticket cache
     to a private cache for that command so that it will be unaffected by
