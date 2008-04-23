@@ -287,19 +287,23 @@ main(int argc, char *argv[])
         }
 
     /*
-     * Parse arguments.  There must be at most one argument, which will be
-     * taken to be the username if the -u option wasn't already given.
+     * Parse arguments.  The first argument will be taken to be the
+     * username if the -u option wasn't already given.  Anything else is
+     * a command.
      */
     argc -= optind;
     argv += optind;
-    if (argc >= 1) {
-        if (username == NULL)
-            username = argv[0];
-        else
-            die("username specified both with -u and as an argument");
+    if (argc >= 1 && username == NULL) {
+        username = argv[0];
+        argc--;
+        argv++;
     }
-    if (argc > 1)
-        command = argv + 1;
+    if (argc >= 1 && strcmp(argv[0], "--") == 0) {
+        argc--;
+        argv++;
+    }
+    if (argc >= 1)
+        command = argv;
 
     /* Check the arguments for consistency. */
     if (background && options.srvtab == NULL)
