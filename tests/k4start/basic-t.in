@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 45 }
+BEGIN { our $total = 55 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -158,6 +158,33 @@ SKIP: {
         like ($service, qr/^\Q$principal\E(\@\S+)?\z/,
               ' and the right service');
     }
+
+    # Test running a command.
+    unlink 'tkt_test';
+    ($out, $err, $status)
+        = command ($K4START, '-qf', "$DATA/test.srvtab", $principal, 'klist');
+    is ($status, 0, 'k4start with command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Kerberos\ 4\ ticket\ cache:\ /tmp/tkt\d+_\S{6}\n
+                   Principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'tkt_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command prefixed by --.
+    unlink 'tkt_test';
+    ($out, $err, $status)
+        = command ($K4START, '-qf', "$DATA/test.srvtab", $principal, '--',
+                   'klist', '-4');
+    is ($status, 0, 'k4start with command and -- succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Kerberos\ 4\ ticket\ cache:\ /tmp/tkt\d+_\S{6}\n
+                   Principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'tkt_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
 
     # Clean up.
     unlink 'tkt_test';

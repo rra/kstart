@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 50 }
+BEGIN { our $total = 80 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -168,6 +168,88 @@ SKIP: {
         like ($service, qr/^\Q$principal\E(\@\S+)?\z/,
               ' and the right service');
     }
+
+    # Test running a command without the principal.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-qUf', "$DATA/test.keytab", 'klist');
+    is ($status, 0, 'k5start with command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    my ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command without the principal prefixed by --.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-qUf', "$DATA/test.keytab", '--', 'klist', '-5');
+    is ($status, 0, 'k5start with command and -- succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command with the principal.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-qf', "$DATA/test.keytab", $principal, 'klist');
+    is ($status, 0, 'k5start with command and principal succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command with the principal and a command prefixed by --.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-qf', "$DATA/test.keytab", $principal, '--',
+                   'klist', '-5');
+    is ($status, 0, 'k5start with command, principal, and -- succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command with the principal specified with -u.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-u', $principal, '-qf', "$DATA/test.keytab",
+                   'klist');
+    is ($status, 0, 'k5start with command and -u succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test running a command with the principal specified with -u and --
+    # before the command.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-u', $principal, '-qf', "$DATA/test.keytab",
+                   '--', 'klist', '-5');
+    is ($status, 0, 'k5start with command, -u, and -- succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+                   Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+          ' and the right output');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+    ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+    ok (!$cache || !-f $cache, ' and the new cache file was deleted');
 
     # Clean up.
     unlink 'krb5cc_test';
