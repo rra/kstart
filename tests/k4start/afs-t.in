@@ -46,7 +46,7 @@ SKIP: {
     is ($status, 0, 'k4start -t succeeds');
   SKIP: {
         skip 'aklog does not support Kerberos v4', 2
-            if $err =~ /^aklog: Couldn\'t determine realm of user/;
+            if $err =~ /^aklog: Couldn\'t (determine realm|get \S+ AFS)/;
         is ($err, '', ' with no errors');
         like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
               ' and the right output');
