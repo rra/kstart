@@ -678,8 +678,10 @@ main(int argc, char *argv[])
      * Otherwise, or when we're done, exit.  clean_cache is only set if we
      * used mkstemp to generate the ticket cache name.
      */
-    if (clean_cache)
-        if (unlink(cache) < 0)
-            sysdie("unable to remove ticket cache %s", cache);
+    if (clean_cache) {
+        code = krb5_cc_destroy(ctx, options.ccache);
+        if (code != 0)
+            die_krb5(ctx, code, "unable to destroy ticket cache %s", cache);
+    }
     exit(status);
 }
