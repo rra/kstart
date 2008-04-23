@@ -2,6 +2,11 @@
 
 kstart 3.12 (unreleased)
 
+    Fix multiple problems with the libkafs and AFS system call checks
+    on platforms other than Linux that caused the libraries to leak into
+    the global LIBS and include checks done without the AFS include
+    paths.
+
     If KRB5_CONFIG was explicitly set in the environment, don't use a
     different krb5-config based on --with-krb4 or --with-krb5.  If
     krb5-config isn't executable, don't use it.  This allows one to
