@@ -171,8 +171,7 @@ SKIP: {
 
     # Test running a command without the principal.  klist may fail if we have
     # no K4 tickets since we're not giving the -5 option; allow for that
-    # (we'll catch real failures in the regex match on the output).  Test
-    # running a
+    # (we'll catch real failures in the regex match on the output).
     unlink 'krb5cc_test';
     ($out, $err, $status)
         = command ($K5START, '-qUf', "$DATA/test.keytab", 'klist');
