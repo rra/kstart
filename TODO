@@ -27,13 +27,16 @@ Documentation:
 
 Test suite:
 
+ * Run the test suite under Heimdal and adjust it for any differences in
+   command output of things like klist.
+
  * Test more of krenew's basic functionality, preferrably by parsing klist
    output more thoroughly and seeing if tickets really were renewed.
 
  * Add tests for the daemon functionality (-b and -K) in k4start, k5start,
    and krenew.  Also test PID handling (-p and -c).
 
- * Add tests for running commands in k4start, k5start, and krenew,
+ * Add more tests for running commands in k4start, k5start, and krenew,
    particularly propagation of signals, propagation of exit status, and
    waking up periodically while the command is running.
 
