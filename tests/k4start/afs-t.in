@@ -30,6 +30,11 @@ SKIP: {
     # Don't overwrite the user's ticket cache.
     $ENV{KRBTKFILE} = 'tkt_test';
 
+    # Hide Kerberos v5 tickets from aklog so that we don't get inconsistent
+    # results.
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+    unlink 'krb5cc_test';
+
     # Basic token test.
     unlink 'tkt_test';
     my ($out, $err, $status)
@@ -39,9 +44,13 @@ SKIP: {
         if ($err eq
             "k4start: cannot create PAG: AFS support is not available\n");
     is ($status, 0, 'k4start -t succeeds');
-    is ($err, '', ' with no errors');
-    like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
-          ' and the right output');
+  SKIP: {
+        skip 'aklog does not support Kerberos v4', 2
+            if $err =~ /^aklog: Couldn\'t determine realm of user/;
+        is ($err, '', ' with no errors');
+        like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+              ' and the right output');
+    }
     my ($default, $service) = klist ('-4');
     is ($default, undef, ' and the normal ticket cache is untouched');
 
