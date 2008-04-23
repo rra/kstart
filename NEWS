@@ -13,6 +13,9 @@ kstart 3.12 (unreleased)
     if it occurs after the first non-option (such as on at least older
     Solaris).
 
+    k5start uses krb5_cc_destroy() rather than unlink to clean up the
+    ticket cache when necessary.
+
     Fix multiple problems with the libkafs and AFS system call checks
     on platforms other than Linux that caused the libraries to leak into
     the global LIBS and include checks done without the AFS include
