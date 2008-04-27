@@ -1,5 +1,10 @@
                        User-Visible kstart Changes
 
+kstart 3.13 (unreleased)
+
+    Include a dummy object in libportable to avoid build failures on
+    systems that don't need any portability functions (such as Mac OS X).
+
 kstart 3.12 (2008-04-23)
 
     krenew, when running a command, first copies the current ticket cache
