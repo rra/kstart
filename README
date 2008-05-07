@@ -216,7 +216,7 @@ THANKS
   -K should be diagnosed as mutually exclusive.
 
   To Howard Wilkinson, for the initial version of the -o, -g, and -m
-  support.
+  support and further debugging of it.
 
   To Sascha Tandel, for the initial version of -c support and reports of
   build problems when the AFS libauthent and libafsrpc libraries didn't

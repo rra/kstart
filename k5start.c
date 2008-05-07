@@ -421,9 +421,6 @@ main(int argc, char *argv[])
         die("-U option requires a keytab be specified with -f");
     if (options.happy_ticket > 0 && options.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
-    if (owner != NULL || group != NULL || mode != NULL)
-        if (options.keep_ticket || command != NULL)
-            die("-o/-g/-m cannot be used with -K or a command");
     if (childfile != NULL && command == NULL)
         die("-c option only makes sense with a command to run");
 
@@ -593,8 +590,15 @@ main(int argc, char *argv[])
         command_run(options.aklog, options.verbose);
 
     /* If requested, set the owner, group, and mode of the resulting cache. */
-    if (owner != NULL || group != NULL || mode != NULL)
-        file_permissions(cache, owner, group, mode);
+    if (owner != NULL || group != NULL || mode != NULL) {
+        const char *filename = cache;
+
+        if (strncmp(filename, "FILE:", strlen("FILE:")) == 0)
+            filename += strlen("FILE:");
+        if (strncmp(filename, "WRFILE:", strlen("WRFILE:")) == 0)
+            filename += strlen("WRFILE:");
+        file_permissions(filename, owner, group, mode);
+    }
 
     /*
      * If told to background, background ourselves.  We do this late so that

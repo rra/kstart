@@ -111,10 +111,6 @@ which may be either the name of a group or a numeric group ID.  Ticket
 caches are created with C<0600> permissions by default, so this will have
 no useful effect unless used with B<-m>.
 
-This option may not be used with B<-K> or a specified command since
-changing the ownership of the ticket cache will prevent B<k5start> from
-re-reading it or renewing it.
-
 =item B<-H> I<minutes>
 
 Check for a happy ticket, defined as one that has a remaining lifetime of
@@ -184,10 +180,6 @@ After creating the ticket cache, change its ownership to I<owner>, which
 may be either the name of a user or a numeric user ID.  If I<owner> is
 the name of a user and B<-g> was not also given, also change the group
 ownership of the ticket cache to the default group for that user.
-
-This option may not be used with B<-K> or a specified command since
-changing the ownership of the ticket cache will prevent B<k5start> from
-re-reading it or renewing it.
 
 =item B<-p> I<pid file>
 

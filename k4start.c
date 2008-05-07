@@ -319,9 +319,6 @@ main(int argc, char *argv[])
             options.keep_ticket, options.lifetime);
     if (options.happy_ticket > 0 && options.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
-    if (owner != NULL || group != NULL || mode != NULL)
-        if (options.keep_ticket || command != NULL)
-            die("-o/-g/-m cannot be used with -K or a command");
     if (childfile != NULL && command == NULL)
         die("-c option only makes sense with a command to run");
 
