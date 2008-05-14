@@ -4,8 +4,10 @@ kstart 3.13 (unreleased)
 
     Remove the restriction that -o, -g, and -m may not be used with -K or
     a command.  The MIT Kerberos libraries have removed the restriction
-    about ticket cache ownership and this now works properly.  Thanks,
-    Howard Wilkinson.
+    about ticket cache ownership and this now works properly.  However,
+    each authentication changes the permissions, so reset the ownership
+    and permissions whenever we renew the cache.  Thanks, Howard
+    Wilkinson.
 
     Strip a leading FILE: or WRFILE: prefix from the ticket cache name
     when changing the ownership or permissions.  Based on a patch from

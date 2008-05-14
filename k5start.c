@@ -590,15 +590,8 @@ main(int argc, char *argv[])
         command_run(options.aklog, options.verbose);
 
     /* If requested, set the owner, group, and mode of the resulting cache. */
-    if (owner != NULL || group != NULL || mode != NULL) {
-        const char *filename = cache;
-
-        if (strncmp(filename, "FILE:", strlen("FILE:")) == 0)
-            filename += strlen("FILE:");
-        if (strncmp(filename, "WRFILE:", strlen("WRFILE:")) == 0)
-            filename += strlen("WRFILE:");
-        file_permissions(filename, owner, group, mode);
-    }
+    if (owner != NULL || group != NULL || mode != NULL)
+        file_permissions(cache, owner, group, mode);
 
     /*
      * If told to background, background ourselves.  We do this late so that
@@ -674,6 +667,8 @@ main(int argc, char *argv[])
                 authenticate(ctx, &options);
                 if (options.run_aklog)
                     command_run(options.aklog, options.verbose);
+                if (owner != NULL || group != NULL || mode != NULL)
+                    file_permissions(cache, owner, group, mode);
             }
         }
     }

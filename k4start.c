@@ -525,6 +525,8 @@ main(int argc, char *argv[])
                 authenticate(&options);
                 if (options.run_aklog && !options.no_aklog)
                     command_run(aklog, options.verbose);
+                if (owner != NULL || group != NULL || mode != NULL)
+                    file_permissions(options.cache, owner, group, mode);
             }
         }
     }

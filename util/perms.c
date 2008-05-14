@@ -60,6 +60,12 @@ file_permissions(const char *file, const char *owner, const char *group,
     gid_t gid = -1;
     mode_t mode;
 
+    /* Support Kerberos ticket cache names as file names. */
+    if (strncmp(file, "FILE:", strlen("FILE:")) == 0)
+        file += strlen("FILE:");
+    if (strncmp(file, "WRFILE:", strlen("WRFILE:")) == 0)
+        file += strlen("WRFILE:");
+
     /* Change ownership. */
     if (group != NULL) {
         gid = convert_number(group, 10);
