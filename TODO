@@ -7,9 +7,6 @@ General:
    that differ between the three programs, which will significantly reduce
    code duplication.
 
- * KINIT_PROG is a lame environment variable for the AKLOG binary.  Also
-   support something saner, like AKLOG.
-
 k5start:
 
  * Add the -F and -P flags to k5start to override library defaults for

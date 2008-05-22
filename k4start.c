@@ -81,18 +81,18 @@ Usage: k4start [options] [name]\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
    -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
    -o <owner>           Set ticket cache owner to <owner>\n\
-   -n                   Don't run aklog or KINIT_PROG\n\
+   -n                   Don't run aklog or AKLOG\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
-   -t                   Get AFS token via aklog or KINIT_PROG\n\
+   -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
 \n\
-If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
-then this program will automatically be executed after the ticket granting\n\
-ticket has been retrieved unless -n is given.  Otherwise, the default is to\n\
-not run any aklog program.  If -t is given and KINIT_PROG is not set,\n\
-%s.\n";
+If the environment variable AKLOG (or KINIT_PROG, for backward compatibility\n\
+is set to a program (such as aklog) then this program will automatically be\n\
+executed after the ticket granting ticket has been retrieved unless -n is\n\
+given.  Otherwise, the default is to not run any aklog program.  If -t is\n\
+given and AKLOG or KINIT_PROG is not set, %s.\n";
 
 
 /*
@@ -106,7 +106,7 @@ usage(int status)
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
              ? "k4start exits with an error"
-             : "the program run will be " PATH_AKLOG));
+             : "the program executed will be\n" PATH_AKLOG));
     exit(status);
 }
 
@@ -323,17 +323,19 @@ main(int argc, char *argv[])
         die("-c option only makes sense with a command to run");
 
     /*
-     * Check to see if KINIT_PROG is set.  If it is, and no_aklog is not set,
-     * set run_aklog, since setting that environment variable changes the
-     * default.
+     * Check to see if AKLOG or KINIT_PROG is set.  If it is, and no_aklog is
+     * not set, set run_aklog, since setting that environment variable changes
+     * the default.
      */
-    aklog = getenv("KINIT_PROG");
+    aklog = getenv("AKLOG");
+    if (aklog == NULL)
+        aklog = getenv("KINIT_PROG");
     if (aklog == NULL)
         aklog = PATH_AKLOG;
     else
         options.run_aklog = 1;
     if (aklog[0] == '\0' && options.run_aklog && !options.no_aklog)
-        die("set KINIT_PROG to specify the path to aklog");
+        die("set AKLOG to specify the path to aklog");
 
     /* The default username is the name of the local user. */
     if (username == NULL) {

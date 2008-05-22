@@ -2,6 +2,12 @@
 
 kstart 3.13 (unreleased)
 
+    If the environment variable AKLOG is set, use its value as the path to
+    the aklog program to run when -t is given to k5start or krenew.  If
+    AKLOG is set, always run that program unless -n was given in k4start.
+    This environment variable replaces the badly-named KINIT_PROG,
+    although KINIT_PROG is still supported for backward compatibility.
+
     Remove the restriction that -o, -g, and -m may not be used with -K or
     a command.  The MIT Kerberos libraries have removed the restriction
     about ticket cache ownership and this now works properly.  However,

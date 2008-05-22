@@ -44,12 +44,12 @@ Usage: krenew [options] [command]\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -p <file>            Write process ID (PID) to <file>\n\
-   -t                   Get AFS token via aklog or KINIT_PROG\n\
+   -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
 \n\
-If the environment variable KINIT_PROG is set to a program (such as aklog)\n\
-then this program will be executed when requested by the -t flag.\n\
-Otherwise, %s.\n";
+If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
+is set to a program (such as aklog) then this program will be executed when\n\
+requested by the -t flag.  Otherwise, %s.\n";
 
 
 /*
@@ -63,7 +63,7 @@ usage(int status)
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
              ? "using -t is an error"
-             : "the default program to run is " PATH_AKLOG));
+             : "the program executed will be\n" PATH_AKLOG));
     exit(status);
 }
 
@@ -336,12 +336,14 @@ main(int argc, char *argv[])
     if (childfile != NULL && command == NULL)
         die("-c option only makes sense with a command to run");
 
-    /* Set aklog from KINIT_PROG or the compiled-in default. */
-    aklog = getenv("KINIT_PROG");
+    /* Set aklog from AKLOG, KINIT_PROG, or the compiled-in default. */
+    aklog = getenv("AKLOG");
+    if (aklog == NULL)
+        aklog = getenv("KINIT_PROG");
     if (aklog == NULL)
         aklog = PATH_AKLOG;
     if (aklog[0] == '\0' && do_aklog)
-        die("set KINIT_PROG to specify the path to aklog");
+        die("set AKLOG to specify the path to aklog");
 
     /* Establish a K5 context and set the ticket cache. */
     code = krb5_init_context(&ctx);

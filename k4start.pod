@@ -160,8 +160,8 @@ command.
 
 =item B<-n>
 
-Regardless of the setting of the environment variable KINIT_PROG, don't
-run the program.
+Regardless of the setting of the environment variables AKLOG and
+KINIT_PROG, don't run the program.
 
 =item B<-o> I<owner>
 
@@ -293,9 +293,12 @@ credentials.
 
 =head1 ENVIRONMENT
 
-If the environment variable KINIT_PROG is set to a program (such as
-B<aklog>) then this program will automatically be executed after the
-ticket granting ticket has been retrieved.
+If the environment variable AKLOG is set, its value will be taken as the
+path to a program and that program will be automatically executed after
+the ticket-granting ticket has been retrieved (unless B<-n> was given).
+If AKLOG is not set and KINIT_PROG is set, its value will be used instead.
+KINIT_PROG is honored for backward compatibility but its use is not
+recommended due to its confusing name.
 
 If no ticket file (with B<-k>) or command is specified on the command
 line, B<k4start> will use the environment variable KRBTKTFILE to determine
