@@ -51,7 +51,8 @@ dnl Check for the Kerberos v5 libraries and for portability between MIT and
 dnl Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
-AC_CHECK_FUNCS([krb5_free_keytab_entry_contents \
+AC_CHECK_FUNCS([krb5_cc_copy_creds \
+    krb5_free_keytab_entry_contents \
     krb5_get_init_creds_opt_set_default_flags \
     krb5_get_renewed_creds])
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])

@@ -185,7 +185,11 @@ copy_cache(krb5_context ctx, krb5_ccache *cache)
     if (status != 0)
         die_krb5(ctx, status, "error initializing new cache");
     krb5_free_principal(ctx, princ);
+#ifdef HAVE_KRB5_CC_COPY_CREDS
     status = krb5_cc_copy_creds(ctx, old, new);
+#else
+    status = krb5_cc_copy_cache(ctx, old, new);
+#endif
     if (status != 0)
         die_krb5(ctx, status, "error copying credentials");
     status = krb5_cc_close(ctx, old);

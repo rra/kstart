@@ -13,6 +13,10 @@ kstart 3.13 (unreleased)
     when changing the ownership or permissions.  Based on a patch from
     Howard Wilkinson.
 
+    Fix a portability problem with Heimdal introduced in the previous
+    release (Heimdal wants krb5_cc_copy_cache, not krb5_cc_copy_creds).
+    Thanks, Jason White.
+
     Include a dummy object in libportable to avoid build failures on
     systems that don't need any portability functions (such as Mac OS X).
 
