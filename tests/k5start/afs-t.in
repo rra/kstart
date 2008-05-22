@@ -8,7 +8,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 7 }
+BEGIN { our $total = 16 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -19,6 +19,9 @@ our $K5START = '@abs_top_builddir@/k5start';
 
 # The path to our data directory, which contains the keytab to use to test.
 our $DATA = '@abs_top_builddir@/tests/data';
+
+# The path to a shell script that just prints something out.
+our $FAKE_AKLOG = '@abs_top_srcdir@/tests/data/fake-aklog';
 
 SKIP: {
     skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
@@ -44,11 +47,41 @@ SKIP: {
 
     # Set the token program to something that doesn't obtain tokens.
     # Everything should still work, but we should have no tokens.
-    $ENV{KINIT_PROG} = '/bin/true';
+    $ENV{AKLOG} = '/bin/true';
     ($out, $err, $status)
         = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
     is ($status, 0, 'k5start -t succeeds with no aklog');
     is ($err, '', ' with no errors');
     unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
             ' and we have no tokens');
+    delete $ENV{AKLOG};
+
+    # Make sure that we run the right aklog program.
+    $ENV{AKLOG} = $FAKE_AKLOG;
+    ($out, $err, $status)
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+    is ($status, 0, 'k5start -t succeeds with fake aklog');
+    is ($err, '', ' with no errors');
+    is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+    delete $ENV{AKLOG};
+
+    # AKLOG should override KINIT_PROG.
+    $ENV{KINIT_PROG} = $FAKE_AKLOG;
+    $ENV{AKLOG} = '/bin/true';
+    ($out, $err, $status)
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+    is ($status, 0, 'k5start -t succeeds with /bin/true aklog');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and we did not run KINIT_PROG');
+    delete $ENV{AKLOG};
+    delete $ENV{KINIT_PROG};
+
+    # KINIT_PROG should still work.
+    $ENV{KINIT_PROG} = $FAKE_AKLOG;
+    ($out, $err, $status)
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+    is ($status, 0, 'k5start -t succeeds with KINIT_PROG');
+    is ($err, '', ' with no errors');
+    is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+    delete $ENV{KINIT_PROG};
 }
