@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+# $Id$
+#
+# An interesting command to run under k5start or krenew to perform various
+# tests.  It takes on the command-line a file into which to write, and into
+# that file, it puts its PID, its current working directory, and its ticket
+# cache.  When it gets a HUP signal, it writes into that file.  When it gets a
+# TERM signal, it writes into that file and exits.
+
+use Cwd;
+
+$| = 1;
+print "Starting\n";
+my $file = shift;
+open (OUT, '>', $file) or die "Cannot write to $file: $!\n";
+print OUT "$$\n";
+print OUT getcwd, "\n";
+print OUT $ENV{KRB5CCNAME}, "\n";
+$SIG{HUP} = sub { print OUT "got SIGHUP\n" };
+$SIG{TERM} = sub { print OUT "got SIGTERM\n"; exit 0 };
+sleep 1000;
