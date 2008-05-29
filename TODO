@@ -30,12 +30,10 @@ Test suite:
  * Test more of krenew's basic functionality, preferrably by parsing klist
    output more thoroughly and seeing if tickets really were renewed.
 
- * Add tests for the daemon functionality in krenew and tests that -K
-   wakes up periodically and renews tickets for both krenew and k5start.
+ * Test that -K and running a command wakes up periodically and renews
+   tickets for both krenew and k5start.
 
- * Add more tests for running commands in k4start, k5start, and krenew,
-   particularly propagation exit status and waking up periodically while
-   the command is running.
+ * Test propagation of exit status from commands in k5start and krenew.
 
  * Add tests for k4start and k5start password prompting, either from
    standard input or from a TTY.

@@ -99,5 +99,6 @@ AC_CONFIG_FILES([tests/k5start/daemon-t], [chmod +x tests/k5start/daemon-t])
 AC_CONFIG_FILES([tests/k5start/pod-t], [chmod +x tests/k5start/pod-t])
 AC_CONFIG_FILES([tests/krenew/afs-t], [chmod +x tests/krenew/afs-t])
 AC_CONFIG_FILES([tests/krenew/basic-t], [chmod +x tests/krenew/basic-t])
+AC_CONFIG_FILES([tests/krenew/daemon-t], [chmod +x tests/krenew/daemon-t])
 AC_CONFIG_FILES([tests/krenew/pod-t], [chmod +x tests/krenew/pod-t])
 AC_OUTPUT

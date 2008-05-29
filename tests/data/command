@@ -18,4 +18,4 @@ print OUT getcwd, "\n";
 print OUT $ENV{KRB5CCNAME}, "\n";
 $SIG{HUP} = sub { print OUT "got SIGHUP\n" };
 $SIG{TERM} = sub { print OUT "got SIGTERM\n"; exit 0 };
-sleep 1000;
+sleep 1000 while 1;
