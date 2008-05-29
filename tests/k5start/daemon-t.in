@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # $Id$
 #
-# Tests for basic k5start functionality.
+# Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Copyright 2008 Board of Trustees, Leland Stanford Jr. University
