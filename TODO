@@ -40,3 +40,6 @@ Test suite:
 
  * Add error tests for invalid combinations of command-line options or
    invalid settings for those options in k4start, k5start, and krenew.
+
+ * Add tests of -o, -g, and -m.  Testing -o and -g will require using
+   fakeroot.
