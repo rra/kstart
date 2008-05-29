@@ -9,7 +9,7 @@ Homepage: http://www.eyrie.org/~eagle/software/kstart/
 Package: kstart
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: Kerberos kinit variant supporting ticket refreshing
+Description: Kerberos kinit supporting AFS and ticket refreshing
  k5start (for Kerberos v5) and k4start (for Kerberos v4) can be used
  instead of kinit to obtain Kerberos tickets.  krenew can be used instead
  of kinit -R to renew renewable tickets.  They are intended primarily for

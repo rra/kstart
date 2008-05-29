@@ -1,3 +1,13 @@
+kstart (3.13-1) unstable; urgency=low
+
+  * New upstream release.
+    - AKLOG environment variable now recognized to set the path to aklog
+      in addition to the misnamed KINIT_PROG.
+    - Allow -o/-g/-m with -K or a command.
+  * Minor improvement to the package short description.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 28 May 2008 18:08:45 -0700
+
 kstart (3.12-1) unstable; urgency=low
 
   * New upstream release.
