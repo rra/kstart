@@ -1,6 +1,6 @@
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 3.12
+Version: 3.13
 Release: 1
 License: MIT, BSD
 Group: System Environment/Base
@@ -42,6 +42,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Wed May 28 2008 Russ Allbery <rra@stanford.edu> 3.13-1
+- New version for 3.13 release.
+
 * Wed Apr 23 2008 Russ Allbery <rra@stanford.edu> 3.12-1
 - New version for 3.12 release.
 
