@@ -2,6 +2,11 @@
 
 kstart 3.13 (unreleased)
 
+    As of this release, k4start should be considered frozen.  I will still
+    fix bugs where possible, but it is no longer tested before releases
+    and new features added to k5start and krenew will not be added to
+    k4start.
+
     If the environment variable AKLOG is set, use its value as the path to
     the aklog program to run when -t is given to k5start or krenew.  If
     AKLOG is set, always run that program unless -n was given in k4start.

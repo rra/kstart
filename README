@@ -51,6 +51,11 @@ DESCRIPTION
   keytab is inappropriate (such as users running their own jobs with their
   own credentials).
 
+  k4start is generally frozen and is no longer actively tested in new
+  releases.  I will fix bugs in k4start where possible, but I no longer
+  have a Kerberos v4 realm with which to test.  New features added to
+  k5start and krenew will not be added to k4start.
+
 REQUIREMENTS
 
   As Kerberos programs, k4start, k5start, and krenew require Kerberos
@@ -73,7 +78,9 @@ REQUIREMENTS
   AFS PAG support on platforms other than Linux requires the kafs library
   that comes with either Heimdal or KTH Kerberos, AFS header files (on any
   other platform besides AIX or IRIX), or AFS libraries (on AIX and IRIX).
-  On Linux, kstart uses its own internal implementation of the AFS system
+  AIX binaries with AFS PAG support may not run on AIX systems that do not
+  have an AFS client installed due to how AIX handles system calls.  On
+  Linux, kstart uses its own internal implementation of the AFS system
   call interface and doesn't require any external libraries.
 
   To run the test suite, you must have the Perl 5.006 or later and the
@@ -169,13 +176,11 @@ TESTING
       make check
 
   In order to test the client in a meaningful way, you will need to do
-  some preparatory work before running the test suite.  Review the files:
+  some preparatory work before running the test suite.  Review the file:
 
       tests/data/README
-      perl/t/data/README
 
-  and follow the instructions in those files to enable the full test
-  suite.
+  and follow the instructions in that file to enable the full test suite.
 
   The test suite also requires some additional software be installed that
   isn't otherwise used by the wallet.  See REQUIREMENTS above for the full
