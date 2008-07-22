@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Kerberos v5 kinit replacement suitable for daemon authentication.
  *
  * This is a replacement for the standard Kerberos v5 kinit that is more

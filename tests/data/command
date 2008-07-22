@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id$
 #
 # An interesting command to run under k5start or krenew to perform various
 # tests.  It takes on the command-line a file into which to write, and into

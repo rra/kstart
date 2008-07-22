@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Automatically renew a Kerberos v5 ticket.
  *
  * Similar to k5start, krenew can run as a daemon or run a specified program

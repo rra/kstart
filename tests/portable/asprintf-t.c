@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * asprintf and vasprintf test suite.
  *
  * Written by Russ Allbery <rra@stanford.edu>

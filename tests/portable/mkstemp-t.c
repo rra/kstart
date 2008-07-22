@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * mkstemp test suite.
  *
  * Written by Russ Allbery <rra@stanford.edu>

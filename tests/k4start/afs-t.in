@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# $Id$
 #
 # Tests for k4start with AFS.
 #

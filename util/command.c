@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Shared command handling for k4start, k5start, and krenew.
  *
  * Run a command, possibly a long-running one for which we need to wait.

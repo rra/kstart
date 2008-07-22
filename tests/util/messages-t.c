@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Test suite for error handling routines.
  *
  * Copyright 2004, 2005, 2006

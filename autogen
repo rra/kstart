@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 #
 # Run this shell script to bootstrap as necessary after a fresh checkout
 # from Subversion.

@@ -1,5 +1,3 @@
-# $Id$
-#
 # Shared Perl functions for tests.
 #
 # Collects a set of useful utility functions for tests, used by the Perl test
