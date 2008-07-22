@@ -6,6 +6,7 @@ aclocal.m4
 build-aux
 config.h
 config.h.in
+config.h.in~
 config.log
 config.status
 configure
@@ -14,6 +15,7 @@ k5start
 krenew
 stamp-h1
 tests/data/.placeholder
+tests/data/test.*
 tests/docs/pod-t
 tests/docs/spelling-t
 tests/k4start/afs-t
