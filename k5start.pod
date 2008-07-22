@@ -3,19 +3,20 @@
 k5start - Obtain and optionally keep active a Kerberos v5 ticket.
 
 =for stopwords
--bhnqstv keytab username kinit LDAP aklog HUP KRB5CCNAME AFS PAG init
-AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
+-bFhnPqstv keytab username kinit LDAP aklog HUP KRB5CCNAME AFS PAG init
+AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani forwardable
+proxiable
 
 =head1 SYNOPSIS
 
-B<k5start> [B<-bhnqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
+B<k5start> [B<-bFhnPqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-l> I<time string>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bhnqstv>] [B<-c> I<child pid file>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bFhnPqstv>] [B<-c> I<child pid file>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<time string>]
     [B<-m> I<mode>] [B<-o> I<owner>] [B<-p> I<pid file>]
@@ -102,6 +103,12 @@ Note that, when used with B<-b>, the PID file is written out after
 B<k4start> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
+
+=item B<-F>
+
+Do not get forwardable tickets even if the local configuration says to get
+forwardable tickets by default.  Without this flag, B<k5start> does
+whatever the library default is.
 
 =item B<-f> I<keytab>
 
@@ -196,6 +203,12 @@ ownership of the ticket cache to the default group for that user.
 If this option is used with a command or with the B<-K> option, there may
 be a short window after each authentication during which the ownership of
 the cache will be the user the B<k5start> process is running as.
+
+=item B<-P>
+
+Do not get proxiable tickets even if the local configuration says to get
+proxiable tickets by default.  Without this flag, B<k5start> does whatever
+the library default is.
 
 =item B<-p> I<pid file>
 

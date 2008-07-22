@@ -9,9 +9,6 @@ General:
 
 k5start:
 
- * Add the -F and -P flags to k5start to override library defaults for
-   forwardable and proxiable tickets.
-
  * Add support to k5start for obtaining K4 tickets in addition to K5
    tickets, using the DES key in a keytab.
 

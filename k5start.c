@@ -74,6 +74,7 @@ Usage: k5start [options] [name [command]]\n\
 \n\
    -b                   Fork and run in the background\n\
    -c <file>            Write child process ID (PID) to <file>\n\
+   -F                   Force non-forwardable tickets\n\
    -f <keytab>          Use <keytab> for authentication rather than password\n\
    -g <group>           Set ticket cache group to <group>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
@@ -86,6 +87,7 @@ Usage: k5start [options] [name [command]]\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
    -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
    -o <owner>           Set ticket cache owner to <owner>\n\
+   -P                   Force non-proxiable tickets\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -q                   Don't output any unnecessary text\n\
    -s                   Read password on standard input\n\
@@ -314,6 +316,8 @@ main(int argc, char *argv[])
     char *childfile = NULL;
     char *pidfile = NULL;
     int background = 0;
+    int nonforwardable = 0;
+    int nonproxiable = 0;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
@@ -321,7 +325,7 @@ main(int argc, char *argv[])
     pid_t child = 0;
     int clean_cache = 0;
     int search_keytab = 0;
-    static const char optstring[] = "bc:f:g:H:hI:i:K:k:l:m:no:p:qr:S:stUu:v";
+    static const char optstring[] = "bc:Ff:g:H:hI:i:K:k:l:m:no:Pp:qr:S:stUu:v";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -332,6 +336,7 @@ main(int argc, char *argv[])
         switch (opt) {
         case 'b': background = 1;               break;
         case 'c': childfile = optarg;           break;
+        case 'F': nonforwardable = 1;           break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
@@ -339,6 +344,7 @@ main(int argc, char *argv[])
         case 'm': mode = optarg;                break;
         case 'n': /* Ignored */                 break;
         case 'o': owner = optarg;               break;
+        case 'P': nonproxiable = 1;             break;
         case 'p': pidfile = optarg;             break;
         case 'q': options.quiet = 1;            break;
         case 'r': srealm = optarg;              break;
@@ -559,6 +565,10 @@ main(int argc, char *argv[])
                                               &options.kopts);
 #endif
     krb5_get_init_creds_opt_set_tkt_life(&options.kopts, life_secs);
+    if (nonforwardable)
+        krb5_get_init_creds_opt_set_forwardable(&options.kopts, 0);
+    if (nonproxiable)
+        krb5_get_init_creds_opt_set_proxiable(&options.kopts, 0);
 
     /* If we're just checking the service ticket, do that and exit if okay. */
     if (options.happy_ticket > 0 && command == NULL)
