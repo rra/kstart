@@ -1,5 +1,4 @@
 dnl kafs.m4 -- Test for a libkafs library or replacement.
-dnl $Id$
 dnl
 dnl Check for a working libkafs library, and if not present, check how we can
 dnl simulate what one would do ourselves, adding the appropriate things to

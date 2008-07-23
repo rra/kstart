@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 3.14 (2008-07-22)
+
+    Add -F and -P options to k5start to force the tickets to not be
+    forwardable or proxiable, regardless of library defaults.  This can be
+    necessary if one's krb5.conf defaults to forwardable or proxiable
+    tickets but service principals aren't allowed to get such tickets.
+
 kstart 3.13 (2008-05-28)
 
     As of this release, k4start should be considered frozen.  I will still

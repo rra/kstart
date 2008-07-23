@@ -2,6 +2,10 @@
 
 k4start - Obtain and optionally keep active a Kerberos v4 ticket
 
+=for stopwords
+-bhnqstv srvtab username kinit LDAP AFS aklog HUP KRBTKFILE AKLOG TGT PAG
+init afslog kstart krenew Bense Allbery Navid Golpayegani
+
 =head1 SYNOPSIS
 
 B<k4start> [B<-bhnqstv>] [B<-c> I<child pid file>] [B<-f> I<srvtab>]
@@ -15,7 +19,7 @@ B<k4start> [B<-bhnqstv>] [B<-c> I<child pid file>] [B<-f> I<srvtab>]
 
 B<k4start> obtains and caches an initial Kerberos v4 ticket-granting
 ticket for a principal.  B<k4start> can be used as an alternative to
-kinit, but it is primarily intended to be used by programs that want to
+B<kinit>, but it is primarily intended to be used by programs that want to
 use a srvtab to obtain Kerberos credentials, such as a web server that
 needs to authenticate to another service such as an LDAP server or to AFS.
 
@@ -211,7 +215,7 @@ the instance portion as part of the argument to B<-S>.
 Read the password from standard input.  This bypasses the normal password
 prompt, which means echo isn't suppressed and input isn't forced to be
 from the controlling terminal.  Most uses of this option are a security
-risk.  You normally want to use a srvtab and the B<-f> option intead.
+risk.  You normally want to use a srvtab and the B<-f> option instead.
 
 =item B<-t>
 
@@ -220,7 +224,7 @@ to run B<aklog> to get a token.  If the environment variable KINIT_PROG is
 set, the program is run regardless of the B<-t> flag (unless the B<-n>
 flag is given).
 
-If B<k4start> has been built with AFS setpag support and a command was
+If B<k4start> has been built with AFS setpag() support and a command was
 given on the command line, B<k4start> will create a new PAG before
 obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
 PAG.
@@ -250,9 +254,9 @@ B<k4start> returns the exit status of that program.
 =head1 EXAMPLES
 
 Use the F</etc/srvtab> srvtab to obtain a ticket granting ticket for the
-principal rcmd.example, putting the ticket cache in F</tmp/service.tgt>.
-The lifetime is 600 minutes and the program wakes up every 10 minutes to
-check if the ticket is about to expire.
+principal C<rcmd.example>, putting the ticket cache in
+F</tmp/service.tgt>.  The lifetime is 600 minutes and the program wakes up
+every 10 minutes to check if the ticket is about to expire.
 
     k4start -k /tmp/service.tgt -f /etc/srvtab -K 10 -l 600 \
         rcmd.example
@@ -280,9 +284,9 @@ Debian init script:
         --exec /usr/local/bin/k4start -- -b -p /var/run/k4start.pid \
         -f /etc/srvtab rcmd.example
 
-This uses F</var/run/k4start.pid> as the PID file and obtains rcmd.example
-tickets from the system srvtab file.  B<k4start> would then be stopped
-with:
+This uses F</var/run/k4start.pid> as the PID file and obtains
+C<rcmd.example> tickets from the system srvtab file.  B<k4start> would
+then be stopped with:
 
     start-stop-daemon --stop --pidfile /var/run/k4start.pid
     rm -f /var/run/k4start.pid
@@ -301,7 +305,7 @@ KINIT_PROG is honored for backward compatibility but its use is not
 recommended due to its confusing name.
 
 If no ticket file (with B<-k>) or command is specified on the command
-line, B<k4start> will use the environment variable KRBTKTFILE to determine
+line, B<k4start> will use the environment variable KRBTKFILE to determine
 the location of the the ticket granting ticket.  If either a command is
 specified or the B<-k> option is used, KRBTKFILE will be set to point to
 that file before running the B<aklog> program or any command given on the

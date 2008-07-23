@@ -1,5 +1,4 @@
 dnl krb5.m4 -- Find the compiler and linker flags for Kerberos v5.
-dnl $Id$
 dnl
 dnl Finds the compiler and linker flags for linking with Kerberos v5 libraries
 dnl and sets the substitution variables KRB5_CPPFLAGS, KRB5_LDFLAGS, and

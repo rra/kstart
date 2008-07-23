@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Portability wrapper around <time.h> and <sys/time.h>.
  *
  * This header includes <time.h> and <sys/time.h> as applicable, handling

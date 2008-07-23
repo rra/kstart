@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Error handling for Kerberos v5.
  *
  * Provides versions of die and warn that take a Kerberos context and a

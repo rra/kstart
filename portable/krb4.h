@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Portability wrapper around krb.h.
  *
  * This header file includes krb.h, wherever it was found, and then adjusts

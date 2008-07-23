@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * AFS system call for Linux systems.
  *
  * This is an AFS system call implementation for Linux systems only (and new

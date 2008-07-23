@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Lifetime conversion routine for Kerberos libraries that don't have it.
  *
  * This file contains an implementation of krb_life_to_time for Kerberos

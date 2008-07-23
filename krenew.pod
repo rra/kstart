@@ -1,6 +1,13 @@
 =head1 NAME
 
+=for stopwords
+krenew
+
 krenew - Renew a Kerberos v5 ticket
+
+=for stopwords
+-bhtv aklog AFS OpenSSH PAG HUP KRB5CCNAME AKLOG kstart afslog Allbery
+Bense
 
 =head1 SYNOPSIS
 
@@ -34,7 +41,7 @@ the command contains command-line options (like C<-c>), put C<--> on the
 command line before the beginning of the command to tell B<krenew> to not
 parse those options as its own.
 
-If B<krenew> is built with setpag support and AFS tokens are requested
+If B<krenew> is built with setpag() support and AFS tokens are requested
 with the B<-t> option, it will put the command in a separate PAG before
 obtaining AFS tokens so that they don't interfere with other processes on
 the system.
@@ -137,7 +144,7 @@ Run an external program after getting a ticket.  The default use of this
 is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
 is set, it overrides the compiled-in default.
 
-If B<krenew> has been built with AFS setpag support and a command was
+If B<krenew> has been built with AFS setpag() support and a command was
 given on the command line, B<krenew> will create a new PAG before
 obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
 PAG.
@@ -178,7 +185,7 @@ C<--> argument before it would be necessary to keep B<krenew> from
 interpreting those options as its own.
 
 If you want to redirect output to a file that requires authentication to
-write to, you will need to do that redirection in a subshell.  In other
+write to, you will need to do that redirection in a sub-shell.  In other
 words, the following command:
 
     krenew -t compute-job > /afs/local/data/output

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Test suite for xmalloc and family.
  *
  * Copyright 2004, 2005, 2006

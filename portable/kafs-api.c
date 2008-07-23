@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * kafs replacement, main API.
  *
  * This is a simple implementation of the k_hasafs, k_setpag, and k_unlog

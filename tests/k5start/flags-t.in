@@ -1,0 +1,119 @@
+#!/usr/bin/perl -w
+#
+# Tests for basic k5start functionality.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+BEGIN { our $total = 28 }
+use Test::More tests => $total;
+
+# Load our test utility programs.
+require '@abs_top_builddir@/tests/libtest.pl';
+
+# The full path to the newly-built k5start client.
+our $K5START = '@abs_top_builddir@/k5start';
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = '@abs_top_builddir@/tests/data';
+
+SKIP: {
+    skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
+    my $principal = contents ("$DATA/test.principal");
+
+    # We have to generate a local krb5.conf that gets forwardable and
+    # proxiable tickets by default.  Try to locate the local krb5.conf that
+    # we're supposed to use and bail if we can't find one.
+    my $krb5conf = $ENV{KRB5_CONFIG};
+    unless ($krb5conf) {
+        for my $path (qw(/etc /usr/local/etc @abs_top_builddir@/tests/data)) {
+            if (-r "$path/krb5.conf") {
+                $krb5conf = "$path/krb5.conf";
+                last;
+            }
+        }
+    }
+    if ($krb5conf) {
+        open (CONF, '<', $krb5conf) or die "Cannot open $krb5conf: $!\n";
+        open (NEWCONF, '>', './krb5.conf')
+            or die "Cannot create krb5.conf: $!\n";
+        print NEWCONF <CONF>;
+        close CONF;
+        print NEWCONF "\n";
+        print NEWCONF "[libdefaults]\n";
+        print NEWCONF "    forwardable = true\n";
+        print NEWCONF "    proxiable   = true\n";
+        close NEWCONF;
+        $ENV{KRB5_CONFIG} = './krb5.conf';
+    } else {
+        die "No krb5.conf found -- set KRB5_CONFIG to point to one\n";
+    }
+
+    # Don't overwrite the user's ticket cache.
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+
+    # Basic authentication test with forwardable and proxiable tickets.
+    unlink 'krb5cc_test';
+    my ($out, $err, $status)
+        = command ($K5START, '-f', "$DATA/test.keytab", $principal);
+    is ($status, 0, 'Basic k5start command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    my ($default, $service, $flags) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    like ($flags, qr/F/, ' and has forwardable tickets');
+    like ($flags, qr/P/, ' and has proxiable tickets');
+
+    # Authentication without proxiable tickets.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-Pf', "$DATA/test.keytab", $principal);
+    is ($status, 0, 'k5start -P command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service, $flags) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    like ($flags, qr/F/, ' and has forwardable tickets');
+    unlike ($flags, qr/P/, ' but not proxiable tickets');
+
+    # Authentication without forwardable tickets.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-F', '-f', "$DATA/test.keytab", $principal);
+    is ($status, 0, 'k5start -F command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service, $flags) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    like ($flags, qr/P/, ' and has proxiable tickets');
+    unlike ($flags, qr/F/, ' but not forwardable tickets');
+
+    # Authentication with neither flag.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-FPf', "$DATA/test.keytab", $principal);
+    is ($status, 0, 'k5start -F -P command succeeds');
+    is ($err, '', ' with no errors');
+    like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+          ' and the right output');
+    ($default, $service, $flags) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' for the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
+    unlike ($flags, qr/P/, ' but not proxiable tickets');
+    unlike ($flags, qr/F/, ' and not forwardable tickets');
+
+    # Clean up.
+    unlink 'krb5cc_test', 'krb5.conf';
+}
