@@ -3,6 +3,7 @@ kstart (3.14-1) UNRELEASED; urgency=low
   * New upstream release.
     - Add -F and -P flags to k5start to force nonforwardable and
       nonproxiable tickets respectively.
+  * Fixed the configure-stamp dependencies.
   * Add Vcs-Git and Vcs-Browser control fields.
   * Update standards version to 3.8.0 (no changes required).
 
