@@ -4,6 +4,7 @@ kstart (3.14-1) UNRELEASED; urgency=low
     - Add -F and -P flags to k5start to force nonforwardable and
       nonproxiable tickets respectively.
   * Add Vcs-Git and Vcs-Browser control fields.
+  * Update standards version to 3.8.0 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Tue, 22 Jul 2008 20:12:38 -0700
 
