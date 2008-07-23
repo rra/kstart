@@ -8,8 +8,8 @@
 
 # Test suite files that are not generated or touched by configure that need to
 # be copied over for builddir != srcdir builds.
-TEST_FILES = tests/TESTS tests/data/README tests/libtest.pl \
-	tests/util/xmalloc-t
+TEST_FILES = tests/TESTS tests/data/README tests/data/command \
+	tests/data/fake-aklog tests/libtest.pl tests/util/xmalloc-t
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
