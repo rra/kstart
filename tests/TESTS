@@ -10,6 +10,7 @@ krenew/afs
 krenew/basic
 krenew/daemon
 portable/asprintf
+portable/daemon
 portable/mkstemp
 portable/snprintf
 util/concat

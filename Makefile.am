@@ -93,8 +93,9 @@ warnings:
 
 # The bits below are for the test suite, not for the main package.
 check_PROGRAMS = tests/runtests tests/portable/asprintf-t \
-	tests/portable/mkstemp-t tests/portable/snprintf-t \
-	tests/util/concat-t tests/util/messages-t tests/util/xmalloc
+	tests/portable/daemon-t tests/portable/mkstemp-t \
+	tests/portable/snprintf-t tests/util/concat-t tests/util/messages-t \
+	tests/util/xmalloc
 check_LIBRARIES = tests/libtest.a
 tests_libtest_a_SOURCES = tests/libtest.c tests/libtest.h
 
@@ -102,6 +103,10 @@ tests_libtest_a_SOURCES = tests/libtest.c tests/libtest.h
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
 tests_portable_asprintf_t_LDADD = tests/libtest.a util/libutil.a \
+	portable/libportable.a
+tests_portable_daemon_t_SOURCES = tests/portable/daemon-t.c \
+	tests/portable/daemon.c
+tests_portable_daemon_t_LDADD = tests/libtest.a util/libutil.a \
 	portable/libportable.a
 tests_portable_mkstemp_t_SOURCES = tests/portable/mkstemp-t.c \
 	tests/portable/mkstemp.c

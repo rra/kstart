@@ -24,6 +24,7 @@ tests/k5start/afs-t
 tests/k5start/basic-t
 tests/k5start/daemon-t
 tests/portable/asprintf-t
+tests/portable/daemon-t
 tests/portable/mkstemp-t
 tests/portable/snprintf-t
 tests/runtests
