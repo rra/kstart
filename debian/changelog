@@ -1,4 +1,4 @@
-kstart (3.14-1) UNRELEASED; urgency=low
+kstart (3.14-1) unstable; urgency=low
 
   * New upstream release.
     - Add -F and -P flags to k5start to force nonforwardable and
