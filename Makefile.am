@@ -13,8 +13,8 @@ TEST_FILES = tests/TESTS tests/data/README tests/data/command \
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = autogen k4start.1 k4start.pod k5start.1 k5start.pod krenew.1 \
-	krenew.pod kstart.spec $(TEST_FILES)
+EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.1 k5start.pod \
+	krenew.1 krenew.pod kstart.spec $(TEST_FILES)
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
