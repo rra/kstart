@@ -30,8 +30,6 @@ Test suite:
  * Test that -K and running a command wakes up periodically and renews
    tickets for both krenew and k5start.
 
- * Test propagation of exit status from commands in k5start and krenew.
-
  * Add tests for k4start and k5start password prompting, either from
    standard input or from a TTY.
 

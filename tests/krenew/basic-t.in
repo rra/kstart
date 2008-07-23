@@ -7,7 +7,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 19 }
+BEGIN { our $total = 22 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -78,6 +78,12 @@ SKIP: {
     ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
     ok (!$cache || !-f $cache, ' and the new cache file was deleted');
     ok (-f 'krb5cc_test', ' but the default one was unaffected');
+
+    # Test propagation of exit status from a command.
+    ($out, $err, $status) = command ($KRENEW, '--', 'sh', '-c', 'exit 3');
+    is ($status, 3, 'krenew of exit 3 returns correct exit status');
+    is ($err, '', ' with no errors');
+    ok (-f 'krb5cc_test', ' and the default cache file was unaffected');
 
     # Clean up.
     unlink 'krb5cc_test';

@@ -7,7 +7,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 80 }
+BEGIN { our $total = 83 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -255,6 +255,15 @@ SKIP: {
     ok (!-f 'krb5cc_test', ' and the default cache file was not created');
     ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
     ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+
+    # Test propagation of exit status from a command.
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
+                   'exit 3');
+    is ($status, 3, 'k5start of exit 3 returns correct exit status');
+    is ($err, '', ' with no errors');
+    ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 
     # Clean up.
     unlink 'krb5cc_test';
