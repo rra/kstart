@@ -3,6 +3,7 @@ kstart (3.14-1) UNRELEASED; urgency=low
   * New upstream release.
     - Add -F and -P flags to k5start to force nonforwardable and
       nonproxiable tickets respectively.
+  * Add Vcs-Git and Vcs-Browser control fields.
 
  -- Russ Allbery <rra@debian.org>  Tue, 22 Jul 2008 20:12:38 -0700
 
