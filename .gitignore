@@ -11,8 +11,11 @@ config.log
 config.status
 configure
 k4start
+!k4start/
 k5start
+!k5start/
 krenew
+!krenew/
 stamp-h1
 tests/data/.placeholder
 tests/data/test.*
@@ -23,6 +26,10 @@ tests/k4start/basic-t
 tests/k5start/afs-t
 tests/k5start/basic-t
 tests/k5start/daemon-t
+tests/k5start/flags-t
+tests/krenew/afs-t
+tests/krenew/basic-t
+tests/krenew/daemon-t
 tests/portable/asprintf-t
 tests/portable/daemon-t
 tests/portable/mkstemp-t
