@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Set owner and mode of ticket files.
  *
  * Holds common code to set the owner and mode of ticket cache files, used by

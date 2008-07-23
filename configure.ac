@@ -1,5 +1,4 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id$
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
@@ -7,9 +6,8 @@ dnl     Board of Trustees, Leland Stanford Jr. University
 dnl
 dnl See LICENSE for licensing terms.
 
-AC_REVISION([$Revision$])
 AC_PREREQ([2.61])
-AC_INIT([kstart], [3.13], [rra@stanford.edu])
+AC_INIT([kstart], [3.14], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AM_INIT_AUTOMAKE([1.10])
@@ -90,15 +88,15 @@ AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])
 dnl Output the results.
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([tests/docs/pod-t], [chmod +x tests/docs/pod-t])
+AC_CONFIG_FILES([tests/docs/spelling-t], [chmod +x tests/docs/spelling-t])
 AC_CONFIG_FILES([tests/k4start/afs-t], [chmod +x tests/k4start/afs-t])
 AC_CONFIG_FILES([tests/k4start/basic-t], [chmod +x tests/k4start/basic-t])
-AC_CONFIG_FILES([tests/k4start/pod-t], [chmod +x tests/k4start/pod-t])
 AC_CONFIG_FILES([tests/k5start/afs-t], [chmod +x tests/k5start/afs-t])
 AC_CONFIG_FILES([tests/k5start/basic-t], [chmod +x tests/k5start/basic-t])
 AC_CONFIG_FILES([tests/k5start/daemon-t], [chmod +x tests/k5start/daemon-t])
-AC_CONFIG_FILES([tests/k5start/pod-t], [chmod +x tests/k5start/pod-t])
+AC_CONFIG_FILES([tests/k5start/flags-t], [chmod +x tests/k5start/flags-t])
 AC_CONFIG_FILES([tests/krenew/afs-t], [chmod +x tests/krenew/afs-t])
 AC_CONFIG_FILES([tests/krenew/basic-t], [chmod +x tests/krenew/basic-t])
 AC_CONFIG_FILES([tests/krenew/daemon-t], [chmod +x tests/krenew/daemon-t])
-AC_CONFIG_FILES([tests/krenew/pod-t], [chmod +x tests/krenew/pod-t])
 AC_OUTPUT

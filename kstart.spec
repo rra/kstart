@@ -1,14 +1,17 @@
+%define rel %(cat /etc/redhat-release | cut -d' ' -f7 | cut -d'.' -f1)
+
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 3.13
-Release: 1
-License: MIT, BSD
+Version: 3.14
+Release: 1.%{rel}
+License: MIT
 Group: System Environment/Base
 URL: http://www.eyrie.org/~eagle/software/kstart/
 Source: http://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
 Requires: krb5-workstation
+Vendor: Stanford University
 
 %description
 Kerberos kinit variant supporting ticket refreshing.  k5start (for
@@ -37,11 +40,17 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 
 %files
 %defattr(-, root, root, 0755)
-%doc LICENSE NEWS README TODO
 %{_bindir}/*
+%defattr(-, root, root, 0644)
+%doc LICENSE NEWS README TODO
 %{_mandir}/*/*
 
 %changelog
+* Tue Jul 22 2008 Russ Allbery <rra@stanford.edu> 3.14-1
+- New version for 3.14 release.
+- Fix default file attributes for non-executables.
+- Remove the BSD license; everything is under an MIT license.
+
 * Wed May 28 2008 Russ Allbery <rra@stanford.edu> 3.13-1
 - New version for 3.13 release.
 

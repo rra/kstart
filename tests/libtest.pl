@@ -1,5 +1,3 @@
-# $Id$
-#
 # Shared Perl functions for tests.
 #
 # Collects a set of useful utility functions for tests, used by the Perl test
@@ -71,17 +69,19 @@ sub kinit {
     return 0;
 }
 
-# Run klist and return the default principal and the first service principal
-# found.  If the first argument is true, runs klist -4 and looks for a K4
-# ticket cache instead of a K5 one.  Returns both as undef if klist fails.
+# Run klist and return the default principal, the first service principal
+# found, and the flags.  If the first argument is true, runs klist -4 and
+# looks for a K4 ticket cache instead of a K5 one.  Returns both as undef if
+# klist fails.
 sub klist {
     my ($k4) = @_;
     my $flag = $k4 ? '-4' : '-5';
-    my $output = `klist $flag 2>&1`;
+    my $output = `klist -f $flag 2>&1`;
     return unless $? == 0;
     my ($default) = ($output =~ /^(?:Default p|P)rincipal: (\S+)/m);
     my ($service) = ($output =~ / [Pp]rincipal\n(?:\S+\s+){4}(\S+)/);
-    return ($default, $service);
+    my ($flags) = ($output =~ /\sFlags: (\S+)/);
+    return ($default, $service, $flags);
 }
 
 # Run tokens and return true if we have an AFS token, false otherwise.

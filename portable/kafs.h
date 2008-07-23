@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Portability wrapper around the kafs API.
  *
  * This header includes kafs.h if it's available, provides k_hasafs, k_setpag,

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Declarations of routines and variables in the C library.  Including this
  * file is the equivalent of including all of the following headers, portably:
  *

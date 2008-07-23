@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * AFS system call via syscall.
  *
  * This is an AFS system call implementation for systems that use syscall,
