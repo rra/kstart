@@ -193,6 +193,24 @@ TESTING
   If a test case fails, please run that individual test program directly
   and send me the output when reporting the problem.
 
+HOMEPAGE AND SOURCE REPOSITORY
+
+  The kstart web page at:
+
+      http://www.eyrie.org/~eagle/software/kstart/
+
+  will always have the current version of this package, the current
+  documentation, and pointers to any additional resources.
+
+  kstart is maintained using Git.  You can access the current source by
+  cloning the repository at:
+
+      git://git.eyrie.org/kerberos/kstart.git
+
+  or view the repository via the web at:
+
+      http://git.eyrie.org/?p=kerberos/kstart.git
+
 THANKS
 
   To Navid Golpayegani, for contributing the initial implementation of the
