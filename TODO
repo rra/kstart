@@ -38,3 +38,7 @@ Test suite:
 
  * Add tests of -o, -g, and -m.  Testing -o and -g will require using
    fakeroot.
+
+Code cleanup:
+
+ * Use bool everywhere appropriate instead of int.
