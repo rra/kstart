@@ -71,7 +71,9 @@ $(srcdir)/krenew.1: $(srcdir)/krenew.pod
 	    $(srcdir)/krenew.pod > $@
 
 DISTCLEANFILES = tests/data/.placeholder
-MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \
+	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
+	build-aux/install-sh build-aux/missing config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
 
 # Remove the files that we copy over if and only if builddir != srcdir.
