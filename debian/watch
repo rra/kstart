@@ -1,5 +1,4 @@
 # watch -- Rules for uscan to find new upstream versions.
-# $Id$
 #
 # I don't use this personally since I'm also the upstream maintainer, but
 # it's included for the benefit of automated package analysis systems.
