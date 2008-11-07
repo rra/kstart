@@ -7,7 +7,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 16 }
+BEGIN { our $total = 22 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -83,4 +83,21 @@ SKIP: {
     is ($err, '', ' with no errors');
     is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
     delete $ENV{KINIT_PROG};
+
+    # First, get an existing ticket cache.  Then, be sure that, even though
+    # the ticket cache is good with -H, we still run aklog if -t was given.
+    $ENV{KINIT_PROG} = $FAKE_AKLOG;
+    ($out, $err, $status) = command ($K5START, '-qUf', "$DATA/test.keytab");
+    is ($status, 0, 'k5start succeeds');
+    is ($err, '', ' with no errors');
+    is ($out, '', ' and no output');
+    ($out, $err, $status)
+        = command ($K5START, '-tqU', '-H', '60', '-f', "$DATA/test.keytab");
+    is ($status, 0, ' and k5start -H 60 -t succeeds with KINIT_PROG');
+    is ($err, '', ' with no errors');
+    is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+    delete $ENV{KINIT_PROG};
+
+    # Clean up.
+    unlink 'krb5cc_test';
 }

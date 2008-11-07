@@ -2,6 +2,11 @@
 
 kstart 3.15 (unreleased)
 
+    Re-run aklog even if the ticket is still valid when -H is used in
+    combination with -t.  We don't check whether the token is valid, so
+    it's safer to always re-run aklog.  We may be setting a token in a new
+    PAG using an existing ticket cache.
+
     Add example krenew-agent script, which runs krenew for a given ticket
     cache if it isn't already running.  Contributed by Tim Skirvin.
 

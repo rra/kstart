@@ -570,10 +570,18 @@ main(int argc, char *argv[])
     if (nonproxiable)
         krb5_get_init_creds_opt_set_proxiable(&options.kopts, 0);
 
-    /* If we're just checking the service ticket, do that and exit if okay. */
+    /*
+     * If we're just checking the service ticket, do that and exit if okay.
+     * Still re-run aklog if requested, though, since the token may have
+     * expired or we may be initializing a new PAG from an existing ticket
+     * cache.
+     */
     if (options.happy_ticket > 0 && command == NULL)
-        if (!ticket_expired(ctx, &options))
+        if (!ticket_expired(ctx, &options)) {
+            if (options.run_aklog)
+                command_run(options.aklog, options.verbose);
             exit(0);
+        }
 
     /*
      * If built with setpag support and we're running a command, create the
