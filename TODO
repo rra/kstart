@@ -18,6 +18,12 @@ k5start:
    if k5start and the daemon then become detached and have to be stopped
    separately.
 
+ * Relax the requirement to use keytabs when running a command and support
+   prompting for the authentication password before starting the command.
+   In this case, there's no reason for k5start to keep running once the
+   command has been started, so it can simply exit after spawning the
+   command.
+
 Documentation:
 
  * Document how to start Apache with tickets and AFS tokens, either using
