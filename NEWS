@@ -7,6 +7,10 @@ kstart 3.15 (unreleased)
     it's safer to always re-run aklog.  We may be setting a token in a new
     PAG using an existing ticket cache.
 
+    Fail with an error rather than a segfault if MIT Kerberos is unable to
+    determine a default local realm for an unqualified principal.  Based
+    on a patch from Jason Funk.
+
     Add example krenew-agent script, which runs krenew for a given ticket
     cache if it isn't already running.  Contributed by Tim Skirvin.
 

@@ -85,7 +85,7 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
     krb5_data *data;
 
     data = krb5_princ_realm(ctx, princ);
-    if (data == NULL)
+    if (data == NULL || data->data == NULL)
         die("cannot get local Kerberos realm");
     return data->data;
 #endif
