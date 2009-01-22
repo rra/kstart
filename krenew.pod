@@ -11,7 +11,7 @@ Bense
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-bhitv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-p> I<pid file>]
     [I<command> ...]
 
@@ -108,6 +108,22 @@ command, if any.  Cannot be used with B<-K>.
 =item B<-h>
 
 Display a usage message and exit.
+
+=item B<-i>
+
+Ignore errors in renewing the ticket and keep running.  Normally,
+B<krenew> exits as soon as it fails to renew the Kerberos ticket cache.
+If this flag is given, it will complain about the failure to standard
+error (unless B<-b> was given) but continue running, waking up to try
+again after the next wakeup interval (see B<-K>).  This is useful if some
+other process may recreate an expired ticket cache and B<krenew> should
+stay around and act on that recreated ticket cache once it's present.
+
+Setup errors opening the Kerberos ticket cache or running the command will
+still cause B<krenew> to exit, even if this flag is given.  Only Kerberos
+errors after B<krenew> is running will be ignored.
+
+This flag is only useful in daemon mode or when a command was given.
 
 =item B<-K> I<minutes>
 

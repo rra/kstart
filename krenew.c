@@ -8,7 +8,7 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008
+ * Copyright 2006, 2007, 2008, 2009
  *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
@@ -79,14 +79,14 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 
     realm = krb5_princ_realm(ctx, princ);
     if (realm == NULL)
-        die("cannot get local Kerberos realm");
+        return NULL;
     return krb5_realm_data(*realm);
 #else
     krb5_data *data;
 
     data = krb5_princ_realm(ctx, princ);
     if (data == NULL || data->data == NULL)
-        die("cannot get local Kerberos realm");
+        return NULL;
     return data->data;
 #endif
 }
@@ -104,6 +104,8 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
     char *realm;
 
     realm = get_realm(ctx, user);
+    if (realm == NULL)
+        return KRB5_CONFIG_NODEFREALM;
     return krb5_build_principal(ctx, princ, strlen(realm), realm, "krbtgt",
                                 realm, (const char *) NULL);
 }
@@ -111,26 +113,37 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 
 /*
  * Check whether a ticket will expire within the given number of minutes.
- * Takes the cache and the number of minutes.  Returns a Kerberos status code.
+ * Takes the cache and the number of minutes.  Returns a Kerberos status code
+ * which will be 0 if the ticket won't expire, KRB5KRB_AP_ERR_TKT_EXPIRED if
+ * it will expire and can be renewed, or another error code for any other
+ * situation.
  */
 static krb5_error_code
 ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 {
     krb5_creds increds, *outcreds = NULL;
+    int increds_valid = 0;
     time_t now, then;
     krb5_error_code status;
 
     /* Obtain the ticket. */
     memset(&increds, 0, sizeof(increds));
     status = krb5_cc_get_principal(ctx, cache, &increds.client);
-    if (status != 0)
-        die_krb5(ctx, status, "error reading cache");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error reading cache");
+        goto done;
+    }
     status = get_krbtgt_princ(ctx, increds.client, &increds.server);
-    if (status != 0)
-        die_krb5(ctx, status, "error building ticket name");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error building ticket name");
+        goto done;
+    }
     status = krb5_get_credentials(ctx, 0, cache, &increds, &outcreds);
-    if (status != 0)
-        die_krb5(ctx, status, "cannot get current credentials");
+    if (status != 0) {
+        warn_krb5(ctx, status, "cannot get current credentials");
+        goto done;
+    }
+    increds_valid = 1;
 
     /* Check the expiration time. */
     if (status == 0) {
@@ -139,15 +152,25 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
         if (then < now + 60 * keep_ticket + EXPIRE_FUDGE)
             status = KRB5KRB_AP_ERR_TKT_EXPIRED;
         then = outcreds->times.renew_till;
-        if (then < now + 60 * keep_ticket + EXPIRE_FUDGE)
-            die("ticket cannot be renewed for long enough");
+
+        /*
+         * The error code for an inability to renew the ticket for long enough
+         * is arbitrary.  It just needs to be different than the error code
+         * that indicates we can renew the ticket.
+         */
+        if (then < now + 60 * keep_ticket + EXPIRE_FUDGE) {
+            warn("ticket cannot be renewed for long enough");
+            status = KRB5KDC_ERR_KEY_EXP;
+            goto done;
+        }
     }
 
+done:
     /* Free memory. */
-    krb5_free_cred_contents(ctx, &increds);
+    if (increds_valid)
+        krb5_free_cred_contents(ctx, &increds);
     if (outcreds != NULL)
         krb5_free_creds(ctx, outcreds);
-
     return status;
 }
 
@@ -200,23 +223,28 @@ copy_cache(krb5_context ctx, krb5_ccache *cache)
 
 
 /*
- * Renew the user's tickets, exiting with an error if this isn't possible.
+ * Renew the user's tickets, warning if this isn't possible.  Returns a
+ * Kerberos error code.
  */
-static void
+static krb5_error_code
 renew(krb5_context ctx, krb5_ccache cache, int verbose)
 {
     krb5_error_code status;
-    krb5_principal user;
+    krb5_principal user = NULL;
     krb5_creds creds, *out;
+    int creds_valid = 0;
 #ifndef HAVE_KRB5_GET_RENEWED_CREDS
     krb5_kdc_flags flags;
     krb5_creds in, *old = NULL;
+    int in_valid = 0;
 #endif
 
     memset(&creds, 0, sizeof(creds));
     status = krb5_cc_get_principal(ctx, cache, &user);
-    if (status != 0)
-        die_krb5(ctx, status, "error reading cache");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error reading cache");
+        goto done;
+    }
     if (verbose) {
         char *name;
 
@@ -230,42 +258,62 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
     }
 #ifdef HAVE_KRB5_GET_RENEWED_CREDS
     status = krb5_get_renewed_creds(ctx, &creds, user, cache, NULL);
+    creds_valid = 1;
     out = &creds;
 #else
     flags.i = 0;
     flags.b.renewable = 1;
     flags.b.renew = 1;
     memset(&in, 0, sizeof(in));
+    in_valid = 1;
     status = krb5_copy_principal(ctx, user, &in.client);
-    if (status != 0)
-        die_krb5(ctx, status, "error copying principal");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error copying principal");
+        goto done;
+    }
     status = get_krbtgt_princ(ctx, in.client, &in.server);
-    if (status != 0)
-        die_krb5(ctx, status, "error building ticket name");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error building ticket name");
+        goto done;
+    }
     status = krb5_get_credentials(ctx, 0, cache, &in, &old);
-    if (status != 0)
-        die_krb5(ctx, status, "cannot get current credentials");
+    if (status != 0) {
+        warn_krb5(ctx, status, "cannot get current credentials");
+        goto done;
+    }
     status = krb5_get_kdc_cred(ctx, cache, flags, NULL, NULL, old, &out);
 #endif
-    if (status != 0)
-        die_krb5(ctx, status, "error renewing credentials");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error renewing credentials");
+        goto done;
+    }
     
     status = krb5_cc_initialize(ctx, cache, user);
-    if (status != 0)
-        die_krb5(ctx, status, "error reinitializing cache");
+    if (status != 0) {
+        warn_krb5(ctx, status, "error reinitializing cache");
+        goto done;
+    }
     status = krb5_cc_store_cred(ctx, cache, out);
-    if (status != 0)
-        die_krb5(ctx, status, "error storing credentials");
-    krb5_free_principal(ctx, user);
+    if (status != 0) {
+        warn_krb5(ctx, status, "error storing credentials");
+        goto done;
+    }
+
+done:
+    if (user != NULL)
+        krb5_free_principal(ctx, user);
 #ifdef HAVE_KRB5_GET_RENEWED_CREDS
-    krb5_free_cred_contents(ctx, &creds);
+    if (creds_valid)
+        krb5_free_cred_contents(ctx, &creds);
 #else
-    krb5_free_cred_contents(ctx, &in);
+    if (in_valid)
+        krb5_free_cred_contents(ctx, &in);
     if (old != NULL)
         krb5_free_creds(ctx, old);
     if (out != NULL)
         krb5_free_creds(ctx, out);
 #endif
+    return status;
 }
 
 
@@ -279,6 +327,7 @@ main(int argc, char *argv[])
     char *pidfile = NULL;
     int background = 0;
     int happy_ticket = 0;
+    int ignore_errors = 0;
     int keep_ticket = 0;
     int do_aklog = 0;
     int verbose = 0;
@@ -298,6 +347,7 @@ main(int argc, char *argv[])
         case 'b': background = 1;               break;
         case 'c': childfile = optarg;           break;
         case 'h': usage(0);                     break;
+        case 'i': ignore_errors = 1;            break;
         case 'p': pidfile = optarg;             break;
         case 't': do_aklog = 1;                 break;
         case 'v': verbose = 1;                  break;
@@ -382,8 +432,14 @@ main(int argc, char *argv[])
      * we can catch any problems.  If -H wasn't set, always authenticate.  If
      * -H was set, authenticate only if the ticket isn't expired.
      */
-    if (happy_ticket == 0 || ticket_expired(ctx, cache, happy_ticket))
-        renew(ctx, cache, verbose);
+    if (happy_ticket != 0) {
+        code = ticket_expired(ctx, cache, happy_ticket);
+        if (code != 0 && code != KRB5KRB_AP_ERR_TKT_EXPIRED && !ignore_errors)
+            exit(1);
+    }
+    if (happy_ticket == 0 || code == KRB5KRB_AP_ERR_TKT_EXPIRED)
+        if (renew(ctx, cache, verbose) != 0 && !ignore_errors)
+            exit(1);
 
     /* If requested, run the aklog program. */
     if (do_aklog)
@@ -447,10 +503,15 @@ main(int argc, char *argv[])
             timeout.tv_sec = keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(ctx, cache, keep_ticket)) {
-                renew(ctx, cache, verbose);
+            code = ticket_expired(ctx, cache, keep_ticket);
+            if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+                if (renew(ctx, cache, verbose) != 0 && !ignore_errors)
+                    exit(1);
                 if (do_aklog)
                     command_run(aklog, verbose);
+            } else if (code != 0) {
+                if (!ignore_errors)
+                    exit(1);
             }
         }
     }
