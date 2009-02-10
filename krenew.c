@@ -356,7 +356,7 @@ main(int argc, char *argv[])
     message_program_name = "krenew";
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bc:H:hK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:H:hiK:k:p:qtv")) != EOF)
         switch (option) {
         case 'b': background = 1;               break;
         case 'c': childfile = optarg;           break;
