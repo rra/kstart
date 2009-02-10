@@ -19,6 +19,7 @@
 #include <portable/kafs.h>
 #include <portable/time.h>
 
+#include <sys/signal.h>
 #include <sys/stat.h>
 
 #include <util/util.h>
@@ -29,6 +30,9 @@
  * as the ticket is expiring.
  */
 #define EXPIRE_FUDGE (2 * 60)
+
+/* Set when krenew receives SIGALRM. */
+static volatile sig_atomic_t alarm_signaled = 0;
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -64,6 +68,16 @@ usage(int status)
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
     exit(status);
+}
+
+
+/*
+ * Signal handler for SIGALRM.  Just sets the global sentinel variable.
+ */
+static RETSIGTYPE
+alarm_handler(int s UNUSED)
+{
+    alarm_signaled = 1;
 }
 
 
@@ -491,7 +505,12 @@ main(int argc, char *argv[])
     /* Loop if we're running as a daemon. */
     if (keep_ticket > 0) {
         struct timeval timeout;
+        struct sigaction sa;
 
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = alarm_handler;
+        if (sigaction(SIGALRM, &sa, NULL) < 0)
+            sysdie("cannot set SIGALRM handler");
         while (1) {
             if (command != NULL) {
                 result = command_finish(child, &status);
@@ -504,7 +523,7 @@ main(int argc, char *argv[])
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
             code = ticket_expired(ctx, cache, keep_ticket);
-            if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+            if (alarm_signaled || code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
                 if (renew(ctx, cache, verbose) != 0 && !ignore_errors)
                     exit(1);
                 if (do_aklog)
@@ -513,6 +532,7 @@ main(int argc, char *argv[])
                 if (!ignore_errors)
                     exit(1);
             }
+            alarm_signaled = 0;
         }
     }
 

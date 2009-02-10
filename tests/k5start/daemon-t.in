@@ -9,7 +9,7 @@
 
 use Cwd;
 
-BEGIN { our $total = 27 }
+BEGIN { our $total = 31 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
@@ -50,12 +50,22 @@ SKIP: {
     if (-f 'pid') {
         my $daemon = contents ('pid');
         is ($pid, $daemon, ' and the right PID is written');
+        $pid = $daemon;
     } else {
         ok (0, ' and the right PID is written');
     }
     ok (kill (0, $pid), ' and k5start is still running');
+    unlink 'krb5cc_test';
+    ok (! -f 'krb5cc_test', 'Ticket cache was deleted');
+    kill (14, $pid) or warn "Can't kill $pid: $!\n";
+    select (undef, undef, undef, 1);
+    ok (kill (0, $pid), ' and k5start is still running after ALRM');
+    ($default, $service) = klist ();
+    like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
+          ' and recreates cache with the right principal');
+    like ($service, qr%^krbtgt/%, ' and the right service');
     kill (15, $pid) or warn "Can't kill $pid: $!\n";
-    is (waitpid ($pid, 0), $pid, ' and it dies after SIGTERM');
+    is (waitpid ($pid, 0), $pid, ' and k5start dies after SIGTERM');
     unlink 'pid';
 
     # Try again with the -b flag.

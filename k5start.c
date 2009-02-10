@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <pwd.h>
+#include <sys/signal.h>
 #include <sys/stat.h>
 
 #include <util/util.h>
@@ -62,6 +63,9 @@ struct options {
     int stdin_passwd;
     int verbose;
 };
+
+/* Set when k5start receives SIGALRM. */
+static volatile sig_atomic_t alarm_signaled = 0;
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -115,6 +119,16 @@ usage(int status)
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
     exit(status);
+}
+
+
+/*
+ * Signal handler for SIGALRM.  Just sets the global sentinel variable.
+ */
+static RETSIGTYPE
+alarm_handler(int s UNUSED)
+{
+    alarm_signaled = 1;
 }
 
 
@@ -613,10 +627,11 @@ main(int argc, char *argv[])
         file_permissions(cache, owner, group, mode);
 
     /*
-     * If told to background, background ourselves.  We do this late so that
-     * we can report initial errors.  We have to do this before spawning the
-     * command, though, since we want to background the command as well and
-     * since otherwise we wouldn't be able to wait for the child process.
+     * If told to background, set signal handlers and background ourselves.
+     * We do this late so that we can report initial errors.  We have to do
+     * this before spawning the command, though, since we want to background
+     * the command as well and since otherwise we wouldn't be able to wait for
+     * the child process.
      */
     if (background)
         daemon(0, 0);
@@ -670,7 +685,12 @@ main(int argc, char *argv[])
     /* Loop if we're running as a daemon. */
     if (options.keep_ticket > 0) {
         struct timeval timeout;
+        struct sigaction sa;
 
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = alarm_handler;
+        if (sigaction(SIGALRM, &sa, NULL) < 0)
+            sysdie("cannot set SIGALRM handler");
         while (1) {
             if (command != NULL) {
                 result = command_finish(child, &status);
@@ -682,12 +702,13 @@ main(int argc, char *argv[])
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(ctx, &options)) {
+            if (alarm_signaled || ticket_expired(ctx, &options)) {
                 authenticate(ctx, &options);
                 if (options.run_aklog)
                     command_run(options.aklog, options.verbose);
                 if (owner != NULL || group != NULL || mode != NULL)
                     file_permissions(cache, owner, group, mode);
+                alarm_signaled = 0;
             }
         }
     }
