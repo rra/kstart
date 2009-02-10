@@ -6,7 +6,7 @@ krenew
 krenew - Renew a Kerberos v5 ticket
 
 =for stopwords
--bhtv aklog AFS OpenSSH PAG HUP KRB5CCNAME AKLOG kstart afslog Allbery
+-bhitv aklog AFS OpenSSH PAG HUP KRB5CCNAME AKLOG kstart afslog Allbery
 Bense
 
 =head1 SYNOPSIS
