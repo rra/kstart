@@ -6,8 +6,8 @@ krenew
 krenew - Renew a Kerberos v5 ticket
 
 =for stopwords
--bhitv aklog AFS OpenSSH PAG HUP KRB5CCNAME AKLOG kstart afslog Allbery
-Bense
+-bhitv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense
 
 =head1 SYNOPSIS
 
@@ -52,6 +52,9 @@ to the child process and does not exit when those signals are received.
 then exit.)  This allows B<krenew> to react properly when run under a
 command supervision system such as runit(8) or svscan(8) that uses signals
 to control supervised commands.
+
+If a running B<krenew> receives an ALRM signal, it immediately refreshes
+the ticket cache regardless of whether it is in danger of expiring.
 
 =head1 OPTIONS
 

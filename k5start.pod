@@ -3,9 +3,9 @@
 k5start - Obtain and optionally keep active a Kerberos v5 ticket.
 
 =for stopwords
--bFhnPqstv keytab username kinit LDAP aklog HUP KRB5CCNAME AFS PAG init
-AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani forwardable
-proxiable
+-bFhnPqstv keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
+init AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
+forwardable proxiable
 
 =head1 SYNOPSIS
 
@@ -65,6 +65,9 @@ to the child process and does not exit when those signals are received.
 will then exit.)  This allows B<k5start> to react properly when run under
 a command supervision system such as runit(8) or svscan(8) that uses
 signals to control supervised commands.
+
+If a running B<k5start> receives an ALRM signal, it immediately refreshes
+the ticket cache regardless of whether it is in danger of expiring.
 
 =head1 OPTIONS
 
