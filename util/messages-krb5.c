@@ -51,7 +51,7 @@ get_error(krb5_context ctx UNUSED, krb5_error_code code)
 #elif defined(HAVE_KRB5_GET_ERR_TEXT)
     msg = krb5_get_err_text(ctx, code);
 #elif defined(HAVE_KRB5_SVC_GET_MSG)
-    krb5_svc_get_msg(code, &msg);
+    krb5_svc_get_msg(code, (char **) &msg);
 #else
     msg = error_message(code);
 #endif
@@ -73,7 +73,7 @@ free_error(krb5_context ctx UNUSED, const char *msg)
 #if defined(HAVE_KRB5_FREE_ERROR_MESSAGE)
     krb5_free_error_message(ctx, msg);
 #elif defined(HAVE_KRB5_SVC_GET_MSG)
-    krb5_free_string((char *) msg);
+    krb5_free_string(ctx, (char *) msg);
 #endif
 }
 
