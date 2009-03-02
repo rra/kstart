@@ -23,6 +23,9 @@ kstart 3.15 (unreleased)
     Add example krenew-agent script, which runs krenew for a given ticket
     cache if it isn't already running.  Contributed by Tim Skirvin.
 
+    Correctly declare message_fatal_cleanup extern, fixing compilation
+    problems on some platforms (particularly Mac OS X).
+
 kstart 3.14 (2008-07-22)
 
     Add -F and -P options to k5start to force the tickets to not be
