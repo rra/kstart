@@ -1,0 +1,9 @@
+kstart (3.14-2) unstable; urgency=low
+
+  As of this release, k4start is no longer included since Debian no longer
+  includes any Kerberos v4 libraries.  All sites still using Kerberos v4
+  should place a high priority on migrating to Kerberos v5; v4 is no
+  longer supported and has known significant security weaknesses.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 01 Mar 2009 19:07:50 -0800
+
