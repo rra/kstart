@@ -2,6 +2,8 @@ kstart (3.14-2) unstable; urgency=low
 
   * Drop k4start since libkrb4 is being dropped from the Kerberos library
     packages.  (Closes: #517789)
+  * Add mode to open call in daemon test suite.  Thanks, James Westby.
+    (Closes: #507180)
   * Update debhelper compatibility level to V7.
     - Partially minimize debian/rules.
     - Add ${misc:Depends} to dependencies.
