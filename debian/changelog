@@ -1,3 +1,13 @@
+kstart (3.14-2) unstable; urgency=low
+
+  * Drop k4start since libkrb4 is being dropped from the Kerberos library
+    packages.
+  * Update debhelper compatibility level to V7.
+    - Partially minimize debian/rules.
+    - Add ${misc:Depends} to dependencies.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 01 Mar 2009 19:03:43 -0800
+
 kstart (3.14-1) unstable; urgency=low
 
   * New upstream release.

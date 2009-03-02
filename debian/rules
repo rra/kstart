@@ -1,79 +1,36 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
-# GNU copyright 1997 to 1999 by Joey Hess.
-# Further updates by Russ Allbery <rra@debian.org>
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
-
-# Tell Autoconf the correct system types.  We need to know the host
-# architecture to determine whether setpag is available.
-DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
-DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
-    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
-else
-    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
-endif
-
-# Set up compiler flags.
 CFLAGS = -Wall -g
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
     CFLAGS += -O0
 else
     CFLAGS += -O2
 endif
-
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	CFLAGS="$(CFLAGS)" ./configure $(SYSTEM) --prefix=/usr \
-	    --mandir=\$${prefix}/share/man --with-aklog=/usr/bin/aklog \
-	    --enable-reduced-depends --enable-setpag --without-libkafs
-	touch $@
+export CFLAGS
 
 build: build-arch build-indep
 build-arch: build-stamp
 build-indep:
-build-stamp: configure-stamp
-	dh_testdir
-	$(MAKE)
-	$(MAKE) check
+build-stamp:
+	dh build --before configure
+	dh_auto_configure -- --enable-reduced-depends --enable-setpag \
+	    --disable-k4start --without-libkafs --with-aklog=/usr/bin/aklog
+	dh build --after configure
 	touch $@
 
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f configure-stamp build-stamp install-stamp
-	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean
-
 install: install-stamp
-install-stamp: build-stamp
-	dh_testdir
-	dh_testroot
-	dh_clean
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/kstart
+install-stamp:
+	dh install --until dh_prep
+	dh_installchangelogs NEWS
+	dh install --remaining
 	touch $@
 
 binary: binary-arch binary-indep
 binary-indep:
 binary-arch: install-stamp
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs NEWS
-	dh_installdocs README TODO
-	dh_installman
-	dh_link
-	dh_fixperms
-	dh_strip
-	dh_compress
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
+	dh $@
 
-.PHONY: build build-arch build-indep clean binary-arch binary-indep binary
-.PHONY: install
+%:
+	dh $@
+
+.PHONY: binary binary-arch binary-indep build build-arch build-indep install
