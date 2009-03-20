@@ -132,9 +132,9 @@ This flag is only useful in daemon mode or when a command was given.
 
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before the next wakeup, and renews the ticket if needed.  If this option
-is not given but a command was given on the command line, the default
-interval is 60 minutes (1 hour).
+before or less than two minutes before the next wakeup, and renews the
+ticket if needed.  If this option is not given but a command was given on
+the command line, the default interval is 60 minutes (1 hour).
 
 =item B<-k> I<ticket file>
 
