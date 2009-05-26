@@ -26,6 +26,9 @@ kstart 3.15 (unreleased)
     Correctly declare message_fatal_cleanup extern, fixing compilation
     problems on some platforms (particularly Mac OS X).
 
+    Document that the -b flag to all programs also changes directories to
+    / and any paths should therefore be absolute.
+
 kstart 3.14 (2008-07-22)
 
     Add -F and -P options to k5start to force the tickets to not be

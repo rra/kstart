@@ -69,6 +69,10 @@ itself until after it does the initial ticket renewal, so that any initial
 errors will be reported, but it will then redirect output to F</dev/null>
 and no subsequent errors will be reported.
 
+If this flag is given, B<krenew> will also change directories to C</>.
+All paths (such as to a command to run or a PID file) should therefore be
+given as absolute, not relative, paths.
+
 If used in conjunction with a command to run, that command will also run
 in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
