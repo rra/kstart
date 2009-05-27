@@ -44,7 +44,6 @@ Usage: krenew [options] [command]\n\
                         otherwise renew the ticket\n\
    -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
-                        (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -t                   Get AFS token via aklog or AKLOG\n\
