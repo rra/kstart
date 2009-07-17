@@ -13,8 +13,8 @@ TEST_FILES = tests/TESTS tests/data/README tests/data/command \
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.1 k5start.pod \
-	krenew.1 krenew.pod kstart.spec $(TEST_FILES)
+EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod \
+	krenew.pod kstart.spec $(TEST_FILES)
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
@@ -56,19 +56,7 @@ portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
 	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
 
-man_MANS = @K4START_MAN@ k5start.1 krenew.1
-
-$(srcdir)/k4start.1: $(srcdir)/k4start.pod
-	pod2man --release=$(VERSION) --center="User commands" \
-	    $(srcdir)/k4start.pod > $@
-
-$(srcdir)/k5start.1: $(srcdir)/k5start.pod
-	pod2man --release=$(VERSION) --center="User commands" \
-	    $(srcdir)/k5start.pod > $@
-
-$(srcdir)/krenew.1: $(srcdir)/krenew.pod
-	pod2man --release=$(VERSION) --center="User commands" \
-	    $(srcdir)/krenew.pod > $@
+dist_man_MANS = $(K4START_MAN) k5start.1 krenew.1
 
 DISTCLEANFILES = tests/data/.placeholder
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \
