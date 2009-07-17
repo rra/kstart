@@ -128,7 +128,7 @@ usage(int status)
 /*
  * Signal handler for SIGALRM.  Just sets the global sentinel variable.
  */
-static RETSIGTYPE
+static void
 alarm_handler(int s UNUSED)
 {
     alarm_signaled = 1;
