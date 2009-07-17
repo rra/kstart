@@ -50,6 +50,7 @@ kstart 3.15 (unreleased)
     * Correctly handle completely skipped tests, like docs/pod.
     * Better reporting of fatal errors in the test suite.
     * Consume all output from a test case before closing its descriptor.
+    * Support aspell for spelling tests and skip them by default.
 
 kstart 3.14 (2008-07-22)
 

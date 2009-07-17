@@ -122,7 +122,7 @@ Ignore errors in renewing the ticket and keep running.  Normally,
 B<krenew> exits as soon as it fails to renew the Kerberos ticket cache.
 If this flag is given, it will complain about the failure to standard
 error (unless B<-b> was given) but continue running, waking up to try
-again after the next wakeup interval (see B<-K>).  This is useful if some
+again after the next check interval (see B<-K>).  This is useful if some
 other process may recreate an expired ticket cache and B<krenew> should
 stay around and act on that recreated ticket cache once it's present.
 
@@ -136,9 +136,10 @@ This flag is only useful in daemon mode or when a command was given.
 
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before or less than two minutes before the next wakeup, and renews the
-ticket if needed.  If this option is not given but a command was given on
-the command line, the default interval is 60 minutes (1 hour).
+before or less than two minutes before the next scheduled check, and
+renews the ticket if needed.  If this option is not given but a command
+was given on the command line, the default interval is 60 minutes (1
+hour).
 
 =item B<-k> I<ticket file>
 

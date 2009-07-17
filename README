@@ -85,9 +85,14 @@ REQUIREMENTS
 
   To run the test suite, you must have the Perl 5.006 or later and the
   modules Test::More and Test::Pod installed.  Test::More comes with Perl
-  5.8 or later and Test::Pod is available from CPAN.  To run the
-  spell check in the test suite, you will additionally need Pod::Spell
-  (available from CPAN) and ispell.
+  5.8 or later and Test::Pod is available from CPAN.
+
+  To check spelling in the POD documentation, Pod::Spell (available from
+  CPAN) and either aspell or ispell with the american dictionary are also
+  required.  The user's path is searched for aspell or ispell and aspell
+  is preferred.  Spelling tests are disabled by default since spelling
+  dictionaries differ too much between systems.  To enable those tests,
+  set RRA_MAINTAINER_TESTS to a true value.
 
   If you change the Automake files and need to regenerate Makefile.in, you
   will need Automake 1.10 or later.  If you change configure.ac or any of

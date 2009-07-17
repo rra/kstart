@@ -168,10 +168,10 @@ option.
 
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before or less than two minutes after the next wakeup, and gets a new
-ticket if needed.  If this option is not given but a command was given on
-the command line, an interval appropriate for the ticket lifetime will be
-used.
+before or less than two minutes after the next scheduled check, and gets a
+new ticket if needed.  If this option is not given but a command was given
+on the command line, an interval appropriate for the ticket lifetime will
+be used.
 
 =item B<-k> I<ticket file>
 
