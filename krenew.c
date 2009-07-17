@@ -17,10 +17,13 @@
 #include <config.h>
 #include <portable/system.h>
 #include <portable/kafs.h>
-#include <portable/time.h>
 
 #include <sys/signal.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#include <time.h>
 
 #include <util/util.h>
 

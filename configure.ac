@@ -70,7 +70,6 @@ AC_ARG_ENABLE([setpag],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 
 dnl Other portability checks.
-AC_HEADER_TIME
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])

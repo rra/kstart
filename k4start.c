@@ -12,8 +12,8 @@
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008
- *     Board of Trustees, Leland Stanford Jr. University
+ * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008,
+ *     2009 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
@@ -22,11 +22,14 @@
 #include <portable/system.h>
 #include <portable/kafs.h>
 #include <portable/krb4.h>
-#include <portable/time.h>
 
 #include <errno.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#include <time.h>
 
 #include <util/util.h>
 
