@@ -29,6 +29,28 @@ kstart 3.15 (unreleased)
     Document that the -b flag to all programs also changes directories to
     / and any paths should therefore be absolute.
 
+    Update to rra-c-util 1.1:
+
+    * Sanity-check the results of krb5-config before proceeding.
+    * Fall back on manual probing if krb5-config results don't work.
+    * Add --with-krb5-include and --with-krb5-lib configure options.
+    * Don't break if the user clobbers CPPFLAGS at build time.
+    * Provide a proper bool type with Sun Studio 12 on Solaris 10.
+    * Change AC_TRY_* to AC_*_IFELSE as recommended by Autoconf.
+    * Add strlcpy, strlcat, and setenv replacements.
+    * Fix open call parameters in daemon portability test.
+    * Update portable and util test suite for C TAP Harness 1.1.
+
+    Update to C TAP Harness 1.1:
+
+    * Rewrite of all test cases to use the new TAP library support.
+    * Much improved and simplified builddir != srcdir test suite support.
+    * Support running a single test with tests/runtests -o.
+    * Summarize results at the end of test executions.
+    * Correctly handle completely skipped tests, like docs/pod.
+    * Better reporting of fatal errors in the test suite.
+    * Consume all output from a test case before closing its descriptor.
+
 kstart 3.14 (2008-07-22)
 
     Add -F and -P options to k5start to force the tickets to not be

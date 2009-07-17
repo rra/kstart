@@ -18,6 +18,6 @@ dnl See LICENSE for licensing terms.
 AC_DEFUN([RRA_ENABLE_REDUCED_DEPENDS],
 [rra_reduced_depends=false
 AC_ARG_ENABLE([reduced-depends],
-    [AC_HELP_STRING([--enable-reduced-depends],
+    [AS_HELP_STRING([--enable-reduced-depends],
         [Try to minimize shared library dependencies])],
     [AS_IF([test x"$enableval" = xyes], [rra_reduced_depends=true])])])

@@ -36,8 +36,8 @@ else
 endif
 
 # We potentially need these for everything and there's no other way to
-# set CPPFLAGS for use with LIBOBJS.
-CPPFLAGS += $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
+# set AM_CPPFLAGS for use with LIBOBJS.
+AM_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
 
 EXTRA_PROGRAMS = k4start
 bin_PROGRAMS = @K4START@ k5start krenew
@@ -94,33 +94,49 @@ warnings:
 	$(MAKE) CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/portable/asprintf-t \
-	tests/portable/daemon-t tests/portable/mkstemp-t \
-	tests/portable/snprintf-t tests/util/concat-t tests/util/messages-t \
-	tests/util/xmalloc
-check_LIBRARIES = tests/libtest.a
-tests_libtest_a_SOURCES = tests/libtest.c tests/libtest.h
+check_PROGRAMS = tests/runtests tests/portable/asprintf-t		\
+	tests/portable/daemon-t tests/portable/mkstemp-t		\
+	tests/portable/setenv-t tests/portable/snprintf-t		\
+	tests/portable/strlcat-t tests/portable/strlcpy-t		\
+	tests/util/concat-t tests/util/messages-t tests/util/xmalloc
+tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
+	-DBUILD='"$(abs_top_builddir)/tests"'
+check_LIBRARIES = tests/tap/libtap.a
+tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
+tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h
 
 # All of the test programs.
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
-tests_portable_asprintf_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_asprintf_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
 tests_portable_daemon_t_SOURCES = tests/portable/daemon-t.c \
 	tests/portable/daemon.c
-tests_portable_daemon_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_daemon_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
 tests_portable_mkstemp_t_SOURCES = tests/portable/mkstemp-t.c \
 	tests/portable/mkstemp.c
-tests_portable_mkstemp_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_mkstemp_t_LDADD = tests/tap/libtap.a util/libutil.a \
+	portable/libportable.a
+tests_portable_setenv_t_SOURCES = tests/portable/setenv-t.c \
+	tests/portable/setenv.c
+tests_portable_setenv_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
 tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
 	tests/portable/snprintf.c
-tests_portable_snprintf_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_snprintf_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
-tests_util_concat_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_strlcat_t_SOURCES = tests/portable/strlcat-t.c \
+	tests/portable/strlcat.c
+tests_portable_strlcat_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
-tests_util_messages_t_LDADD = tests/libtest.a util/libutil.a \
+tests_portable_strlcpy_t_SOURCES = tests/portable/strlcpy-t.c \
+	tests/portable/strlcpy.c
+tests_portable_strlcpy_t_LDADD = tests/tap/libtap.a util/libutil.a \
+	portable/libportable.a
+tests_util_concat_t_LDADD = tests/tap/libtap.a util/libutil.a \
+	portable/libportable.a
+tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a
 tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
@@ -130,4 +146,4 @@ check-local: $(check_PROGRAMS)
 		cp "$(srcdir)/$$f" "$(builddir)/$$f" ; \
 	    done \
 	fi
-	cd tests && ./runtests TESTS
+	cd tests && ./runtests $(abs_top_srcdir)/tests/TESTS

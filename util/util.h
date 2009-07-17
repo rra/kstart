@@ -7,10 +7,10 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Copyright 2005, 2006, 2007, 2008
  *     Board of Trustees, Leland Stanford Jr. University
- * Copyright 2004, 2005, 2006, 2007
+ * Copyright (c) 2004, 2005, 2006, 2007
  *     by Internet Systems Consortium, Inc. ("ISC")
- * Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
- *     2003 by The Internet Software Consortium and Rich Salz
+ * Copyright (c) 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
+ *     2002, 2003 by The Internet Software Consortium and Rich Salz
  *
  * See LICENSE for licensing terms.
  */
@@ -20,6 +20,7 @@
 
 #include <config.h>
 #include <portable/macros.h>
+#include <portable/stdbool.h>
 
 #include <krb5.h>
 #include <stdarg.h>
@@ -29,6 +30,9 @@
 #define UNUSED __attribute__((__unused__))
 
 BEGIN_DECLS
+
+/* Default to a hidden visibility for all util functions. */
+#pragma GCC visibility push(hidden)
 
 /*
  * Set permissions on a file.  owner and group may be NULL, names, or numeric
@@ -195,6 +199,9 @@ void xmalloc_fail(const char *, size_t, const char *, int);
  * just calls sysdie.
  */
 extern xmalloc_handler_type xmalloc_error_handler;
+
+/* Undo default visibility change. */
+#pragma GCC visibility pop
 
 END_DECLS
 

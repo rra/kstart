@@ -1,24 +1,24 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 dnl     Board of Trustees, Leland Stanford Jr. University
 dnl
 dnl See LICENSE for licensing terms.
 
-AC_PREREQ([2.61])
+AC_PREREQ([2.63])
 AC_INIT([kstart], [3.14], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([1.10])
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
+AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-AC_AIX
-AC_GNU_SOURCE
 
 dnl aklog is the standard name for the utility to get AFS tokens from Kerberos
 dnl tickets.  afslog is the name of the utility that comes with KTH Kerberos
@@ -85,8 +85,7 @@ AC_CHECK_TYPE([sig_atomic_t], ,
      #include <signal.h>])
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit setsid])
-AC_REPLACE_FUNCS([asprintf daemon mkstemp])
-AC_TYPE_SIGNAL
+AC_REPLACE_FUNCS([asprintf daemon mkstemp setenv strlcat strlcpy])
 
 dnl Create the tests/data directory.
 AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])

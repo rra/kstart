@@ -2,7 +2,7 @@
  * mkstemp test suite.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2002, 2004, 2008
+ * Copyright 2002, 2004, 2008, 2009
  *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#include <tests/libtest.h>
+#include <tests/tap/basic.h>
 
 int test_mkstemp(char *template);
 
@@ -30,43 +30,43 @@ main(void)
     struct stat st1, st2;
     ssize_t length;
 
-    test_init(20);
+    plan(20);
 
     /* First, test a few error messages. */
     errno = 0;
-    ok_int(1, -1, test_mkstemp(tooshort));
-    ok(2, errno == EINVAL);
-    ok_string(3, "XXXXX", tooshort);
+    is_int(-1, test_mkstemp(tooshort), "too short of template");
+    is_int(EINVAL, errno, "...with correct errno");
+    is_string("XXXXX", tooshort, "...and template didn't change");
     errno = 0;
-    ok_int(4, -1, test_mkstemp(bad1));
-    ok(5, errno == EINVAL);
-    ok_string(6, "/foo/barXXXXX", bad1);
+    is_int(-1, test_mkstemp(bad1), "bad template");
+    is_int(EINVAL, errno, "...with correct errno");
+    is_string("/foo/barXXXXX", bad1, "...and template didn't change");
     errno = 0;
-    ok_int(7, -1, test_mkstemp(bad2));
-    ok(8, errno == EINVAL);
-    ok_string(9, "/foo/barXXXXXX.out", bad2);
+    is_int(-1, test_mkstemp(bad2), "template doesn't end in XXXXXX");
+    is_int(EINVAL, errno, "...with correct errno");
+    is_string("/foo/barXXXXXX.out", bad2, "...and template didn't change");
     errno = 0;
 
     /* Now try creating a real file. */
     fd = test_mkstemp(template);
-    ok(10, fd >= 0);
-    ok(11, strcmp(template, "tsXXXXXXX") != 0);
-    ok(12, strncmp(template, "tsX", 3) == 0);
-    ok(13, access(template, F_OK) == 0);
+    ok(fd >= 0, "mkstemp works with valid template");
+    ok(strcmp(template, "tsXXXXXXX") != 0, "...and template changed");
+    ok(strncmp(template, "tsX", 3) == 0, "...and didn't touch first X");
+    ok(access(template, F_OK) == 0, "...and the file exists");
 
     /* Make sure that it's the same file as template refers to now. */
-    ok(14, stat(template, &st1) == 0);
-    ok(15, fstat(fd, &st2) == 0);
-    ok(16, st1.st_ino == st2.st_ino);
+    ok(stat(template, &st1) == 0, "...and stat of template works");
+    ok(fstat(fd, &st2) == 0, "...and stat of open file descriptor works");
+    ok(st1.st_ino == st2.st_ino, "...and they're the same file");
     unlink(template);
 
     /* Make sure the open mode is correct. */
     length = strlen(template);
-    ok(17, write(fd, template, length) == length);
-    ok(18, lseek(fd, 0, SEEK_SET) == 0);
-    ok(19, read(fd, buffer, length) == length);
+    is_int(length, write(fd, template, length), "write to open file works");
+    ok(lseek(fd, 0, SEEK_SET) == 0, "...and rewide works");
+    is_int(length, read(fd, buffer, length), "...and the data is there");
     buffer[length] = '\0';
-    ok_string(20, template, buffer);
+    is_string(template, buffer, "...and matches what we wrote");
     close(fd);
 
     return 0;

@@ -7,21 +7,10 @@
  * Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
  *     2003 by The Internet Software Consortium and Rich Salz
  *
- * This code is derived from software contributed to the Internet Software
- * Consortium by Rich Salz.
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * See LICENSE for licensing terms.
  */
+
+#line 1 "xmalloc.c"
 
 #include <config.h>
 #include <portable/system.h>
@@ -257,6 +246,7 @@ main(int argc, char *argv[])
     int willfail = 0;
     unsigned char code;
     struct rlimit rl;
+    void *tmp;
 
     if (argc < 3)
         die("Usage error.  Type, size, and limit must be given.");
@@ -304,6 +294,15 @@ main(int argc, char *argv[])
         if (setrlimit(RLIMIT_AS, &rl) < 0) {
             syswarn("Can't set data limit to %lu", (unsigned long) limit);
             exit(2);
+        }
+        if (size < limit || code == 'r') {
+            tmp = malloc(code == 'r' ? 10 : size);
+            if (tmp == NULL) {
+                syswarn("Can't allocate initial memory of %lu",
+                        (unsigned long) size);
+                exit(2);
+            }
+            free(tmp);
         }
 #else
         warn("Data limits aren't supported.");
