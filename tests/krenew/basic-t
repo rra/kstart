@@ -3,7 +3,7 @@
 # Tests for basic krenew functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
 #
 # See LICENSE for licensing terms.
 
@@ -11,13 +11,13 @@ BEGIN { our $total = 22 }
 use Test::More tests => $total;
 
 # Load our test utility programs.
-require '@abs_top_builddir@/tests/libtest.pl';
+require "$ENV{SOURCE}/libtest.pl";
 
 # The full path to the newly-built krenew client.
-our $KRENEW = '@abs_top_builddir@/krenew';
+our $KRENEW = "$ENV{BUILD}/../krenew";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = '@abs_top_builddir@/tests/data';
+our $DATA = "$ENV{BUILD}/data";
 
 SKIP: {
     skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";

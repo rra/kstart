@@ -6,15 +6,14 @@
 #
 # See LICENSE for licensing terms.
 
-# Test suite files that are not generated or touched by configure that need to
-# be copied over for builddir != srcdir builds.
-TEST_FILES = tests/TESTS tests/data/README tests/data/command \
-	tests/data/fake-aklog tests/libtest.pl tests/util/xmalloc-t
-
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod \
-	krenew.pod kstart.spec $(TEST_FILES)
+EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod krenew.pod  \
+	kstart.spec tests/data/README tests/data/command		   \
+	tests/data/fake-aklog tests/docs/pod-spelling-t tests/docs/pod-t   \
+	tests/k4start/afs-t tests/k4start/basic-t tests/k5start/afs-t	   \
+	tests/k5start/basic-t tests/k5start/daemon-t tests/k5start/flags-t \
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew-daemon-t
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
@@ -63,12 +62,6 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \
 	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
 	build-aux/install-sh build-aux/missing config.h.in config.h.in~ \
 	configure k4start.1 k5start.1 krenew.1
-
-# Remove the files that we copy over if and only if builddir != srcdir.
-distclean-local:
-	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
-	    rm -f $(TEST_FILES) ; \
-	fi
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all
@@ -129,9 +122,4 @@ tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.a \
 tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
 check-local: $(check_PROGRAMS)
-	set -e; if [ x"$(builddir)" != x"$(srcdir)" ] ; then \
-	    for f in $(TEST_FILES) ; do \
-		cp "$(srcdir)/$$f" "$(builddir)/$$f" ; \
-	    done \
-	fi
 	cd tests && ./runtests $(abs_top_srcdir)/tests/TESTS
