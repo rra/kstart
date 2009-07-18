@@ -422,13 +422,9 @@ main(int argc, char *argv[])
         die_krb5(ctx, code, "error initializing ticket cache");
     if (command != NULL)
         cachename = copy_cache(ctx, &cache);
-    if (cachename != NULL) {
-        char *env;
-
-        if (xasprintf(&env, "KRB5CCNAME=%s", cachename) < 0)
-            die("cannot format KRB5CCNAME environment variable");
-        putenv(env);
-    }
+    if (cachename != NULL)
+        if (setenv("KRB5CCNAME", cachename, 1) != 0)
+            die("cannot set KRB5CCNAME environment variable");
 
     /*
      * If built with setpag support and we're running a command, create the

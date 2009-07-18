@@ -241,14 +241,14 @@ main(int argc, char *argv[])
             break;
         case 'I':
             if (strlen(optarg) < sizeof(options.sinst))
-                strcpy(options.sinst, optarg);
+                strlcpy(options.sinst, optarg, sizeof(options.sinst));
             else
                 die("service instance %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.sinst));
             break;
         case 'i':
             if (strlen(optarg) < sizeof(options.inst))
-                strcpy(options.inst, optarg);
+                strlcpy(options.inst, optarg, sizeof(options.inst));
             else
                 die("instance %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.inst));
@@ -265,14 +265,14 @@ main(int argc, char *argv[])
             break;
         case 'r':
             if (strlen(optarg) < sizeof(options.realm))
-                strcpy(options.realm, optarg);
+                strlcpy(options.realm, optarg, sizeof(options.realm));
             else
                 die("realm %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.realm));
             break;
         case 'S':
             if (strlen(optarg) < sizeof(options.sname))
-                strcpy(options.sname, optarg);
+                strlcpy(options.sname, optarg, sizeof(options.sname));
             else
                 die("service name %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.sname));
@@ -372,12 +372,9 @@ main(int argc, char *argv[])
     if (options.cache == NULL)
         options.cache = tkt_string();
     else if (options.cache != NULL) {
-        char *env;
-
         krb_set_tkt_string(options.cache);
-        if (xasprintf(&env, "KRBTKFILE=%s", options.cache) < 0)
-            die("cannot format KRBTKFILE environment variable");
-        putenv(env);
+        if (setenv("KRBTKFILE", options.cache, 1) != 0)
+            die("cannot set KRBTKFILE environment variable");
     }
 
     /*
@@ -425,9 +422,9 @@ main(int argc, char *argv[])
     if (*options.realm == '\0' && krb_get_lrealm(options.realm, 1) != KSUCCESS)
         die("cannot get local Kerberos realm");
     if (*options.sname == '\0') {
-        strcpy(options.sname, "krbtgt");
+        strlcpy(options.sname, "krbtgt", sizeof(options.sname));
         if (*options.sinst == '\0')
-            strcpy(options.sinst, options.realm);
+            strlcpy(options.sinst, options.realm, sizeof(options.sinst));
     }
 
     /* If we're just checking the service ticket, do that and exit if okay. */

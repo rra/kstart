@@ -15,7 +15,7 @@
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
@@ -499,11 +499,8 @@ main(int argc, char *argv[])
         if (code != 0)
             cache = krb5_cc_get_name(ctx, options.ccache);
     } else {
-        char *env;
-
-        if (xasprintf(&env, "KRB5CCNAME=%s", cache) < 0)
-            die("cannot format KRB5CCNAME environment variable");
-        putenv(env);
+        if (setenv("KRB5CCNAME", cache, 1) != 0)
+            die("cannot set KRB5CCNAME environment variable");
         code = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
     if (code != 0)
