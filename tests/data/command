@@ -9,12 +9,10 @@
 use Cwd;
 
 $| = 1;
+$SIG{HUP} = sub { print OUT "got SIGHUP\n" };
+$SIG{TERM} = sub { print OUT "got SIGTERM\n"; exit 0 };
 print "Starting\n";
 my $file = shift;
 open (OUT, '>', $file) or die "Cannot write to $file: $!\n";
-print OUT "$$\n";
-print OUT getcwd, "\n";
-print OUT $ENV{KRB5CCNAME}, "\n";
-$SIG{HUP} = sub { print OUT "got SIGHUP\n" };
-$SIG{TERM} = sub { print OUT "got SIGTERM\n"; exit 0 };
+print OUT "$$\n", getcwd, "\n", $ENV{KRB5CCNAME}, "\n";
 sleep 1000 while 1;

@@ -132,6 +132,11 @@ SKIP: {
     ok (kill (0, $pid), 'krenew is running');
     $child = contents ('child-pid');
     ok (kill (0, $child), 'The child process is running');
+    $tries = 0;
+    while (not -S 'child-out' and $tries < 10) {
+        select (undef, undef, undef, 0.1);
+        $tries++;
+    }
     kill (1, $pid) or warn "Cannot send HUP to $pid: $!\n";
     select (undef, undef, undef, 0.1);
     kill (15, $pid) or warn "Cannot send TERM to $pid: $!\n";

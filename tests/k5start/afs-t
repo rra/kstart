@@ -17,7 +17,7 @@ require "$ENV{SOURCE}/libtest.pl";
 our $K5START = "$ENV{BUILD}/../k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "${DATA}/data";
+our $DATA = "$ENV{BUILD}/data";
 
 # The path to a shell script that just prints something out.
 our $FAKE_AKLOG = "$ENV{SOURCE}/data/fake-aklog";

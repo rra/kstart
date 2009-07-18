@@ -32,7 +32,7 @@ SKIP: {
 
     # Obtain renewable tickets and bail if we can't.
     unlink 'krb5cc_test';
-    unless (kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '5m')) {
+    unless (kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '1h')) {
         skip 'cannot get renewable tickets', $total;
     }
 
@@ -56,9 +56,11 @@ SKIP: {
             ' and we have no tokens');
     delete $ENV{AKLOG};
 
-    # Make sure that we run the right aklog program.
+    # Make sure that we run the right aklog program.  We need to pass -K to
+    # reduce the wakeup period or krenew will want tickets that last longer
+    # than an hour (the default -K interval when running a command).
     $ENV{AKLOG} = $FAKE_AKLOG;
-    ($out, $err, $status) = command ($KRENEW, '-t', '--', 'true');
+    ($out, $err, $status) = command ($KRENEW, '-K', 10, '-t', '--', 'true');
     is ($status, 0, 'krenew -t succeeds with fake aklog');
     is ($err, '', ' with no errors');
     is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
@@ -76,7 +78,7 @@ SKIP: {
 
     # KINIT_PROG should still work.
     $ENV{KINIT_PROG} = $FAKE_AKLOG;
-    ($out, $err, $status) = command ($KRENEW, '-t', '--', 'true');
+    ($out, $err, $status) = command ($KRENEW, '-K', 10, '-t', '--', 'true');
     is ($status, 0, 'krenew -t succeeds with KINIT_PROG');
     is ($err, '', ' with no errors');
     is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
