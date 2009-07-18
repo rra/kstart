@@ -63,7 +63,7 @@ main(void)
     /* Make sure the open mode is correct. */
     length = strlen(template);
     is_int(length, write(fd, template, length), "write to open file works");
-    ok(lseek(fd, 0, SEEK_SET) == 0, "...and rewide works");
+    ok(lseek(fd, 0, SEEK_SET) == 0, "...and rewind works");
     is_int(length, read(fd, buffer, length), "...and the data is there");
     buffer[length] = '\0';
     is_string(template, buffer, "...and matches what we wrote");
