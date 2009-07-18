@@ -29,6 +29,9 @@ kstart 3.15 (unreleased)
     Document that the -b flag to all programs also changes directories to
     / and any paths should therefore be absolute.
 
+    Add support for the old Heimdal krb5_get_error_string interface.
+    Thanks, Chaskiel Grundman.
+
     Fix some timing issues with the test suite that caused spurious
     failures on fast systems and try to make it more robust in the face of
     different process scheduling.  This probably still isn't perfect.
