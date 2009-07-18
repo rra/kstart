@@ -9,11 +9,7 @@
 
 use Cwd;
 
-BEGIN { our $total = 31 }
-use Test::More tests => $total;
-
-# Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+use Test::More;
 
 # The full path to the newly-built krenew client.
 our $KRENEW = "$ENV{BUILD}/../krenew";
@@ -21,140 +17,147 @@ our $KRENEW = "$ENV{BUILD}/../krenew";
 # The path to our data directory, which contains the keytab to use to test.
 our $DATA = "$ENV{BUILD}/data";
 
-SKIP: {
-    skip 'no keytab configuration', $total unless -f "$DATA/test.keytab";
-    my $principal = contents ("$DATA/test.principal");
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
 
-    # Don't overwrite the user's ticket cache.
-    my $cwd = getcwd;
+# Decide whether we have the configuration to run the tests.
+my ($cwd, $principal);
+if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
+    plan skip_all => 'no keytab configuration';
+    exit 0;
+} else {
+    $principal = contents ("$DATA/test.principal");
+    $cwd = getcwd;
     $ENV{KRB5CCNAME} = "$cwd/krb5cc_test";
-
-    # Obtain renewable tickets and bail if we can't.
     unlink 'krb5cc_test';
     unless (kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m')) {
-        skip 'cannot get renewable tickets', $total;
+        plan skip_all => 'cannot get renewable tickets';
+        exit 0;
     }
-
-    # Start a krenew daemon and be sure it gets tickets and stays running.
-    my $pid = fork;
-    if (!defined $pid) {
-        die "Can't fork: $!\n";
-    } elsif ($pid == 0) {
-        close STDERR;
-        exec ($KRENEW, '-K', 30, '-p', 'pid')
-            or die "Can't run $KRENEW: $!\n";
-    }
-    my $tries = 0;
-    while (not -f 'pid' and $tries < 10) {
-        select (undef, undef, undef, 0.1);
-        $tries++;
-    }
-    if (-f 'pid') {
-        my $daemon = contents ('pid');
-        is ($pid, $daemon, 'The right PID is written');
-    } else {
-        ok (0, 'The right PID is written');
-    }
-    ok (kill (0, $pid), ' and krenew is still running');
-    unlink 'krb5cc_test';
-    kill (14, $pid) or warn "Can't kill $pid: $!\n";
-    is (waitpid ($pid, 0), $pid, ' and it dies after failure to renew');
-    is (($? >> 8), 1, ' with non-zero exit status');
-    unlink 'pid';
-    kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
-
-    # Try again with the -b flag.
-    my ($out, $err, $status)
-        = command ($KRENEW, '-bK', 30, '-p', "$cwd/pid");
-    is ($status, 0, 'Backgrounding krenew works');
-    is ($err, '', ' with no error output');
-    is ($out, '', ' and -q was added implicitly');
-    $tries = 0;
-    while (not -f 'pid' and $tries < 10) {
-        select (undef, undef, undef, 0.1);
-        $tries++;
-    }
-    $pid = contents ('pid');
-    ok (kill (0, $pid), ' and the PID file is correct');
-    kill (15, $pid) or warn "Can't kill $pid: $!\n";
-    select (undef, undef, undef, 0.5);
-    ok (!kill (0, $pid), ' and it dies after SIGTERM');
-    unlink 'pid';
-
-    # Now try with -i.  In this case, krenew should keep running even if the
-    # ticket cache disappears and be able to start refreshing it again when it
-    # reappears.
-    ($out, $err, $status)
-        = command ($KRENEW, '-biK', 30, '-p', "$cwd/pid");
-    is ($status, 0, 'Backgrounding krenew works');
-    is ($err, '', ' with no error output');
-    is ($out, '', ' and -q was added implicitly');
-    $tries = 0;
-    while (not -f 'pid' and $tries < 10) {
-        select (undef, undef, undef, 0.1);
-        $tries++;
-    }
-    $pid = contents ('pid');
-    ok (kill (0, $pid), ' and the PID file is correct');
-    unlink 'krb5cc_test';
-    kill (14, $pid) or warn "Can't kill $pid: $!\n";
-    select (undef, undef, undef, 0.5);
-    ok (kill (0, $pid), ' and it keeps running after failure to renew');
-    kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
-    my $time = (stat 'krb5cc_test')[9];
-    while (time == $time) {
-        select (undef, undef, undef, 0.1);
-    }
-    is ($time, (stat 'krb5cc_test')[9], 'Cache has not been touched');
-    kill (14, $pid) or warn "Can't kill $pid: $!\n";
-    select (undef, undef, undef, 0.5);
-    ok ($time < (stat 'krb5cc_test')[9], ' and is updated after SIGALRM');
-    kill (15, $pid) or warn "Can't kill $pid: $!\n";
-    select (undef, undef, undef, 0.5);
-    ok (!kill (0, $pid), ' and it dies after SIGTERM');
-    unlink 'pid';
-
-    # Now, run a command in the background.
-    unlink 'child-out';
-    ($out, $err, $status)
-        = command ($KRENEW, '-bK', 30, '-p', "$cwd/pid", '-c',
-                   "$cwd/child-pid", '--',
-                   "$ENV{SOURCE}/data/command", "$cwd/child-out");
-    is ($status, 0, 'Backgrounding krenew works');
-    is ($err, '', ' with no error output');
-    is ($out, '', ' and output was redirected properly');
-    $tries = 0;
-    while (not -f 'child-pid' and $tries < 10) {
-        select (undef, undef, undef, 0.1);
-        $tries++;
-    }
-    $pid = contents ('pid');
-    ok (kill (0, $pid), 'krenew is running');
-    $child = contents ('child-pid');
-    ok (kill (0, $child), 'The child process is running');
-    $tries = 0;
-    while (not -S 'child-out' and $tries < 10) {
-        select (undef, undef, undef, 0.1);
-        $tries++;
-    }
-    kill (1, $pid) or warn "Cannot send HUP to $pid: $!\n";
-    select (undef, undef, undef, 0.1);
-    kill (15, $pid) or warn "Cannot send TERM to $pid: $!\n";
-    select (undef, undef, undef, 0.1);
-    ok (!kill (0, $pid), 'krenew is no longer running');
-    ok (!kill (0, $child), 'The child process is no longer running');
-    open (OUT, '<', 'child-out') or die "Cannot open child-out: $!\n";
-    my $daemon = <OUT>;
-    chomp $daemon;
-    is ($child, $daemon, 'Child PID is correct');
-    my $dir = <OUT>;
-    is ($dir, "/\n", 'Child working directory is /');
-    my $cache = <OUT>;
-    like ($cache, qr%^/tmp/krb5cc_%, 'Child cache is correct');
-    is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
-    is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
-    ok (eof OUT, 'No more child output written');
-    chomp $cache;
-    ok (! -f $cache, 'New child cache removed');
-    unlink 'krb5cc_test', 'pid', 'child-pid', 'child-out';
+    plan tests => 31;
 }
+
+# Start a krenew daemon and be sure it gets tickets and stays running.
+my $pid = fork;
+if (!defined $pid) {
+    BAIL_OUT ("can't fork: $!");
+} elsif ($pid == 0) {
+    close STDERR;
+    exec ($KRENEW, '-K', 30, '-p', 'pid')
+        or BAIL_OUT ("can't run $KRENEW: $!");
+}
+my $tries = 0;
+while (not -f 'pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+if (-f 'pid') {
+    my $daemon = contents ('pid');
+    is ($pid, $daemon, 'The right PID is written');
+} else {
+    ok (0, 'The right PID is written');
+}
+ok (kill (0, $pid), ' and krenew is still running');
+unlink 'krb5cc_test';
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+is (waitpid ($pid, 0), $pid, ' and it dies after failure to renew');
+is (($? >> 8), 1, ' with non-zero exit status');
+unlink 'pid';
+kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
+
+# Try again with the -b flag.
+my ($out, $err, $status)
+    = command ($KRENEW, '-bK', 30, '-p', "$cwd/pid");
+is ($status, 0, 'Backgrounding krenew works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and -q was added implicitly');
+$tries = 0;
+while (not -f 'pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), ' and the PID file is correct');
+kill (15, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.5);
+ok (!kill (0, $pid), ' and it dies after SIGTERM');
+unlink 'pid';
+
+# Now try with -i.  In this case, krenew should keep running even if the
+# ticket cache disappears and be able to start refreshing it again when it
+# reappears.
+($out, $err, $status) = command ($KRENEW, '-biK', 30, '-p', "$cwd/pid");
+is ($status, 0, 'Backgrounding krenew works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and -q was added implicitly');
+$tries = 0;
+while (not -f 'pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), ' and the PID file is correct');
+unlink 'krb5cc_test';
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.5);
+ok (kill (0, $pid), ' and it keeps running after failure to renew');
+kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
+my $time = (stat 'krb5cc_test')[9];
+while (time == $time) {
+    select (undef, undef, undef, 0.1);
+}
+is ($time, (stat 'krb5cc_test')[9], 'Cache has not been touched');
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+$tries = 0;
+while ($time >= (stat 'krb5cc_test')[9] && $tries < 10) {
+    select (undef, undef, undef, 0.5);
+    $tries++;
+}
+ok ($time < (stat 'krb5cc_test')[9], ' and is updated after SIGALRM');
+kill (15, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.5);
+ok (!kill (0, $pid), ' and it dies after SIGTERM');
+unlink 'pid';
+
+# Now, run a command in the background.
+unlink 'child-out';
+($out, $err, $status)
+    = command ($KRENEW, '-bK', 30, '-p', "$cwd/pid", '-c', "$cwd/child-pid",
+               '--', "$ENV{SOURCE}/data/command", "$cwd/child-out");
+is ($status, 0, 'Backgrounding krenew works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and output was redirected properly');
+$tries = 0;
+while (not -f 'child-pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), 'krenew is running');
+$child = contents ('child-pid');
+ok (kill (0, $child), 'The child process is running');
+$tries = 0;
+while (not -S 'child-out' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+kill (1, $pid) or warn "Cannot send HUP to $pid: $!\n";
+select (undef, undef, undef, 0.1);
+kill (15, $pid) or warn "Cannot send TERM to $pid: $!\n";
+select (undef, undef, undef, 0.1);
+ok (!kill (0, $pid), 'krenew is no longer running');
+ok (!kill (0, $child), 'The child process is no longer running');
+open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
+my $daemon = <OUT>;
+chomp $daemon;
+is ($child, $daemon, 'Child PID is correct');
+my $dir = <OUT>;
+is ($dir, "/\n", 'Child working directory is /');
+my $cache = <OUT>;
+like ($cache, qr%^/tmp/krb5cc_%, 'Child cache is correct');
+is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
+is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
+ok (eof OUT, 'No more child output written');
+chomp $cache;
+ok (! -f $cache, 'New child cache removed');
+unlink 'krb5cc_test', 'pid', 'child-pid', 'child-out';

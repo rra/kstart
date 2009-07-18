@@ -7,11 +7,7 @@
 #
 # See LICENSE for licensing terms.
 
-BEGIN { our $total = 7 }
-use Test::More tests => $total;
-
-# Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+use Test::More;
 
 # The full path to the newly-built k4start client.
 our $K4START = "$ENV{BUILD}/../k4start";
@@ -19,48 +15,63 @@ our $K4START = "$ENV{BUILD}/../k4start";
 # The path to our data directory, which contains the keytab to use to test.
 our $DATA = "$ENV{BUILD}/data";
 
-SKIP: {
-    skip 'no srvtab configuration', $total unless -f "$DATA/test.srvtab";
-    skip 'no current AFS tokens', $total unless tokens();
-    my $principal = contents ("$DATA/test.principal");
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# Don't overwrite the user's ticket cache.
+$ENV{KRBTKFILE} = 'tkt_test';
+
+# Hide Kerberos v5 tickets from aklog so that we don't get inconsistent
+# results.
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+unlink 'krb5cc_test';
+
+# Decide whether we have the configuration to run the tests.
+my ($principal, $out, $err, $status);
+if (not -x $K4START) {
+    plan skip_all => 'k4start not built';
+    exit 0;
+} elsif (not -f "$DATA/test.srvtab" or not -f "$DATA/test.principal") {
+    plan skip_all => 'no srvtab configuration';
+    exit 0;
+} elsif (not tokens ()) {
+    plan skip_all => 'no current AFS tokens';
+    exit 0;
+} else {
+    $principal = contents ("$DATA/test.principal");
     $principal =~ s/\..*//;
     $principal =~ tr%/%.%;
-
-    # Don't overwrite the user's ticket cache.
-    $ENV{KRBTKFILE} = 'tkt_test';
-
-    # Hide Kerberos v5 tickets from aklog so that we don't get inconsistent
-    # results.
-    $ENV{KRB5CCNAME} = 'krb5cc_test';
-    unlink 'krb5cc_test';
-
-    # Basic token test.
     unlink 'tkt_test';
-    my ($out, $err, $status)
-        = command ($K4START, '-tqf', "$DATA/test.srvtab", $principal, '--',
-                   'tokens');
-    skip 'not built with AFS support', $total
-        if ($err eq
-            "k4start: cannot create PAG: AFS support is not available\n");
-    is ($status, 0, 'k4start -t succeeds');
-  SKIP: {
-        skip 'aklog does not support Kerberos v4', 2
-            if $err =~ /^aklog: Couldn\'t (determine realm|get \S+ AFS)/;
-        is ($err, '', ' with no errors');
-        like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
-              ' and the right output');
-    }
-    my ($default, $service) = klist ('-4');
-    is ($default, undef, ' and the normal ticket cache is untouched');
-
-    # Set the token program to something that doesn't obtain tokens.
-    # Everything should still work, but we should have no tokens.
-    $ENV{KINIT_PROG} = '/bin/true';
     ($out, $err, $status)
         = command ($K4START, '-tqf', "$DATA/test.srvtab", $principal, '--',
                    'tokens');
-    is ($status, 0, 'k4start -t succeeds with no aklog');
-    is ($err, '', ' with no errors');
-    unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
-            ' and we have no tokens');
+    if ($err eq "k4start: cannot create PAG: AFS support is not available\n") {
+        plan skip_all => 'not built with AFS support';
+        exit 0;
+    } else {
+        plan tests => 7;
+    }
 }
+
+# Basic token test.
+is ($status, 0, 'k4start -t succeeds');
+SKIP: {
+    skip 'aklog does not support Kerberos v4', 2
+        if $err =~ /^aklog: Couldn\'t (determine realm|get \S+ AFS)/;
+    is ($err, '', ' with no errors');
+    like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+          ' and the right output');
+}
+my ($default, $service) = klist ('-4');
+is ($default, undef, ' and the normal ticket cache is untouched');
+
+# Set the token program to something that doesn't obtain tokens.  Everything
+# should still work, but we should have no tokens.
+$ENV{KINIT_PROG} = '/bin/true';
+($out, $err, $status)
+    = command ($K4START, '-tqf', "$DATA/test.srvtab", $principal, '--',
+               'tokens');
+is ($status, 0, 'k4start -t succeeds with no aklog');
+is ($err, '', ' with no errors');
+unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+        ' and we have no tokens');

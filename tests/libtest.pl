@@ -5,12 +5,14 @@
 # than in a separate namespace.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007, 2008 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2007, 2008, 2009 Board of Trustees, Leland Stanford Jr. University
 #
 # See LICENSE for licensing terms.
 
 require 5.006;
 use strict;
+
+use Test::More;
 
 # Make a call to a command with the given arguments.  Returns the standard
 # output, the standard error, and the exit status as a list.
@@ -18,23 +20,23 @@ sub command {
     my ($command, @args) = @_;
     my $pid = fork;
     if (not defined $pid) {
-        die "cannot fork: $!\n";
+        BAIL_OUT ("cannot fork: $!");
     } elsif ($pid == 0) {
         open (STDOUT, '>', 'command.out')
-            or die "cannot create command.out: $!\n";
+            or BAIL_OUT ("cannot create command.out: $!");
         open (STDERR, '>', 'command.err')
-            or die "cannot create command.err: $!\n";
+            or BAIL_OUT ("cannot create command.err: $!");
         exec ($command, @args)
-            or die "cannot run $command: $!\n";
+            or BAIL_OUT ("cannot run $command: $!");
     } else {
         waitpid ($pid, 0);
     }
     my $status = ($? >> 8);
     local $/;
-    open (OUT, '<', 'command.out') or die "cannot open command.out: $!\n";
+    open (OUT, '<', 'command.out') or BAIL_OUT ("cannot open command.out: $!");
     my $output = <OUT>;
     close OUT;
-    open (ERR, '<', 'command.err') or die "cannot open command.err: $!\n";
+    open (ERR, '<', 'command.err') or BAIL_OUT ("cannot open command.err: $!");
     my $error = <ERR>;
     close ERR;
     unlink ('command.out', 'command.err');
@@ -44,7 +46,7 @@ sub command {
 # Returns the one-line contents of a file as a string, removing the newline.
 sub contents {
     my ($file) = @_;
-    open (FILE, '<', $file) or die "cannot open $file: $!\n";
+    open (FILE, '<', $file) or BAIL_OUT ("cannot open $file: $!");
     my $data = <FILE>;
     close FILE;
     chomp $data;

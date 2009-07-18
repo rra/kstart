@@ -15,7 +15,7 @@ use strict;
 use Test::More;
 
 # Skip all spelling tests unless the maintainer environment variable is set.
-plan skip_all => 'Spelling tests only run for maintainer'
+plan skip_all => 'spelling tests only run for maintainer'
     unless $ENV{RRA_MAINTAINER_TESTS};
 
 # Load required Perl modules.
@@ -46,7 +46,7 @@ $| = 1;
 my @pod = map {
     my $pod = "$ENV{SOURCE}/../" . $_;
     $pod =~ s,[^/.][^/]*/../,,g;
-    $pod
+    $pod;
 } qw(k4start.pod k5start.pod krenew.pod);
 plan tests => scalar @pod;
 
@@ -54,10 +54,11 @@ plan tests => scalar @pod;
 for my $pod (@pod) {
     my $child = open (CHILD, '-|');
     if (not defined $child) {
-        die "Cannot fork: $!\n";
+        BAIL_OUT ("cannot fork: $!");
     } elsif ($child == 0) {
-        my $pid = open (SPELL, '|-', @spell) or die "Cannot run @spell: $!\n";
-        open (POD, '<', $pod) or die "Cannot open $pod: $!\n";
+        my $pid = open (SPELL, '|-', @spell)
+            or BAIL_OUT ("cannot run @spell: $!");
+        open (POD, '<', $pod) or BAIL_OUT ("cannot open $pod: $!");
         my $parser = Pod::Spell->new;
         $parser->parse_from_filehandle (\*POD, \*SPELL);
         close POD;
