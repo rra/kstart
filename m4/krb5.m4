@@ -1,8 +1,8 @@
-dnl krb5.m4 -- Find the compiler and linker flags for Kerberos v5.
+dnl Find the compiler and linker flags for Kerberos v5.
 dnl
 dnl Finds the compiler and linker flags for linking with Kerberos v5
 dnl libraries.  Provides the --with-krb5, --with-krb5-include, and
-dnl --with-krb5-lib configure option to specify non-standards paths to the
+dnl --with-krb5-lib configure options to specify non-standards paths to the
 dnl Kerberos libraries.  Uses krb5-config where available unless reduced
 dnl dependencies is requested.
 dnl
