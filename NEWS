@@ -46,6 +46,7 @@ kstart 3.15 (unreleased)
     * Sanity-check the results of krb5-config before proceeding.
     * Fall back on manual probing if krb5-config results don't work.
     * Add --with-krb5-include and --with-krb5-lib configure options.
+    * Add --with-krb4-include and --with-krb4-lib configure options.
     * Don't break if the user clobbers CPPFLAGS at build time.
     * Provide a proper bool type with Sun Studio 12 on Solaris 10.
     * Change AC_TRY_* to AC_*_IFELSE as recommended by Autoconf.
