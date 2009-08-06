@@ -38,11 +38,7 @@ endif
 # set AM_CPPFLAGS for use with LIBOBJS.
 AM_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
 
-EXTRA_PROGRAMS = k4start
-bin_PROGRAMS = @K4START@ k5start krenew
-k4start_SOURCES = k4start.c portable/krb4.h
-k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
-k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
+bin_PROGRAMS = k5start krenew
 k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
@@ -55,7 +51,16 @@ portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
 	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
 
-dist_man_MANS = $(K4START_MAN) k5start.1 krenew.1
+dist_man_MANS = k5start.1 krenew.1
+
+# Conditionally add k4start to the build.
+if K4START
+bin_PROGRAMS += k4start
+k4start_SOURCES = k4start.c portable/krb4.h
+k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
+k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
+dist_man_MANS += k4start.1
+endif
 
 DISTCLEANFILES = tests/data/.placeholder
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \

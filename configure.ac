@@ -47,24 +47,20 @@ dnl Allow the user to disable Kerberos v4 support.  Useful for building
 dnl against just Heimdal, without KTH Kerberos.  If the user doesn't
 dnl explicitly disable k4start, it's built if Kerberos v4 libraries are found
 dnl and isn't built otherwise.
-K4START=k4start
-K4START_MAN='$(srcdir)/k4start.1'
+rra_build_k4start=
 AC_ARG_ENABLE([k4start],
     AC_HELP_STRING([--disable-k4start],
         [Don't build k4start (Kerberos v4 support)]),
-    [AS_IF([test x"$enableval" = xno],
-        [K4START=
-         K4START_MAN=])])
-AS_IF([test x"$K4START" != x],
+    [AS_IF([test x"$enableval" = xno], [rra_build_k4start=false])])
+AS_IF([test x"$rra_build_k4start" != xfalse],
     [RRA_LIB_KRB4_OPTIONAL
      AS_IF([test x"$rra_use_krb4" = xyes],
         [RRA_LIB_KRB4_SWITCH
          AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
-         RRA_LIB_KRB4_RESTORE],
-        [K4START=
-         K4START_MAN=])])
-AC_SUBST([K4START])
-AC_SUBST([K4START_MAN])
+         RRA_LIB_KRB4_RESTORE
+         rra_build_k4start=true],
+        [rra_build_k4start=false])])
+AM_CONDITIONAL([K4START], [test x"$rra_build_k4start" = xtrue])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_ENABLE([setpag],
