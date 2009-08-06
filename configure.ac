@@ -32,19 +32,6 @@ AC_ARG_WITH([aklog],
 AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
     [Full path to aklog binary.])
 
-dnl Allow the user to disable Kerberos v4 support.  Useful for building
-dnl against just Heimdal, without KTH Kerberos.
-K4START=k4start
-K4START_MAN='$(srcdir)/k4start.1'
-AC_ARG_ENABLE([k4start],
-    AC_HELP_STRING([--disable-k4start],
-        [Don't build k4start (Kerberos v4 support)]),
-    [AS_IF([test x"$enableval" = xno],
-        [K4START=
-         K4START_MAN=])])
-AC_SUBST([K4START])
-AC_SUBST([K4START_MAN])
-
 dnl Check for the Kerberos v5 libraries and for portability between MIT and
 dnl Heimdal.
 RRA_LIB_KRB5
@@ -56,13 +43,28 @@ AC_CHECK_FUNCS([krb5_cc_copy_creds \
 AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 RRA_LIB_KRB5_RESTORE
 
-dnl If we're building k4start, check for the Kerberos v4 libraries and add our
-dnl local lifetime implementation if needed.
+dnl Allow the user to disable Kerberos v4 support.  Useful for building
+dnl against just Heimdal, without KTH Kerberos.  If the user doesn't
+dnl explicitly disable k4start, it's built if Kerberos v4 libraries are found
+dnl and isn't built otherwise.
+K4START=k4start
+K4START_MAN='$(srcdir)/k4start.1'
+AC_ARG_ENABLE([k4start],
+    AC_HELP_STRING([--disable-k4start],
+        [Don't build k4start (Kerberos v4 support)]),
+    [AS_IF([test x"$enableval" = xno],
+        [K4START=
+         K4START_MAN=])])
 AS_IF([test x"$K4START" != x],
-    [RRA_LIB_KRB4
-     RRA_LIB_KRB4_SWITCH
-     AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
-     RRA_LIB_KRB4_RESTORE])
+    [RRA_LIB_KRB4_OPTIONAL
+     AS_IF([test x"$rra_use_krb4" = xyes],
+        [RRA_LIB_KRB4_SWITCH
+         AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
+         RRA_LIB_KRB4_RESTORE],
+        [K4START=
+         K4START_MAN=])])
+AC_SUBST([K4START])
+AC_SUBST([K4START_MAN])
 
 dnl See if AFS setpag support is desired.
 AC_ARG_ENABLE([setpag],
