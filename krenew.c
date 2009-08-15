@@ -138,7 +138,7 @@ static krb5_error_code
 ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
 {
     krb5_creds increds, *outcreds = NULL;
-    int increds_valid = 0;
+    bool increds_valid = false;
     time_t now, then;
     krb5_error_code status;
 
@@ -159,7 +159,7 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, int keep_ticket)
         warn_krb5(ctx, status, "cannot get current credentials");
         goto done;
     }
-    increds_valid = 1;
+    increds_valid = true;
 
     /* Check the expiration time. */
     if (status == 0) {
@@ -248,11 +248,11 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
     krb5_error_code status;
     krb5_principal user = NULL;
     krb5_creds creds, *out;
-    int creds_valid = 0;
+    bool creds_valid = false;
 #ifndef HAVE_KRB5_GET_RENEWED_CREDS
     krb5_kdc_flags flags;
     krb5_creds in, *old = NULL;
-    int in_valid = 0;
+    bool in_valid = false;
 #endif
 
     memset(&creds, 0, sizeof(creds));
@@ -274,14 +274,14 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
     }
 #ifdef HAVE_KRB5_GET_RENEWED_CREDS
     status = krb5_get_renewed_creds(ctx, &creds, user, cache, NULL);
-    creds_valid = 1;
+    creds_valid = true;
     out = &creds;
 #else
     flags.i = 0;
     flags.b.renewable = 1;
     flags.b.renew = 1;
     memset(&in, 0, sizeof(in));
-    in_valid = 1;
+    in_valid = true;
     status = krb5_copy_principal(ctx, user, &in.client);
     if (status != 0) {
         warn_krb5(ctx, status, "error copying principal");
@@ -341,12 +341,12 @@ main(int argc, char *argv[])
     char **command = NULL;
     char *childfile = NULL;
     char *pidfile = NULL;
-    int background = 0;
+    bool background = false;
     int happy_ticket = 0;
-    int ignore_errors = 0;
+    bool ignore_errors = false;
     int keep_ticket = 0;
-    int do_aklog = 0;
-    int verbose = 0;
+    bool do_aklog = false;
+    bool verbose = false;
     const char *aklog = NULL;
     krb5_context ctx;
     krb5_ccache cache;
@@ -360,13 +360,13 @@ main(int argc, char *argv[])
     /* Parse command-line options. */
     while ((option = getopt(argc, argv, "bc:H:hiK:k:p:qtv")) != EOF)
         switch (option) {
-        case 'b': background = 1;               break;
+        case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
         case 'h': usage(0);                     break;
-        case 'i': ignore_errors = 1;            break;
+        case 'i': ignore_errors = true;         break;
         case 'p': pidfile = optarg;             break;
-        case 't': do_aklog = 1;                 break;
-        case 'v': verbose = 1;                  break;
+        case 't': do_aklog = true;              break;
+        case 'v': verbose = true;               break;
 
         case 'H':
             happy_ticket = atoi(optarg);

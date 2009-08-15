@@ -51,13 +51,13 @@ struct options {
     const char *srvtab;
     const char *cache;
     int lifetime;
-    int happy_ticket;
-    int keep_ticket;
-    int quiet;
-    int no_aklog;
-    int run_aklog;
-    int stdin_passwd;
-    int verbose;
+    bool happy_ticket;
+    bool keep_ticket;
+    bool quiet;
+    bool no_aklog;
+    bool run_aklog;
+    bool stdin_passwd;
+    bool verbose;
 };
 
 /* The usage message. */
@@ -201,11 +201,11 @@ main(int argc, char *argv[])
     char **command = NULL;
     char *childfile = NULL;
     char *pidfile = NULL;
-    int background = 0;
+    bool background = false;
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
     int status = 0;
-    int clean_cache = 0;
+    bool clean_cache = false;
     static const char optstring[] = "bc:f:g:H:hI:i:K:k:l:m:no:p:qr:S:stu:v";
 
     /* Initialize logging. */
@@ -215,18 +215,18 @@ main(int argc, char *argv[])
     memset(&options, 0, sizeof(options));
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'b': background = 1;               break;
+        case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'k': options.cache = optarg;       break;
         case 'm': mode = optarg;                break;
-        case 'n': options.no_aklog = 1;         break;
+        case 'n': options.no_aklog = true;      break;
         case 'o': owner = optarg;               break;
         case 'p': pidfile = optarg;             break;
-        case 'q': options.quiet = 1;            break;
-        case 't': options.run_aklog = 1;        break;
-        case 'v': options.verbose = 1;          break;
+        case 'q': options.quiet = true;         break;
+        case 't': options.run_aklog = true;     break;
+        case 'v': options.verbose = true;       break;
         case 'u': username = optarg;            break;
 
         case 'f':
@@ -278,7 +278,7 @@ main(int argc, char *argv[])
                     (unsigned long) sizeof(options.sname));
             break;
         case 's':
-            options.stdin_passwd = 1;
+            options.stdin_passwd = true;
             if (options.srvtab != NULL)
                 die("cannot use both -s and -f flags");
             break;
@@ -335,7 +335,7 @@ main(int argc, char *argv[])
     if (aklog == NULL)
         aklog = PATH_AKLOG;
     else
-        options.run_aklog = 1;
+        options.run_aklog = true;
     if (aklog[0] == '\0' && options.run_aklog && !options.no_aklog)
         die("set AKLOG to specify the path to aklog");
 
@@ -367,7 +367,7 @@ main(int argc, char *argv[])
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
         options.cache = cache;
-        clean_cache = 1;
+        clean_cache = true;
     }
     if (options.cache == NULL)
         options.cache = tkt_string();
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
      */
     if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
-            options.quiet = 1;
+            options.quiet = true;
 
     /* Parse the username into its components. */
     k_errno = kname_parse(options.aname, options.inst, options.realm,

@@ -60,11 +60,11 @@ struct options {
     const char *keytab;
     int happy_ticket;
     int keep_ticket;
-    int quiet;
-    int run_aklog;
+    bool quiet;
+    bool run_aklog;
     const char *aklog;
-    int stdin_passwd;
-    int verbose;
+    bool stdin_passwd;
+    bool verbose;
 };
 
 /* Set when k5start receives SIGALRM. */
@@ -332,16 +332,16 @@ main(int argc, char *argv[])
     char **command = NULL;
     char *childfile = NULL;
     char *pidfile = NULL;
-    int background = 0;
-    int nonforwardable = 0;
-    int nonproxiable = 0;
+    bool background = false;
+    bool nonforwardable = false;
+    bool nonproxiable = false;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
     int status = 0;
     pid_t child = 0;
-    int clean_cache = 0;
-    int search_keytab = 0;
+    bool clean_cache = false;
+    bool search_keytab = false;
     static const char optstring[] = "bc:Ff:g:H:hI:i:K:k:l:m:no:Pp:qr:S:stUu:v";
 
     /* Initialize logging. */
@@ -351,9 +351,9 @@ main(int argc, char *argv[])
     memset(&options, 0, sizeof(options));
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'b': background = 1;               break;
+        case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
-        case 'F': nonforwardable = 1;           break;
+        case 'F': nonforwardable = true;        break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
@@ -361,14 +361,14 @@ main(int argc, char *argv[])
         case 'm': mode = optarg;                break;
         case 'n': /* Ignored */                 break;
         case 'o': owner = optarg;               break;
-        case 'P': nonproxiable = 1;             break;
+        case 'P': nonproxiable = true;          break;
         case 'p': pidfile = optarg;             break;
-        case 'q': options.quiet = 1;            break;
+        case 'q': options.quiet = true;         break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
-        case 't': options.run_aklog = 1;        break;
-        case 'v': options.verbose = 1;          break;
-        case 'U': search_keytab = 1;            break;
+        case 't': options.run_aklog = true;     break;
+        case 'v': options.verbose = true;       break;
+        case 'U': search_keytab = true;         break;
         case 'u': principal = optarg;           break;
 
         case 'f':
@@ -396,7 +396,7 @@ main(int argc, char *argv[])
             lifetime = life_secs / 60;
             break;
         case 's':
-            options.stdin_passwd = 1;
+            options.stdin_passwd = true;
             if (options.keytab != NULL)
                 die("cannot use both -s and -f flags");
             break;
@@ -492,7 +492,7 @@ main(int argc, char *argv[])
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
         cache = tmp;
-        clean_cache = 1;
+        clean_cache = true;
     }
     if (cache == NULL) {
         code = krb5_cc_default(ctx, &options.ccache);
@@ -512,7 +512,7 @@ main(int argc, char *argv[])
      */
     if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
-            options.quiet = 1;
+            options.quiet = true;
 
     /*
      * The easiest thing for us is if the user just specifies the full

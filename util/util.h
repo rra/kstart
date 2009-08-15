@@ -47,7 +47,7 @@ void file_permissions(const char *file, const char *owner, const char *group,
  * Run the given aklog command.  If verbose is true, print some more output to
  * standard output about the exit status.
  */
-void command_run(const char *aklog, int verbose);
+void command_run(const char *aklog, bool verbose);
 
 /*
  * Start a command, executing the given command with the given argument vector
