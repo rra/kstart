@@ -106,12 +106,13 @@ tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h
 # kafs tests are buit differently depending on whether we use our local
 # libkafs replacement.
 if NEED_KAFS
-tests_kafs_basic_CPPFLAGS = $(KAFS_CPPFLAGS)
-tests_kafs_basic_LDFLAGS = $(KAFS_LDFLAGS)
-tests_kafs_basic_LDADD = kafs/libkafs.a util/libutil.a \
-        portable/libportable.a $(KAFS_LIBS)
+    tests_kafs_basic_CPPFLAGS = $(KAFS_CPPFLAGS)
+    tests_kafs_basic_LDFLAGS = $(KAFS_LDFLAGS)
+    tests_kafs_basic_LDADD = kafs/libkafs.a util/libutil.a \
+	portable/libportable.a $(KAFS_LIBS)
 else
-tests_kafs_basic_LDADD = util/libutil.a portable/libportable.a $(KAFS_LIBS)
+    tests_kafs_basic_LDADD = util/libutil.a portable/libportable.a \
+	$(KAFS_LIBS)
 endif
 
 # All of the other test programs.
