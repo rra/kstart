@@ -6,6 +6,7 @@ kstart (3.15-1) UNRELEASED; urgency=low
     - Rerun aklog with k5start -H even if the ticket is valid.
     - Fix segfault when there is no default local realm.
     - Improve documentation of working directory with -b.
+  * Use debhelper overrides to further minimize debian/rules.
   * Update standards version to 3.8.2 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Sat, 15 Aug 2009 14:43:08 -0700

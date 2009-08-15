@@ -1,36 +1,11 @@
 #!/usr/bin/make -f
 
-CFLAGS = -Wall -g
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-    CFLAGS += -O0
-else
-    CFLAGS += -O2
-endif
-export CFLAGS
-
-build: build-arch build-indep
-build-arch: build-stamp
-build-indep:
-build-stamp:
-	dh build --before configure
-	dh_auto_configure -- --enable-reduced-depends --enable-setpag \
-	    --disable-k4start --without-libkafs --with-aklog=/usr/bin/aklog
-	dh build --after configure
-	touch $@
-
-install: install-stamp
-install-stamp:
-	dh install --until dh_prep
-	dh_installchangelogs NEWS
-	dh install --remaining
-	touch $@
-
-binary: binary-arch binary-indep
-binary-indep:
-binary-arch: install-stamp
-	dh $@
-
 %:
 	dh $@
 
-.PHONY: binary binary-arch binary-indep build build-arch build-indep install
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-reduced-depends --enable-setpag \
+	    --disable-k4start --without-libkafs --with-aklog=/usr/bin/aklog
+
+override_dh_installchangelogs:
+	dh_installchangelogs NEWS
