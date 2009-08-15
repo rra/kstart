@@ -41,6 +41,9 @@ kstart 3.15 (unreleased)
     v4 libraries are present.  The option is still supported to explicitly
     disable building k4start even if Kerberos v4 libraries are found.
 
+    Enable Automake silent rules.  For a quieter build, pass the
+    --enable-silent-rules option to configure or build with make V=0.
+
     Update to rra-c-util 2.0:
 
     * Redo build system for kafs replacement library and add tests.

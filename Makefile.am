@@ -88,8 +88,8 @@ WARNINGS = -g -O -DDEBUG=1 -Wall -W -Wendif-labels -Wpointer-arith \
 	-Wmissing-prototypes -Wnested-externs -Werror
 
 warnings:
-	$(MAKE) CFLAGS='$(WARNINGS)'
-	$(MAKE) CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
+	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
+	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
 check_PROGRAMS = tests/runtests tests/kafs/basic tests/portable/asprintf-t \

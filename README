@@ -95,9 +95,9 @@ REQUIREMENTS
   set RRA_MAINTAINER_TESTS to a true value.
 
   If you change the Automake files and need to regenerate Makefile.in, you
-  will need Automake 1.10 or later.  If you change configure.ac or any of
+  will need Automake 1.11 or later.  If you change configure.ac or any of
   the m4 files it includes and need to regenerate configure or
-  config.h.in, you will need Autoconf 2.61 or later.
+  config.h.in, you will need Autoconf 2.64 or later.
 
 INSTALLATION
 
@@ -106,6 +106,10 @@ INSTALLATION
       ./configure
       make
       make install
+
+  Pass --enable-silent-rules to configure for a quieter build (similar to
+  the Linux kernel).  Use make warnings instead of make to build with full
+  GCC compiler warnings (requires a relatively current version of GCC).
 
   This will build k4start, k5start, and krenew and install them in
   /usr/local/bin with man pages in /usr/local/man/man1.  You may need to
