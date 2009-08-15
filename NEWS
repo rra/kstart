@@ -1,5 +1,76 @@
                        User-Visible kstart Changes
 
+kstart 3.15 (2009-08-15)
+
+    k5start and krenew now catch SIGALRM and immediately refresh the
+    ticket cache upon receiving it, even if the ticket isn't expired.
+
+    Add the -i option to krenew, which says to keep running even if there
+    is an error renewing the ticket cache.  This is useful if the ticket
+    cache renewed by krenew may expire and then later be renewed (such as
+    with a manual kinit) and krenew is expected to wake up again and
+    process the new ticket cache.
+
+    Re-run aklog even if the ticket is still valid when -H is used in
+    combination with -t.  We don't check whether the token is valid, so
+    it's safer to always re-run aklog.  We may be setting a token in a new
+    PAG using an existing ticket cache.
+
+    Fail with an error rather than a segfault if MIT Kerberos is unable to
+    determine a default local realm for an unqualified principal.  Based
+    on a patch from Jason Funk.
+
+    Add example krenew-agent script, which runs krenew for a given ticket
+    cache if it isn't already running.  Contributed by Tim Skirvin.
+
+    Correctly declare message_fatal_cleanup extern, fixing compilation
+    problems on some platforms (particularly Mac OS X).
+
+    Document that the -b flag to all programs also changes directories to
+    / and any paths should therefore be absolute.
+
+    Add support for the old Heimdal krb5_get_error_string interface.
+    Thanks, Chaskiel Grundman.
+
+    Fix some timing issues with the test suite that caused spurious
+    failures on fast systems and try to make it more robust in the face of
+    different process scheduling.  This probably still isn't perfect.
+
+    k4start is now built optionally based on whether Kerberos v4 libraries
+    are available, removing the need for --disable-k4start if no Kerberos
+    v4 libraries are present.  The option is still supported to explicitly
+    disable building k4start even if Kerberos v4 libraries are found.
+
+    Enable Automake silent rules.  For a quieter build, pass the
+    --enable-silent-rules option to configure or build with make V=0.
+
+    Update to rra-c-util 2.0:
+
+    * Redo build system for kafs replacement library and add tests.
+    * Add --with-libkafs-include and --with-libkafs-lib configure options.
+    * Add --with-afs-include and --with-afs-lib configure options.
+    * Sanity-check the results of krb5-config before proceeding.
+    * Fall back on manual probing if krb5-config results don't work.
+    * Add --with-krb5-include and --with-krb5-lib configure options.
+    * Add --with-krb4-include and --with-krb4-lib configure options.
+    * Don't break if the user clobbers CPPFLAGS at build time.
+    * Provide a proper bool type with Sun Studio 12 on Solaris 10.
+    * Change AC_TRY_* to AC_*_IFELSE as recommended by Autoconf.
+    * Add strlcpy, strlcat, and setenv replacements.
+    * Fix open call parameters in daemon portability test.
+    * Update portable and util test suite for C TAP Harness 1.1.
+
+    Update to C TAP Harness 1.1:
+
+    * Rewrite of all test cases to use the new TAP library support.
+    * Much improved and simplified builddir != srcdir test suite support.
+    * Support running a single test with tests/runtests -o.
+    * Summarize results at the end of test executions.
+    * Correctly handle completely skipped tests, like docs/pod.
+    * Better reporting of fatal errors in the test suite.
+    * Consume all output from a test case before closing its descriptor.
+    * Support aspell for spelling tests and skip them by default.
+
 kstart 3.14 (2008-07-22)
 
     Add -F and -P options to k5start to force the tickets to not be

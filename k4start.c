@@ -12,22 +12,25 @@
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008
- *     Board of Trustees, Leland Stanford Jr. University
+ * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008,
+ *     2009 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
 #include <portable/krb4.h>
-#include <portable/time.h>
 
 #include <errno.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#include <time.h>
 
+#include <kafs/kafs.h>
 #include <util/util.h>
 
 /*
@@ -48,13 +51,13 @@ struct options {
     const char *srvtab;
     const char *cache;
     int lifetime;
-    int happy_ticket;
-    int keep_ticket;
-    int quiet;
-    int no_aklog;
-    int run_aklog;
-    int stdin_passwd;
-    int verbose;
+    bool happy_ticket;
+    bool keep_ticket;
+    bool quiet;
+    bool no_aklog;
+    bool run_aklog;
+    bool stdin_passwd;
+    bool verbose;
 };
 
 /* The usage message. */
@@ -198,11 +201,11 @@ main(int argc, char *argv[])
     char **command = NULL;
     char *childfile = NULL;
     char *pidfile = NULL;
-    int background = 0;
+    bool background = false;
     int lifetime = DEFAULT_TKT_LIFE;
     pid_t child = 0;
     int status = 0;
-    int clean_cache = 0;
+    bool clean_cache = false;
     static const char optstring[] = "bc:f:g:H:hI:i:K:k:l:m:no:p:qr:S:stu:v";
 
     /* Initialize logging. */
@@ -212,18 +215,18 @@ main(int argc, char *argv[])
     memset(&options, 0, sizeof(options));
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'b': background = 1;               break;
+        case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'k': options.cache = optarg;       break;
         case 'm': mode = optarg;                break;
-        case 'n': options.no_aklog = 1;         break;
+        case 'n': options.no_aklog = true;      break;
         case 'o': owner = optarg;               break;
         case 'p': pidfile = optarg;             break;
-        case 'q': options.quiet = 1;            break;
-        case 't': options.run_aklog = 1;        break;
-        case 'v': options.verbose = 1;          break;
+        case 'q': options.quiet = true;         break;
+        case 't': options.run_aklog = true;     break;
+        case 'v': options.verbose = true;       break;
         case 'u': username = optarg;            break;
 
         case 'f':
@@ -238,14 +241,14 @@ main(int argc, char *argv[])
             break;
         case 'I':
             if (strlen(optarg) < sizeof(options.sinst))
-                strcpy(options.sinst, optarg);
+                strlcpy(options.sinst, optarg, sizeof(options.sinst));
             else
                 die("service instance %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.sinst));
             break;
         case 'i':
             if (strlen(optarg) < sizeof(options.inst))
-                strcpy(options.inst, optarg);
+                strlcpy(options.inst, optarg, sizeof(options.inst));
             else
                 die("instance %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.inst));
@@ -262,20 +265,20 @@ main(int argc, char *argv[])
             break;
         case 'r':
             if (strlen(optarg) < sizeof(options.realm))
-                strcpy(options.realm, optarg);
+                strlcpy(options.realm, optarg, sizeof(options.realm));
             else
                 die("realm %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.realm));
             break;
         case 'S':
             if (strlen(optarg) < sizeof(options.sname))
-                strcpy(options.sname, optarg);
+                strlcpy(options.sname, optarg, sizeof(options.sname));
             else
                 die("service name %s too long (%lu max)", optarg,
                     (unsigned long) sizeof(options.sname));
             break;
         case 's':
-            options.stdin_passwd = 1;
+            options.stdin_passwd = true;
             if (options.srvtab != NULL)
                 die("cannot use both -s and -f flags");
             break;
@@ -332,7 +335,7 @@ main(int argc, char *argv[])
     if (aklog == NULL)
         aklog = PATH_AKLOG;
     else
-        options.run_aklog = 1;
+        options.run_aklog = true;
     if (aklog[0] == '\0' && options.run_aklog && !options.no_aklog)
         die("set AKLOG to specify the path to aklog");
 
@@ -364,17 +367,14 @@ main(int argc, char *argv[])
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
         options.cache = cache;
-        clean_cache = 1;
+        clean_cache = true;
     }
     if (options.cache == NULL)
         options.cache = tkt_string();
     else if (options.cache != NULL) {
-        char *env;
-
         krb_set_tkt_string(options.cache);
-        if (xasprintf(&env, "KRBTKFILE=%s", options.cache) < 0)
-            die("cannot format KRBTKFILE environment variable");
-        putenv(env);
+        if (setenv("KRBTKFILE", options.cache, 1) != 0)
+            die("cannot set KRBTKFILE environment variable");
     }
 
     /*
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
      */
     if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
-            options.quiet = 1;
+            options.quiet = true;
 
     /* Parse the username into its components. */
     k_errno = kname_parse(options.aname, options.inst, options.realm,
@@ -422,9 +422,9 @@ main(int argc, char *argv[])
     if (*options.realm == '\0' && krb_get_lrealm(options.realm, 1) != KSUCCESS)
         die("cannot get local Kerberos realm");
     if (*options.sname == '\0') {
-        strcpy(options.sname, "krbtgt");
+        strlcpy(options.sname, "krbtgt", sizeof(options.sname));
         if (*options.sinst == '\0')
-            strcpy(options.sinst, options.realm);
+            strlcpy(options.sinst, options.realm, sizeof(options.sinst));
     }
 
     /* If we're just checking the service ticket, do that and exit if okay. */

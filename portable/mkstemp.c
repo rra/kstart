@@ -73,7 +73,7 @@ mkstemp(char *template)
             working /= 62;
         }
         fd = open(template, O_RDWR | O_CREAT | O_EXCL, 0600);
-        if (fd >= 0 || errno != EEXIST)
+        if (fd >= 0 || (errno != EEXIST && errno != EISDIR))
             return fd;
 
         /*

@@ -7,10 +7,10 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Copyright 2005, 2006, 2007, 2008
  *     Board of Trustees, Leland Stanford Jr. University
- * Copyright 2004, 2005, 2006, 2007
+ * Copyright (c) 2004, 2005, 2006, 2007
  *     by Internet Systems Consortium, Inc. ("ISC")
- * Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
- *     2003 by The Internet Software Consortium and Rich Salz
+ * Copyright (c) 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
+ *     2002, 2003 by The Internet Software Consortium and Rich Salz
  *
  * See LICENSE for licensing terms.
  */
@@ -20,6 +20,7 @@
 
 #include <config.h>
 #include <portable/macros.h>
+#include <portable/stdbool.h>
 
 #include <krb5.h>
 #include <stdarg.h>
@@ -29,6 +30,9 @@
 #define UNUSED __attribute__((__unused__))
 
 BEGIN_DECLS
+
+/* Default to a hidden visibility for all util functions. */
+#pragma GCC visibility push(hidden)
 
 /*
  * Set permissions on a file.  owner and group may be NULL, names, or numeric
@@ -43,7 +47,7 @@ void file_permissions(const char *file, const char *owner, const char *group,
  * Run the given aklog command.  If verbose is true, print some more output to
  * standard output about the exit status.
  */
-void command_run(const char *aklog, int verbose);
+void command_run(const char *aklog, bool verbose);
 
 /*
  * Start a command, executing the given command with the given argument vector
@@ -128,7 +132,7 @@ void message_log_syslog_crit(int, const char *, va_list, int);
 typedef void (*message_handler_func)(int, const char *, va_list, int);
 
 /* If non-NULL, called before exit and its return value passed to exit. */
-int (*message_fatal_cleanup)(void);
+extern int (*message_fatal_cleanup)(void);
 
 /*
  * If non-NULL, prepended (followed by ": ") to all messages printed by either
@@ -195,6 +199,9 @@ void xmalloc_fail(const char *, size_t, const char *, int);
  * just calls sysdie.
  */
 extern xmalloc_handler_type xmalloc_error_handler;
+
+/* Undo default visibility change. */
+#pragma GCC visibility pop
 
 END_DECLS
 

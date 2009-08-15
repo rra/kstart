@@ -1,0 +1,111 @@
+#!/usr/bin/perl -w
+#
+# Tests for k5start with AFS.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $K5START = "$ENV{BUILD}/../k5start";
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = "$ENV{BUILD}/data";
+
+# The path to a shell script that just prints something out.
+our $FAKE_AKLOG = "$ENV{SOURCE}/data/fake-aklog";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# Don't overwrite the user's ticket cache.
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+
+# Decide whether we have the configuration to run the tests.
+my ($principal, $out, $err, $status);
+if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
+    plan skip_all => 'no keytab configuration';
+    exit 0;
+} elsif (not tokens ()) {
+    plan skip_all => 'no current AFS tokens';
+    exit 0;
+} else {
+    $principal = contents ("$DATA/test.principal");
+    unlink 'krb5cc_test';
+    ($out, $err, $status)
+        = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
+    if ($err eq "k5start: cannot create PAG: AFS support is not available\n") {
+        plan skip_all => 'not built with AFS support';
+        exit 0;
+    } else {
+        plan tests => 22;
+    }
+}
+
+# Basic token test.
+is ($status, 0, 'k5start -t succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+      ' and the right output');
+my ($default, $service) = klist ();
+is ($default, undef, ' and the normal ticket cache is untouched');
+
+# Set the token program to something that doesn't obtain tokens.
+# Everything should still work, but we should have no tokens.
+$ENV{AKLOG} = '/bin/true';
+($out, $err, $status)
+    = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'tokens');
+is ($status, 0, 'k5start -t succeeds with no aklog');
+is ($err, '', ' with no errors');
+unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+        ' and we have no tokens');
+delete $ENV{AKLOG};
+
+# Make sure that we run the right aklog program.
+$ENV{AKLOG} = $FAKE_AKLOG;
+($out, $err, $status)
+    = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+is ($status, 0, 'k5start -t succeeds with fake aklog');
+is ($err, '', ' with no errors');
+is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+delete $ENV{AKLOG};
+
+# AKLOG should override KINIT_PROG.
+$ENV{KINIT_PROG} = $FAKE_AKLOG;
+$ENV{AKLOG} = '/bin/true';
+($out, $err, $status)
+    = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+is ($status, 0, 'k5start -t succeeds with /bin/true aklog');
+is ($err, '', ' with no errors');
+is ($out, '', ' and we did not run KINIT_PROG');
+delete $ENV{AKLOG};
+delete $ENV{KINIT_PROG};
+
+# KINIT_PROG should still work.
+$ENV{KINIT_PROG} = $FAKE_AKLOG;
+($out, $err, $status)
+    = command ($K5START, '-tqUf', "$DATA/test.keytab", '--', 'true');
+is ($status, 0, 'k5start -t succeeds with KINIT_PROG');
+is ($err, '', ' with no errors');
+is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+delete $ENV{KINIT_PROG};
+
+# First, get an existing ticket cache.  Then, be sure that, even though
+# the ticket cache is good with -H, we still run aklog if -t was given.
+$ENV{KINIT_PROG} = $FAKE_AKLOG;
+($out, $err, $status) = command ($K5START, '-qUf', "$DATA/test.keytab");
+is ($status, 0, 'k5start succeeds');
+is ($err, '', ' with no errors');
+is ($out, '', ' and no output');
+($out, $err, $status)
+    = command ($K5START, '-tqU', '-H', '60', '-f', "$DATA/test.keytab");
+is ($status, 0, ' and k5start -H 60 -t succeeds with KINIT_PROG');
+is ($err, '', ' with no errors');
+is ($out, "Running fake aklog\n", ' and we ran the fake aklog');
+delete $ENV{KINIT_PROG};
+
+# Clean up.
+unlink 'krb5cc_test';

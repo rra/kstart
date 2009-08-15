@@ -1,13 +1,13 @@
-                           kstart release 3.14
+                           kstart release 3.15
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
          Currently maintained by Russ Allbery <rra@stanford.edu>
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
-  2007, 2008 Board of Trustees, Leland Stanford Jr. University.  Based on
-  code copyright 1987, 1988, 1989 by the Massachusetts Institute of
-  Technology.  This software is distributed under a BSD-style license.
+  2007, 2008, 2009 Board of Trustees, Leland Stanford Jr. University.
+  Based on code copyright 1987, 1988, 1989 by the Massachusetts Institute
+  of Technology.  This software is distributed under a BSD-style license.
   Please see the file LICENSE in the distribution for more information.
 
 BLURB
@@ -87,10 +87,17 @@ REQUIREMENTS
   modules Test::More and Test::Pod installed.  Test::More comes with Perl
   5.8 or later and Test::Pod is available from CPAN.
 
+  To check spelling in the POD documentation, Pod::Spell (available from
+  CPAN) and either aspell or ispell with the american dictionary are also
+  required.  The user's path is searched for aspell or ispell and aspell
+  is preferred.  Spelling tests are disabled by default since spelling
+  dictionaries differ too much between systems.  To enable those tests,
+  set RRA_MAINTAINER_TESTS to a true value.
+
   If you change the Automake files and need to regenerate Makefile.in, you
-  will need Automake 1.10 or later.  If you change configure.ac or any of
+  will need Automake 1.11 or later.  If you change configure.ac or any of
   the m4 files it includes and need to regenerate configure or
-  config.h.in, you will need Autoconf 2.61 or later.
+  config.h.in, you will need Autoconf 2.64 or later.
 
 INSTALLATION
 
@@ -99,6 +106,10 @@ INSTALLATION
       ./configure
       make
       make install
+
+  Pass --enable-silent-rules to configure for a quieter build (similar to
+  the Linux kernel).  Use make warnings instead of make to build with full
+  GCC compiler warnings (requires a relatively current version of GCC).
 
   This will build k4start, k5start, and krenew and install them in
   /usr/local/bin with man pages in /usr/local/man/man1.  You may need to
@@ -113,13 +124,30 @@ INSTALLATION
   change the installation locations of the binaries and manual pages
   separately.
 
-  If your Kerberos v5 libraries aren't installed in a location found by
-  your compiler by default, use the --with-krb5=PATH option to configure.
-  The Kerberos libraries will then be expected in PATH/lib and the headers
-  in PATH/include.  Similarly, if your Kerberos v4 libraries aren't found
-  by dfeault, use the --with-krb4=PATH option to configure.  If you only
-  want to build k5start and krenew, pass the --disable-k4start flag to
+  If Kerberos v4 libraries are found during configure time, k4start will
+  be built.  Otherwise, it will be skipped.  To never build k4start, even
+  if Kerberos v4 libraries are available, pass --disable-k4start to
   configure.
+
+  Normally, configure will use krb5-config to determine the flags to use
+  to compile with your Kerberos libraries.  If krb5-config isn't found, it
+  will look for the standard Kerberos libraries in locations already
+  searched by your compiler.  If the the krb5-config script first in your
+  path is not the one corresponding to the Kerberos libraries you want to
+  use or if your Kerberos libraries and includes aren't in a location
+  searched by default by your compiler, you need to specify
+  --with-krb5=PATH:
+
+      ./configure --with-krb5=/usr/pubsw
+
+  You can also individually set the paths to the include directory and the
+  library directory with --with-krb5-include and --with-krb5-lib.  You may
+  need to do this if Autoconf can't figure out whether to use lib, lib32,
+  or lib64 on your platform.  Similarly, if your Kerberos v4 libraries
+  aren't found by default and krb5-config doesn't return the flags for
+  building with Kerberos v4, use the --with-krb4, --with-krb4-include, or
+  --with-krb4-lib options to configure.  Note that these settings aren't
+  used if a krb5-config script is found.
 
   To specify a particular krb5-config script to use, either set the
   KRB5_CONFIG environment variable or pass it to configure like:

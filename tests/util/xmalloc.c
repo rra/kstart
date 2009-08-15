@@ -1,26 +1,16 @@
 /*
  * Test suite for xmalloc and family.
  *
+ * Copyright 2008 Board of Trustees, Leland Stanford Jr. University
  * Copyright 2004, 2005, 2006
  *     by Internet Systems Consortium, Inc. ("ISC")
  * Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
  *     2003 by The Internet Software Consortium and Rich Salz
  *
- * This code is derived from software contributed to the Internet Software
- * Consortium by Rich Salz.
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * See LICENSE for licensing terms.
  */
+
+#line 1 "xmalloc.c"
 
 #include <config.h>
 #include <portable/system.h>
@@ -81,20 +71,19 @@ test_realloc(size_t size)
     char *buffer;
     size_t i;
 
-    buffer = xmalloc(size / 2);
+    buffer = xmalloc(10);
     if (buffer == NULL)
         return 0;
-    if (size / 2 > 0)
-        memset(buffer, 1, size / 2);
+    memset(buffer, 1, 10);
     buffer = xrealloc(buffer, size);
     if (buffer == NULL)
         return 0;
     if (size > 0)
-        memset(buffer + size / 2, 2, size - size / 2);
-    for (i = 0; i < size / 2; i++)
+        memset(buffer + 10, 2, size - 10);
+    for (i = 0; i < 10; i++)
         if (buffer[i] != 1)
             return 0;
-    for (i = size / 2; i < size; i++)
+    for (i = 10; i < size; i++)
         if (buffer[i] != 2)
             return 0;
     free(buffer);
@@ -257,6 +246,7 @@ main(int argc, char *argv[])
     int willfail = 0;
     unsigned char code;
     struct rlimit rl;
+    void *tmp;
 
     if (argc < 3)
         die("Usage error.  Type, size, and limit must be given.");
@@ -268,27 +258,6 @@ main(int argc, char *argv[])
     limit = strtol(argv[3], 0, 10);
     if (limit == 0 && errno != 0)
         sysdie("Invalid limit");
-
-    /*
-     * If a memory limit was given and we can set memory limits, set it.
-     * Otherwise, exit 2, signalling to the driver that the test should be
-     * skipped.  We do this here rather than in the driver due to some
-     * pathological problems with Linux (setting ulimit in the shell caused
-     * the shell to die).
-     */
-    if (limit > 0) {
-#if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
-        rl.rlim_cur = limit;
-        rl.rlim_max = limit;
-        if (setrlimit(RLIMIT_DATA, &rl) < 0) {
-            syswarn("Can't set data limit to %lu", (unsigned long) limit);
-            exit(2);
-        }
-#else
-        warn("Data limits aren't supported.");
-        exit(2);
-#endif
-    }
 
     /* If the code is capitalized, install our customized error handler. */
     code = argv[1][0];
@@ -303,10 +272,43 @@ main(int argc, char *argv[])
      * that the test should be skipped.
      */
     max = size;
-    if (code == 's' || code == 'n' || code == 'a' || code == 'v')
-        max *= 2;
+    if (code == 's' || code == 'n' || code == 'a' || code == 'v') {
+        max += size;
+        if (limit > 0)
+            limit += size;
+    }
     if (limit > 0 && max > limit)
         willfail = 2;
+
+    /*
+     * If a memory limit was given and we can set memory limits, set it.
+     * Otherwise, exit 2, signalling to the driver that the test should be
+     * skipped.  We do this here rather than in the driver due to some
+     * pathological problems with Linux (setting ulimit in the shell caused
+     * the shell to die).
+     */
+    if (limit > 0) {
+#if HAVE_SETRLIMIT && defined(RLIMIT_AS)
+        rl.rlim_cur = limit;
+        rl.rlim_max = limit;
+        if (setrlimit(RLIMIT_AS, &rl) < 0) {
+            syswarn("Can't set data limit to %lu", (unsigned long) limit);
+            exit(2);
+        }
+        if (size < limit || code == 'r') {
+            tmp = malloc(code == 'r' ? 10 : size);
+            if (tmp == NULL) {
+                syswarn("Can't allocate initial memory of %lu",
+                        (unsigned long) size);
+                exit(2);
+            }
+            free(tmp);
+        }
+#else
+        warn("Data limits aren't supported.");
+        exit(2);
+#endif
+    }
 
     switch (code) {
     case 'c': exit(test_calloc(size) ? willfail : 1);

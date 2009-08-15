@@ -15,21 +15,25 @@
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
-#include <portable/time.h>
 
 #include <errno.h>
 #include <netdb.h>
 #include <pwd.h>
+#include <sys/signal.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#include <time.h>
 
+#include <kafs/kafs.h>
 #include <util/util.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -56,12 +60,15 @@ struct options {
     const char *keytab;
     int happy_ticket;
     int keep_ticket;
-    int quiet;
-    int run_aklog;
+    bool quiet;
+    bool run_aklog;
     const char *aklog;
-    int stdin_passwd;
-    int verbose;
+    bool stdin_passwd;
+    bool verbose;
 };
+
+/* Set when k5start receives SIGALRM. */
+static volatile sig_atomic_t alarm_signaled = 0;
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -119,6 +126,16 @@ usage(int status)
 
 
 /*
+ * Signal handler for SIGALRM.  Just sets the global sentinel variable.
+ */
+static void
+alarm_handler(int s UNUSED)
+{
+    alarm_signaled = 1;
+}
+
+
+/*
  * Given a context and a principal, get the realm.  This works differently in
  * MIT Kerberos and Heimdal, unfortunately.
  */
@@ -136,7 +153,7 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
     krb5_data *data;
 
     data = krb5_princ_realm(ctx, princ);
-    if (data == NULL)
+    if (data == NULL || data->data == NULL)
         die("cannot get local Kerberos realm");
     return data->data;
 #endif
@@ -315,16 +332,16 @@ main(int argc, char *argv[])
     char **command = NULL;
     char *childfile = NULL;
     char *pidfile = NULL;
-    int background = 0;
-    int nonforwardable = 0;
-    int nonproxiable = 0;
+    bool background = false;
+    bool nonforwardable = false;
+    bool nonproxiable = false;
     int lifetime = DEFAULT_LIFETIME;
     krb5_context ctx;
     krb5_deltat life_secs;
     int status = 0;
     pid_t child = 0;
-    int clean_cache = 0;
-    int search_keytab = 0;
+    bool clean_cache = false;
+    bool search_keytab = false;
     static const char optstring[] = "bc:Ff:g:H:hI:i:K:k:l:m:no:Pp:qr:S:stUu:v";
 
     /* Initialize logging. */
@@ -334,9 +351,9 @@ main(int argc, char *argv[])
     memset(&options, 0, sizeof(options));
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'b': background = 1;               break;
+        case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
-        case 'F': nonforwardable = 1;           break;
+        case 'F': nonforwardable = true;        break;
         case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
@@ -344,14 +361,14 @@ main(int argc, char *argv[])
         case 'm': mode = optarg;                break;
         case 'n': /* Ignored */                 break;
         case 'o': owner = optarg;               break;
-        case 'P': nonproxiable = 1;             break;
+        case 'P': nonproxiable = true;          break;
         case 'p': pidfile = optarg;             break;
-        case 'q': options.quiet = 1;            break;
+        case 'q': options.quiet = true;         break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
-        case 't': options.run_aklog = 1;        break;
-        case 'v': options.verbose = 1;          break;
-        case 'U': search_keytab = 1;            break;
+        case 't': options.run_aklog = true;     break;
+        case 'v': options.verbose = true;       break;
+        case 'U': search_keytab = true;         break;
         case 'u': principal = optarg;           break;
 
         case 'f':
@@ -379,7 +396,7 @@ main(int argc, char *argv[])
             lifetime = life_secs / 60;
             break;
         case 's':
-            options.stdin_passwd = 1;
+            options.stdin_passwd = true;
             if (options.keytab != NULL)
                 die("cannot use both -s and -f flags");
             break;
@@ -475,18 +492,15 @@ main(int argc, char *argv[])
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
         cache = tmp;
-        clean_cache = 1;
+        clean_cache = true;
     }
     if (cache == NULL) {
         code = krb5_cc_default(ctx, &options.ccache);
         if (code != 0)
             cache = krb5_cc_get_name(ctx, options.ccache);
     } else {
-        char *env;
-
-        if (xasprintf(&env, "KRB5CCNAME=%s", cache) < 0)
-            die("cannot format KRB5CCNAME environment variable");
-        putenv(env);
+        if (setenv("KRB5CCNAME", cache, 1) != 0)
+            die("cannot set KRB5CCNAME environment variable");
         code = krb5_cc_resolve(ctx, cache, &options.ccache);
     }
     if (code != 0)
@@ -498,7 +512,7 @@ main(int argc, char *argv[])
      */
     if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
         if (!options.verbose)
-            options.quiet = 1;
+            options.quiet = true;
 
     /*
      * The easiest thing for us is if the user just specifies the full
@@ -570,10 +584,18 @@ main(int argc, char *argv[])
     if (nonproxiable)
         krb5_get_init_creds_opt_set_proxiable(&options.kopts, 0);
 
-    /* If we're just checking the service ticket, do that and exit if okay. */
+    /*
+     * If we're just checking the service ticket, do that and exit if okay.
+     * Still re-run aklog if requested, though, since the token may have
+     * expired or we may be initializing a new PAG from an existing ticket
+     * cache.
+     */
     if (options.happy_ticket > 0 && command == NULL)
-        if (!ticket_expired(ctx, &options))
+        if (!ticket_expired(ctx, &options)) {
+            if (options.run_aklog)
+                command_run(options.aklog, options.verbose);
             exit(0);
+        }
 
     /*
      * If built with setpag support and we're running a command, create the
@@ -605,10 +627,11 @@ main(int argc, char *argv[])
         file_permissions(cache, owner, group, mode);
 
     /*
-     * If told to background, background ourselves.  We do this late so that
-     * we can report initial errors.  We have to do this before spawning the
-     * command, though, since we want to background the command as well and
-     * since otherwise we wouldn't be able to wait for the child process.
+     * If told to background, set signal handlers and background ourselves.
+     * We do this late so that we can report initial errors.  We have to do
+     * this before spawning the command, though, since we want to background
+     * the command as well and since otherwise we wouldn't be able to wait for
+     * the child process.
      */
     if (background)
         daemon(0, 0);
@@ -662,7 +685,12 @@ main(int argc, char *argv[])
     /* Loop if we're running as a daemon. */
     if (options.keep_ticket > 0) {
         struct timeval timeout;
+        struct sigaction sa;
 
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = alarm_handler;
+        if (sigaction(SIGALRM, &sa, NULL) < 0)
+            sysdie("cannot set SIGALRM handler");
         while (1) {
             if (command != NULL) {
                 result = command_finish(child, &status);
@@ -674,12 +702,13 @@ main(int argc, char *argv[])
             timeout.tv_sec = options.keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            if (ticket_expired(ctx, &options)) {
+            if (alarm_signaled || ticket_expired(ctx, &options)) {
                 authenticate(ctx, &options);
                 if (options.run_aklog)
                     command_run(options.aklog, options.verbose);
                 if (owner != NULL || group != NULL || mode != NULL)
                     file_permissions(cache, owner, group, mode);
+                alarm_signaled = 0;
             }
         }
     }

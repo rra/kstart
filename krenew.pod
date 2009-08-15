@@ -6,12 +6,12 @@ krenew
 krenew - Renew a Kerberos v5 ticket
 
 =for stopwords
--bhtv aklog AFS OpenSSH PAG HUP KRB5CCNAME AKLOG kstart afslog Allbery
-Bense
+-bhitv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-bhitv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-p> I<pid file>]
     [I<command> ...]
 
@@ -53,6 +53,9 @@ then exit.)  This allows B<krenew> to react properly when run under a
 command supervision system such as runit(8) or svscan(8) that uses signals
 to control supervised commands.
 
+If a running B<krenew> receives an ALRM signal, it immediately refreshes
+the ticket cache regardless of whether it is in danger of expiring.
+
 =head1 OPTIONS
 
 =over 4
@@ -65,6 +68,10 @@ command that B<krenew> will be running.  B<krenew> will not background
 itself until after it does the initial ticket renewal, so that any initial
 errors will be reported, but it will then redirect output to F</dev/null>
 and no subsequent errors will be reported.
+
+If this flag is given, B<krenew> will also change directories to C</>.
+All paths (such as to a command to run or a PID file) should therefore be
+given as absolute, not relative, paths.
 
 If used in conjunction with a command to run, that command will also run
 in the background and will also have its input and output redirected to
@@ -109,13 +116,30 @@ command, if any.  Cannot be used with B<-K>.
 
 Display a usage message and exit.
 
+=item B<-i>
+
+Ignore errors in renewing the ticket and keep running.  Normally,
+B<krenew> exits as soon as it fails to renew the Kerberos ticket cache.
+If this flag is given, it will complain about the failure to standard
+error (unless B<-b> was given) but continue running, waking up to try
+again after the next check interval (see B<-K>).  This is useful if some
+other process may recreate an expired ticket cache and B<krenew> should
+stay around and act on that recreated ticket cache once it's present.
+
+Setup errors opening the Kerberos ticket cache or running the command will
+still cause B<krenew> to exit, even if this flag is given.  Only Kerberos
+errors after B<krenew> is running will be ignored.
+
+This flag is only useful in daemon mode or when a command was given.
+
 =item B<-K> I<minutes>
 
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before the next wakeup, and renews the ticket if needed.  If this option
-is not given but a command was given on the command line, the default
-interval is 60 minutes (1 hour).
+before or less than two minutes before the next scheduled check, and
+renews the ticket if needed.  If this option is not given but a command
+was given on the command line, the default interval is 60 minutes (1
+hour).
 
 =item B<-k> I<ticket file>
 
