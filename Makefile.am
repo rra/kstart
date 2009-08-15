@@ -9,7 +9,7 @@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod krenew.pod  \
-	kstart.spec tests/data/README tests/data/command		   \
+	kstart.spec tests/TESTS tests/data/README tests/data/command	   \
 	tests/data/fake-aklog tests/docs/pod-spelling-t tests/docs/pod-t   \
 	tests/k4start/afs-t tests/k4start/basic-t tests/k5start/afs-t	   \
 	tests/k5start/basic-t tests/k5start/daemon-t tests/k5start/flags-t \
