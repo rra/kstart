@@ -13,7 +13,8 @@ EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod krenew.pod  \
 	tests/data/fake-aklog tests/docs/pod-spelling-t tests/docs/pod-t   \
 	tests/k4start/afs-t tests/k4start/basic-t tests/k5start/afs-t	   \
 	tests/k5start/basic-t tests/k5start/daemon-t tests/k5start/flags-t \
-	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t
+	tests/kafs/basic-t tests/krenew/afs-t tests/krenew/basic-t	   \
+	tests/krenew/daemon-t
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
@@ -34,15 +35,8 @@ else
     K5START_LIBS = $(KAFS_LIBS) $(KRB5_LIBS)
 endif
 
-# We potentially need these for everything and there's no other way to
-# set AM_CPPFLAGS for use with LIBOBJS.
+# We potentially need these for everything due to the libkafs library.
 AM_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
-
-bin_PROGRAMS = k5start krenew
-k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-k5start_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
-krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-krenew_LDADD = util/libutil.a portable/libportable.a $(K5START_LIBS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/dummy.c portable/kafs.h \
@@ -51,15 +45,33 @@ portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
 	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
 
+# Conditionally build the replacement kafs library and add it to the
+# libraries used by the other programs.
+if NEED_KAFS
+    noinst_LIBRARIES += kafs/libkafs.a
+    EXTRA_kafs_libkafs_a_SOURCES = kafs/sys-linux.c kafs/sys-syscall.c
+    kafs_libkafs_a_SOURCES = kafs/kafs.c kafs/kafs.h
+    kafs_libkafs_a_CPPFLAGS = $(KAFS_CPPFLAGS)
+    LIBKAFS = kafs/libkafs.a
+endif
+
+bin_PROGRAMS = k5start krenew
+k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+	$(K5START_LIBS)
+krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+	$(K5START_LIBS)
 dist_man_MANS = k5start.1 krenew.1
 
 # Conditionally add k4start to the build.
 if K4START
-bin_PROGRAMS += k4start
-k4start_SOURCES = k4start.c portable/krb4.h
-k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
-k4start_LDADD = util/libutil.a portable/libportable.a $(K4START_LIBS)
-dist_man_MANS += k4start.1
+    bin_PROGRAMS += k4start
+    k4start_SOURCES = k4start.c portable/krb4.h
+    k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
+    k4start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+	$(K4START_LIBS)
+    dist_man_MANS += k4start.1
 endif
 
 DISTCLEANFILES = tests/data/.placeholder
@@ -80,10 +92,10 @@ warnings:
 	$(MAKE) CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/portable/asprintf-t		\
-	tests/portable/daemon-t tests/portable/mkstemp-t		\
-	tests/portable/setenv-t tests/portable/snprintf-t		\
-	tests/portable/strlcat-t tests/portable/strlcpy-t		\
+check_PROGRAMS = tests/runtests tests/kafs/basic tests/portable/asprintf-t \
+	tests/portable/daemon-t tests/portable/mkstemp-t		   \
+	tests/portable/setenv-t tests/portable/snprintf-t		   \
+	tests/portable/strlcat-t tests/portable/strlcpy-t		   \
 	tests/util/concat-t tests/util/messages-t tests/util/xmalloc
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
@@ -91,7 +103,18 @@ check_LIBRARIES = tests/tap/libtap.a
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h
 
-# All of the test programs.
+# kafs tests are buit differently depending on whether we use our local
+# libkafs replacement.
+if NEED_KAFS
+tests_kafs_basic_CPPFLAGS = $(KAFS_CPPFLAGS)
+tests_kafs_basic_LDFLAGS = $(KAFS_LDFLAGS)
+tests_kafs_basic_LDADD = kafs/libkafs.a util/libutil.a \
+        portable/libportable.a $(KAFS_LIBS)
+else
+tests_kafs_basic_LDADD = util/libutil.a portable/libportable.a $(KAFS_LIBS)
+endif
+
+# All of the other test programs.
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
 tests_portable_asprintf_t_LDADD = tests/tap/libtap.a util/libutil.a \

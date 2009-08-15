@@ -15,6 +15,7 @@
 /stamp-h1
 /tests/data/.placeholder
 /tests/data/test.*
+/tests/kafs/basic
 /tests/portable/asprintf-t
 /tests/portable/daemon-t
 /tests/portable/mkstemp-t

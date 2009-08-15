@@ -22,7 +22,6 @@
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
 
 #include <errno.h>
 #include <netdb.h>
@@ -34,6 +33,7 @@
 #endif
 #include <time.h>
 
+#include <kafs/kafs.h>
 #include <util/util.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */

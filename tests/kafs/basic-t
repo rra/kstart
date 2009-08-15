@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# Test suite for the kafs library.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+#
+# See LICENSE for licensing terms.
+
+. "$SOURCE/tap/libtap.sh"
+cd "$BUILD/kafs"
+
+# Check whether we already have a token.
+if tokens | grep -i 'tokens for ' >/dev/null ; then
+    tokens=true
+else
+    tokens=false
+fi
+
+# Run the helper program and save its output and error.
+./basic > basic-output 2> basic-errors
+status=$?
+
+# If it exited with status 2, AFS is apparently not running and we should skip
+# all of the tests.
+if [ "$status" -eq 2 ] ; then
+    skip_all 'AFS not available'
+fi
+plan 5
+
+# If we don't currently have a token, we can't check that it disappears after
+# k_setpag.  Otherwise, check the first tokens output and be sure that no
+# tokens are seen.
+if sed -n '/^=== tokens .setpag./,/^===/p' basic-output \
+        | grep -i 'tokens for ' > /dev/null ; then
+    ok 'k_setpag hides existing tokens' false
+else
+    if [ "$tokens" = true ] ; then
+        ok 'k_setpag hides existing tokens' true
+    else
+        skip 'no existing tokens'
+    fi
+fi
+
+# If aklog failed, we can't run the rest of the tests.
+if [ "$status" -eq 3 ] ; then
+    skip_block 3 'aklog failed'
+else
+    if sed -n '/^=== tokens .aklog./,/^===/p' basic-output \
+            | grep -i 'tokens for ' > /dev/null ; then
+        ok 'token present after aklog' true
+    else
+        ok 'token present after aklog' false
+    fi
+
+    # Check for no token after k_unlog.
+    if sed -n '/^=== tokens .unlog./,/^===/p' basic-output \
+            | grep -i 'tokens for ' > /dev/null ; then
+        ok 'token absent after unlog' false
+    else
+        ok 'token absent after unlog' true
+    fi
+
+    # Be sure that everything succeeded; otherwise print out the errors file.
+    if [ "$status" -ne 0 ] ; then
+        sed 's/^/#/' basic-errors
+    fi
+    ok 'all kafs calls succeeded' [ "$status" -eq 0 ]
+fi
+
+# Ensure that none of this affected our starting token.
+if [ "$tokens" = true ] ; then
+    if tokens | grep -i 'tokens for ' >/dev/null ; then
+        ok 'still have initial token' true
+    else
+        ok 'still have initial token' false
+    fi
+else
+    skip 'no existing tokens'
+fi
+
+# Clean up.
+rm basic-output basic-errors

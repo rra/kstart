@@ -16,7 +16,6 @@
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
 
 #include <sys/signal.h>
 #include <sys/stat.h>
@@ -25,6 +24,7 @@
 #endif
 #include <time.h>
 
+#include <kafs/kafs.h>
 #include <util/util.h>
 
 /*

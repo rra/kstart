@@ -20,7 +20,6 @@
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
 #include <portable/krb4.h>
 
 #include <errno.h>
@@ -31,6 +30,7 @@
 #endif
 #include <time.h>
 
+#include <kafs/kafs.h>
 #include <util/util.h>
 
 /*

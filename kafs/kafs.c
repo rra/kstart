@@ -4,8 +4,7 @@
  * This is a simple implementation of the k_hasafs, k_setpag, and k_unlog
  * functions.  It is for use on systems that don't have libkafs or
  * libkopenafs, or where a dependency on those libraries is not desirable for
- * some reason.  It relies on an implementation of pamafs_syscall; available
- * versions are provided in files named kafs-*.c and selected by configure.
+ * some reason.
  *
  * A more robust implementation of the full kafs interface would have a
  * separate header file with the various system call constants and would
@@ -15,14 +14,14 @@
  * hard-coded here.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2009
+ *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
 #include <portable/system.h>
-#include <portable/kafs.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -33,11 +32,28 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
+#include <kafs/kafs.h>
+
 /* Used for unused parameters to silence gcc warnings. */
 #define UNUSED __attribute__((__unused__))
 
 /* Provided by the relevant sys-*.c file. */
-extern int k_syscall(long, long, long, long, long, int *);
+static int k_syscall(long, long, long, long, long, int *);
+
+/*
+ * Include the syscall implementation for this host, based on the configure
+ * results.  An include of the C source is easier to handle in the build
+ * machinery than lots of Automake conditionals.
+ *
+ * The included file must provide a k_syscall implementation.
+ */
+#if defined(HAVE_KAFS_LINUX)
+# include <kafs/sys-linux.c>
+#elif defined(HAVE_KAFS_SYSCALL)
+# include <kafs/sys-syscall.c>
+#else
+# error "Unknown AFS system call implementation"
+#endif
 
 /*
  * The struct passed to unlog as an argument.  All the values are NULL or 0,
@@ -61,6 +77,9 @@ struct ViceIoctl {
  * be triggered in the normal case of AFS being loaded and the only time that
  * we change this static variable is to say that the call failed, so there
  * shouldn't be a collision of updates from multiple calls.
+ *
+ * It's probably safe to just ignore SIGSYS instead, but this feels more
+ * thorough.
  */
 static volatile sig_atomic_t syscall_okay = 1;
 
@@ -69,7 +88,7 @@ static volatile sig_atomic_t syscall_okay = 1;
  * Signal handler to catch failed system calls and change the okay flag.
  */
 #ifdef SIGSYS
-static RETSIGTYPE
+static void
 sigsys_handler(int s UNUSED)
 {
     syscall_okay = 0;
@@ -83,6 +102,9 @@ sigsys_handler(int s UNUSED)
  * standard part of the kafs interface, but we don't export it here since our
  * code never needs to call it directly and therefore doesn't need to know the
  * constants that it uses.
+ *
+ * This interface assumes that all pointers can be represented in a long, but
+ * then so does the whole AFS system call interface.
  */
 static int
 k_pioctl(const char *path, int cmd, const void *cmarg, int follow)
@@ -97,16 +119,16 @@ k_pioctl(const char *path, int cmd, const void *cmarg, int follow)
 
 
 /*
- * Probe to see if AFS is available and we can make system calls
- * successfully.  This just attempts the set token system call with an empty
- * token structure, which will be a no-op in the kernel.
+ * Probe to see if AFS is available and we can make system calls successfully.
+ * This just attempts the set token system call with an empty token structure,
+ * which will be a no-op in the kernel.
  */
 int
 k_hasafs(void)
 {
     struct ViceIoctl iob;
     int id, result, err, saved_errno, okay;
-    RETSIGTYPE (*saved_func)(int);
+    void (*saved_func)(int);
 
     saved_errno = errno;
 

@@ -63,9 +63,11 @@ AS_IF([test x"$rra_build_k4start" != xfalse],
 AM_CONDITIONAL([K4START], [test x"$rra_build_k4start" = xtrue])
 
 dnl See if AFS setpag support is desired.
+rra_build_kafs=false
 AC_ARG_ENABLE([setpag],
     [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
+AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
 
 dnl Other portability checks.
 AC_HEADER_STDBOOL
