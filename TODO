@@ -7,6 +7,9 @@ General:
    that differ between the three programs, which will significantly reduce
    code duplication.
 
+ * Add optional syslog logging of errors, particularly useful when
+   backgrounded with -b.
+
 k5start:
 
  * Add support to k5start for obtaining K4 tickets in addition to K5
@@ -23,6 +26,14 @@ k5start:
    In this case, there's no reason for k5start to keep running once the
    command has been started, so it can simply exit after spawning the
    command.
+
+ * Add a flag similar to krenew -i that continues running despite errors.
+
+krenew:
+
+ * If we encounter an error renewing the ticket cache and the -i flag is
+   in use, don't wait the normal period; instead, shorten the wakeup
+   period and keep retrying until the error resolves itself.
 
 Documentation:
 
