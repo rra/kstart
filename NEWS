@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 3.15 (unreleased)
+kstart 3.15 (2009-08-15)
 
     k5start and krenew now catch SIGALRM and immediately refresh the
     ticket cache upon receiving it, even if the ticket isn't expired.
