@@ -200,7 +200,7 @@ AC_DEFUN([RRA_LIB_KRB4_OPTIONAL],
  AC_SUBST([KRB4_LIBS])
 
  AC_ARG_WITH([krb4],
-    [AS_HELP_STRING([--with-krb4<:@=DIR:>@],
+    [AS_HELP_STRING([--with-krb4@<:@=DIR@:>@],
         [Location of Kerberos v4 headers and libraries])],
     [AS_IF([test x"$withval" = xno],
         [rra_use_krb4=false],
