@@ -70,6 +70,10 @@ after it does the initial authentication, so that any initial errors will
 be reported, but it will then redirect output to F</dev/null> and no
 subsequent errors will be reported.
 
+If this flag is given, B<k4start> will also change directories to C</>.
+All paths (such as to a command to run or a PID file) should therefore be
+given as absolute, not relative, paths.
+
 If used in conjunction with a command to run, that command will also run
 in the background and will also have its input and output redirected to
 F</dev/null>.  It will have to report any errors via some other mechanism
@@ -135,8 +139,8 @@ option.
 
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
-before or less than two minutes after the next wakeup, and gets a new
-ticket if needed.
+before or less than two minutes after the next scheduled check, and gets a
+new ticket if needed.
 
 =item B<-k> I<ticket file>
 

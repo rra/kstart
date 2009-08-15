@@ -39,7 +39,7 @@ int lsetpag(void);
 # define k_hasafs() (1)
 # define k_setpag() lsetpag()
 # define k_unlog()  (errno = ENOSYS, -1)
-#elif defined(HAVE_AFS_PARAM_H) || defined(HAVE_LINUX_AFS)
+#elif defined(HAVE_AFS_PARAM_H) || defined(HAVE_KAFS_LINUX)
 int k_hasafs(void);
 int k_setpag(void);
 int k_unlog(void);

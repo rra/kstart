@@ -4,8 +4,8 @@
  * Run a command, possibly a long-running one for which we need to wait.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008
- *     Board of Trustees, Leland Stanford Jr. University
+ * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007,
+ *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
@@ -27,7 +27,7 @@ static pid_t global_child_pid;
  * be a fully-qualified path.
  */
 void
-command_run(const char *aklog, int verbose)
+command_run(const char *aklog, bool verbose)
 {
     int status;
 
@@ -47,7 +47,7 @@ command_run(const char *aklog, int verbose)
  * anything.  We just want the signal to be caught so that select will be
  * interrupted.
  */
-static RETSIGTYPE
+static void
 child_handler(int sig UNUSED)
 {
     /* Do nothing. */
@@ -58,7 +58,7 @@ child_handler(int sig UNUSED)
  * This handler is installed for signals that should be propagated to the
  * child (and ignored by kstart).
  */
-static RETSIGTYPE
+static void
 propagate_handler(int sig)
 {
     kill(global_child_pid, sig);

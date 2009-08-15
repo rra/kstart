@@ -6,22 +6,16 @@
  * exists).  It is for use on systems that don't have libkafs or libkopenafs,
  * or where a dependency on those libraries is not desirable for some reason.
  *
+ * This file is included by kafs/kafs.c on Linux platforms and therefore
+ * doesn't need its own copy of standard includes, only whatever additional
+ * data is needed for the Linux interface.
+ *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2009
+ *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
-
-#include <config.h>
-#include <portable/system.h>
-
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-
-/* The interface we implement. */
-int k_syscall(long, long, long, long, long, int *);
 
 /* 
  * The struct passed to ioctl to do an AFS system call.  Definition taken from
@@ -43,8 +37,12 @@ struct afsprocdata {
  *
  * The first path we attempt is the OpenAFS path; the second is the one used
  * by Arla (at least some versions).
+ *
+ * Returns -1 and sets errno to ENOSYS if attempting a system call fails and 0
+ * otherwise.  If the system call was made, its return status will be stored
+ * in rval.
  */
-int
+static int
 k_syscall(long call, long param1, long param2, long param3, long param4,
           int *rval)
 {
@@ -54,8 +52,10 @@ k_syscall(long call, long param1, long param2, long param3, long param4,
     fd = open("/proc/fs/openafs/afs_ioctl", O_RDWR);
     if (fd < 0)
         fd = open("/proc/fs/nnpfs/afs_ioctl", O_RDWR);
-    if (fd < 0)
+    if (fd < 0) {
+        errno = ENOSYS;
         return -1;
+    }
 
     syscall_data.syscall = call;
     syscall_data.param1 = param1;

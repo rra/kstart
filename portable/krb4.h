@@ -27,10 +27,16 @@
 
 BEGIN_DECLS
 
+/* Default to a hidden visibility for all portability functions. */
+#pragma GCC visibility push(hidden)
+
 #if !HAVE_KRB_LIFE_TO_TIME
 time_t krb_life_to_time(time_t, int);
 int krb_time_to_life(KRB4_32, KRB4_32);
 #endif
+
+/* Undo default visibility change. */
+#pragma GCC visibility pop
 
 END_DECLS
 

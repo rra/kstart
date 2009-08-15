@@ -38,11 +38,20 @@
 /* Define to 1 if you have the <kafs.h> header file. */
 #undef HAVE_KAFS_H
 
+/* Define to 1 to use the Linux AFS /proc interface. */
+#undef HAVE_KAFS_LINUX
+
+/* Define to 1 to use the AFS syscall interface. */
+#undef HAVE_KAFS_SYSCALL
+
 /* Define to 1 if you have the <kerberosIV/krb.h> header file. */
 #undef HAVE_KERBEROSIV_KRB_H
 
 /* Define to 1 if you have the <kopenafs.h> header file. */
 #undef HAVE_KOPENAFS_H
+
+/* Define to enable Kerberos v4 features. */
+#undef HAVE_KRB4
 
 /* Define to 1 if you have the `krb5_cc_copy_creds' function. */
 #undef HAVE_KRB5_CC_COPY_CREDS
@@ -55,6 +64,9 @@
 
 /* Define to 1 if you have the `krb5_get_error_message' function. */
 #undef HAVE_KRB5_GET_ERROR_MESSAGE
+
+/* Define to 1 if you have the `krb5_get_error_string' function. */
+#undef HAVE_KRB5_GET_ERROR_STRING
 
 /* Define to 1 if you have the `krb5_get_err_txt' function. */
 #undef HAVE_KRB5_GET_ERR_TXT
@@ -78,9 +90,6 @@
 /* Define to 1 if you have the k_hasafs function. */
 #undef HAVE_K_HASAFS
 
-/* Define to 1 to use the Linux AFS /proc interface. */
-#undef HAVE_LINUX_AFS
-
 /* Define to 1 if the system has the type `long long'. */
 #undef HAVE_LONG_LONG
 
@@ -92,6 +101,9 @@
 
 /* Define to 1 if you have the `mkstemp' function. */
 #undef HAVE_MKSTEMP
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
 
 /* Define to 1 if you have the `setrlimit' function. */
 #undef HAVE_SETRLIMIT
@@ -116,6 +128,12 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strlcat' function. */
+#undef HAVE_STRLCAT
+
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
 
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H
@@ -159,35 +177,58 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
 /* Full path to aklog binary. */
 #undef PATH_AKLOG
 
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#undef TIME_WITH_SYS_TIME
-
-/* Version number of package */
-#undef VERSION
-
-/* Define to 1 if on AIX 3.
-   System headers sometimes define this.
-   We just want to avoid a redefinition error message.  */
+/* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # undef _ALL_SOURCE
 #endif
-
 /* Enable GNU extensions on systems that have them.  */
 #ifndef _GNU_SOURCE
 # undef _GNU_SOURCE
 #endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# undef _POSIX_PTHREAD_SEMANTICS
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# undef _TANDEM_SOURCE
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# undef __EXTENSIONS__
+#endif
 
-/* Define to 1 on Solaris for correct errno handling with threads. */
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to 1 if on MINIX. */
+#undef _MINIX
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+#undef _POSIX_1_SOURCE
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+#undef _POSIX_SOURCE
+
+/* Define to 1 on Solaris for threaded errno handling. */
 #undef _REENTRANT
+
+/* Define to int if <signal.h> does not define. */
+#undef sig_atomic_t

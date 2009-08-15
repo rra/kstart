@@ -12,6 +12,18 @@ k5start:
  * Add support to k5start for obtaining K4 tickets in addition to K5
    tickets, using the DES key in a keytab.
 
+ * Add a flag saying to start a command in a PAG and with tokens and then
+   keep running even if the command exits.  This would be useful to spawn
+   a long-running daemon inside a PAG and then maintain its tokens, even
+   if k5start and the daemon then become detached and have to be stopped
+   separately.
+
+ * Relax the requirement to use keytabs when running a command and support
+   prompting for the authentication password before starting the command.
+   In this case, there's no reason for k5start to keep running once the
+   command has been started, so it can simply exit after spawning the
+   command.
+
 Documentation:
 
  * Document how to start Apache with tickets and AFS tokens, either using
@@ -38,7 +50,3 @@ Test suite:
 
  * Add tests of -o, -g, and -m.  Testing -o and -g will require using
    fakeroot.
-
-Code cleanup:
-
- * Use bool everywhere appropriate instead of int.
