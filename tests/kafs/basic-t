@@ -24,6 +24,7 @@ status=$?
 # If it exited with status 2, AFS is apparently not running and we should skip
 # all of the tests.
 if [ "$status" -eq 2 ] ; then
+    rm -f basic-output basic-errors
     skip_all 'AFS not available'
 fi
 plan 5
@@ -80,4 +81,4 @@ else
 fi
 
 # Clean up.
-rm basic-output basic-errors
+rm -f basic-output basic-errors
