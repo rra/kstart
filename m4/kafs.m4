@@ -195,5 +195,4 @@ AC_DEFUN([RRA_LIB_KAFS],
          AC_DEFINE([HAVE_KAFS_SYSCALL], [1],
             [Define to 1 to use the AFS syscall interface.])
          AC_DEFINE([_REENTRANT], [1],
-            [Define to 1 on Solaris for correct threaded errno handling.])])])
- AC_SUBST([KAFS_SYSCALL_OBJECTS])])
+            [Define to 1 on Solaris for threaded errno handling.])])])])
