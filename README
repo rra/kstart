@@ -220,8 +220,12 @@ TESTING
   possible permutations (and the test suite cannot cope with a missing
   Test::More module).
 
-  If a test case fails, please run that individual test program directly
-  and send me the output when reporting the problem.
+  If a test fails, you can run a single test with verbose output via:
+
+      tests/runtests -o <name-of-test>
+
+  Do this instead of running the test program directly since it will
+  ensure that necessary environment variables are set up.
 
 HOMEPAGE AND SOURCE REPOSITORY
 
