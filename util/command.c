@@ -47,7 +47,7 @@ command_run(const char *aklog, int verbose)
  * anything.  We just want the signal to be caught so that select will be
  * interrupted.
  */
-static RETSIGTYPE
+static void
 child_handler(int sig UNUSED)
 {
     /* Do nothing. */
@@ -58,7 +58,7 @@ child_handler(int sig UNUSED)
  * This handler is installed for signals that should be propagated to the
  * child (and ignored by kstart).
  */
-static RETSIGTYPE
+static void
 propagate_handler(int sig)
 {
     kill(global_child_pid, sig);
