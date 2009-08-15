@@ -54,7 +54,7 @@ AC_ARG_ENABLE([k4start],
     [AS_IF([test x"$enableval" = xno], [rra_build_k4start=false])])
 AS_IF([test x"$rra_build_k4start" != xfalse],
     [RRA_LIB_KRB4_OPTIONAL
-     AS_IF([test x"$rra_use_krb4" = xyes],
+     AS_IF([test x"$rra_use_krb4" = xtrue],
         [RRA_LIB_KRB4_SWITCH
          AC_CHECK_FUNCS([krb_life_to_time], , [AC_LIBOBJ([lifetime])])
          RRA_LIB_KRB4_RESTORE
