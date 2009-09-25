@@ -18,7 +18,6 @@
 #include <portable/system.h>
 
 #include <signal.h>
-#include <sys/signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>

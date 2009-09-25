@@ -1,5 +1,10 @@
                        User-Visible kstart Changes
 
+kstart 3.16 (unreleased)
+
+    Include the proper header for signal handling functions, fixing a
+    build problem on Solaris 9.  Thanks, Tim Bishop.
+
 kstart 3.15 (2009-08-15)
 
     k5start and krenew now catch SIGALRM and immediately refresh the
