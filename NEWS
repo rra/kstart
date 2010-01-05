@@ -6,6 +6,12 @@ kstart 3.16 (unreleased)
     not given, fixing a NULL pointer dereference when the -o, -g, or -m
     options were given without -k.  Thanks, Garrett Wollman.
 
+    Allow the argument to -k to start with FILE: and strip off that prefix
+    to form the ticket cache name.  -k still forces its argument to be a
+    file-based cache, however; FILE: is the only cache type designator
+    supported.  Use the KRB5CCNAME environment variable for other ticket
+    cache types.
+
     Include the proper header for signal handling functions, fixing a
     build problem on Solaris 9.  Thanks, Tim Bishop.
 

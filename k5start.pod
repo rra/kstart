@@ -176,11 +176,10 @@ be used.
 =item B<-k> I<ticket file>
 
 Use I<ticket file> as the ticket cache rather than the contents of the
-environment variable KRB5CCNAME or the library default.  I<ticket file>
-should be the path to a file, without any leading C<FILE:> string.  Using
-this option forces a file-based ticket cache; if you wish to use a
-different type of ticket cache, don't specify B<-k> and instead set
-KRB5CCNAME to the designator of the cache you wish to use.
+environment variable KRB5CCNAME or the library default.  Using this option
+forces a file-based ticket cache.  If you wish to use a different type of
+ticket cache, don't specify B<-k> and instead set KRB5CCNAME to the
+designator of the cache you wish to use.
 
 =item B<-l> I<time string>
 

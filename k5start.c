@@ -15,7 +15,7 @@
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
@@ -387,7 +387,10 @@ main(int argc, char *argv[])
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'k':
-            cache = concat("FILE:", optarg, (char *) 0);
+            if (strncmp(optarg, "FILE:", strlen("FILE:")) == 0)
+                cache = xstrdup(optarg);
+            else
+                cache = concat("FILE:", optarg, (char *) 0);
             break;
         case 'l':
             code = krb5_string_to_deltat(optarg, &life_secs);
