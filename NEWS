@@ -2,6 +2,10 @@
 
 kstart 3.16 (unreleased)
 
+    Correctly set the ticket cache path in k5start when the -k option was
+    not given, fixing a NULL pointer dereference when the -o, -g, or -m
+    options were given without -k.  Thanks, Garrett Wollman.
+
     Include the proper header for signal handling functions, fixing a
     build problem on Solaris 9.  Thanks, Tim Bishop.
 

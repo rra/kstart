@@ -496,7 +496,7 @@ main(int argc, char *argv[])
     }
     if (cache == NULL) {
         code = krb5_cc_default(ctx, &options.ccache);
-        if (code != 0)
+        if (code == 0)
             cache = krb5_cc_get_name(ctx, options.ccache);
     } else {
         if (setenv("KRB5CCNAME", cache, 1) != 0)
