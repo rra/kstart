@@ -273,10 +273,10 @@ PAG.
 
 =item B<-U>
 
-Rather than requiring the principal to authenticate as be given on the
-command line, read it from the keytab specified with B<-f>.  The principal
-will be taken from the first entry in the keytab.  B<-f> must be specified
-if this option is used.
+Rather than requiring the authentication principal be given on the command
+line, read it from the keytab specified with B<-f>.  The principal will be
+taken from the first entry in the keytab.  B<-f> must be specified if this
+option is used.
 
 When B<-U> is given, B<k5start> will not expect a principal name to be
 given on the command line, and any arguments after the options will be
