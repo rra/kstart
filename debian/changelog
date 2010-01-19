@@ -1,4 +1,4 @@
-kstart (3.16-1) UNRELEASED; urgency=low
+kstart (3.16-1) unstable; urgency=low
 
   * New upstream release.
     - Add -L option to log messages to syslog.
@@ -8,7 +8,7 @@ kstart (3.16-1) UNRELEASED; urgency=low
     it's included in the distribution.
   * Update standards version to 3.8.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Tue, 19 Jan 2010 10:37:31 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 19 Jan 2010 10:44:24 -0800
 
 kstart (3.15-1) unstable; urgency=low
 
