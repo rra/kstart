@@ -8,14 +8,14 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod krenew.pod  \
-	kstart.spec tests/TESTS tests/data/README tests/data/command	   \
-	tests/data/fake-aklog tests/docs/pod-spelling-t tests/docs/pod-t   \
-	tests/k4start/afs-t tests/k4start/basic-t tests/k5start/afs-t	   \
-	tests/k5start/basic-t tests/k5start/daemon-t tests/k5start/flags-t \
-	tests/kafs/basic-t tests/krenew/afs-t tests/krenew/basic-t	   \
-	tests/krenew/daemon-t tests/libtest.pl tests/tap/libtap.sh	   \
-	tests/util/xmalloc-t
+EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k4start.1	\
+	k4start.pod k5start.pod krenew.pod kstart.spec tests/TESTS	\
+	tests/data/README tests/data/command tests/data/fake-aklog	\
+	tests/docs/pod-spelling-t tests/docs/pod-t tests/k4start/afs-t	\
+	tests/k4start/basic-t tests/k5start/afs-t tests/k5start/basic-t	\
+	tests/k5start/daemon-t tests/k5start/flags-t tests/kafs/basic-t	\
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	\
+	tests/libtest.pl tests/tap/libtap.sh tests/util/xmalloc-t
 
 # The following library order matters for annoying reasons.  libafsauthent
 # contains its own com_err implementation, which we do not want to pick up.
