@@ -156,8 +156,9 @@ SKIP: {
     $short =~ s/\@stanford\.edu$//;
     like ($out, qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
                    \ for\ service\ \Q$short\E(\@\S+)?\n
-                   Principal:\ \Q$principal\E(\@\S+)?\n
-                   Service\ principal:\ \Q$principal\E(\@\S+)?\n\z/x,
+                   k5start:\ authenticating\ as\ \Q$principal\E(\@\S+)?\n
+                   k5start:\ getting\ tickets\ for
+                   \ \Q$principal\E(\@\S+)?\n\z/x,
           ' and the right output');
     ($default, $service) = klist ();
     like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
@@ -174,8 +175,9 @@ unlink 'krb5cc_test';
 ok ($status == 0 || $status == 1, 'k5start with command succeeds');
 ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
     ' with no or expected errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 my ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
@@ -187,8 +189,9 @@ unlink 'krb5cc_test';
     = command ($K5START, '-qUf', "$DATA/test.keytab", '--', 'klist', '-5');
 is ($status, 0, 'k5start with command and -- succeeds');
 is ($err, '', ' with no errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
@@ -202,8 +205,9 @@ ok ($status == 0 || $status == 1,
     'k5start with command and principal succeeds');
 ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
     ' with no or expected errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
@@ -216,8 +220,9 @@ unlink 'krb5cc_test';
                'klist', '-5');
 is ($status, 0, 'k5start with command, principal, and -- succeeds');
 is ($err, '', ' with no errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
@@ -231,8 +236,9 @@ unlink 'krb5cc_test';
 ok ($status == 0 || $status == 1, 'k5start with command and -u succeeds');
 ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
     ' with no or expected errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
@@ -246,8 +252,9 @@ unlink 'krb5cc_test';
                '--', 'klist', '-5');
 is ($status, 0, 'k5start with command, -u, and -- succeeds');
 is ($err, '', ' with no errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^(Credentials|Ticket)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);

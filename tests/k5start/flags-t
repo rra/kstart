@@ -3,7 +3,7 @@
 # Tests for basic k5start functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
 #
 # See LICENSE for licensing terms.
 
@@ -20,7 +20,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 28;
+    plan tests => 34;
 } else {
     plan skip_all => "no keytab configuration";
     exit 0;
@@ -100,7 +100,7 @@ like ($service, qr%^krbtgt/%, ' and the right service');
 like ($flags, qr/P/, ' and has proxiable tickets');
 unlike ($flags, qr/F/, ' but not forwardable tickets');
 
-# Authentication with neither flag.
+# Authentication with both flags flag.
 unlink 'krb5cc_test';
 ($out, $err, $status)
     = command ($K5START, '-FPf', "$DATA/test.keytab", $principal);
@@ -113,6 +113,23 @@ like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
 like ($service, qr%^krbtgt/%, ' and the right service');
 unlike ($flags, qr/P/, ' but not proxiable tickets');
 unlike ($flags, qr/F/, ' and not forwardable tickets');
+
+# Test -k with a fully-qualified ticket cache name.
+unlink 'krb5cc_test', 'krb5cc_test2';
+($out, $err, $status)
+    = command ($K5START, '-k', 'FILE:krb5cc_test2', '-f',
+               "$DATA/test.keytab", $principal);
+is ($status, 0, 'k5start -k command with file succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+      ' and the right output');
+ok (!-f 'krb5cc_test', ' and does not use KRB5CCNAME');
+$ENV{KRB5CCNAME} = 'krb5cc_test2';
+($default, $service, $flags) = klist ();
+like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
+like ($service, qr%^krbtgt/%, ' and the right service');
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+unlink 'krb5cc_test2';
 
 # Clean up.
 unlink 'krb5cc_test', 'krb5.conf';

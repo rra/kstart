@@ -18,7 +18,7 @@
 # Makefile.am -- Automake makefile for kstart.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 #    Board of Trustees, Leland Stanford Jr. University
 #
 # See LICENSE for licensing terms.
@@ -415,14 +415,14 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen k4start.1 k4start.pod k5start.pod krenew.pod  \
-	kstart.spec tests/TESTS tests/data/README tests/data/command	   \
-	tests/data/fake-aklog tests/docs/pod-spelling-t tests/docs/pod-t   \
-	tests/k4start/afs-t tests/k4start/basic-t tests/k5start/afs-t	   \
-	tests/k5start/basic-t tests/k5start/daemon-t tests/k5start/flags-t \
-	tests/kafs/basic-t tests/krenew/afs-t tests/krenew/basic-t	   \
-	tests/krenew/daemon-t tests/libtest.pl tests/tap/libtap.sh	   \
-	tests/util/xmalloc-t
+EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k4start.1	\
+	k4start.pod k5start.pod krenew.pod kstart.spec tests/TESTS	\
+	tests/data/README tests/data/command tests/data/fake-aklog	\
+	tests/docs/pod-spelling-t tests/docs/pod-t tests/k4start/afs-t	\
+	tests/k4start/basic-t tests/k5start/afs-t tests/k5start/basic-t	\
+	tests/k5start/daemon-t tests/k5start/flags-t tests/kafs/basic-t	\
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	\
+	tests/libtest.pl tests/tap/libtap.sh tests/util/xmalloc-t
 
 
 # The following library order matters for annoying reasons.  libafsauthent
@@ -449,8 +449,10 @@ portable_libportable_a_SOURCES = portable/dummy.c portable/macros.h \
 	portable/stdbool.h portable/system.h
 
 portable_libportable_a_LIBADD = $(LIBOBJS)
-util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
-	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
+util_libutil_a_SOURCES = util/command.c util/command.h util/concat.c	    \
+	util/concat.h util/macros.h util/messages.c util/messages.h	    \
+	util/messages-krb5.c util/messages-krb5.h util/perms.c util/perms.h \
+	util/xmalloc.c util/xmalloc.h
 
 @NEED_KAFS_TRUE@EXTRA_kafs_libkafs_a_SOURCES = kafs/sys-linux.c kafs/sys-syscall.c
 @NEED_KAFS_TRUE@kafs_libkafs_a_SOURCES = kafs/kafs.c kafs/kafs.h

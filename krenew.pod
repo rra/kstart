@@ -6,12 +6,12 @@ krenew
 krenew - Renew a Kerberos v5 ticket
 
 =for stopwords
--bhitv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+-bhiLtv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
 Allbery Bense
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhitv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-bhiLtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-p> I<pid file>]
     [I<command> ...]
 
@@ -149,6 +149,17 @@ should be the path to a file, without any leading C<FILE:> string.  Using
 this option forces a file-based ticket cache; if you wish to use a
 different type of ticket cache, don't specify B<-k> and instead set
 KRB5CCNAME to the designator of the cache you wish to use.
+
+=item B<-L>
+
+Report messages to syslog as well as to standard output or standard error.
+All messages will be logged with facility LOG_DAEMON.  Regular messages
+that are displayed on standard output are logged with level LOG_NOTICE.
+Errors that don't cause B<krenew> to terminate when run with B<-i> are
+logged with level LOG_WARNING.  Fatal errors are logged with level
+LOG_ERR.
+
+This is useful when debugging problems in combination with B<-b>.
 
 =item B<-p> I<pid file>
 

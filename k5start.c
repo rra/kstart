@@ -9,13 +9,14 @@
  * It is based very heavily on a modified Kerberos v4 kinit, changed to call
  * the Kerberos v5 initialization functions instead.  k5start is not as useful
  * for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit supports
- * more useful options, but -K and -H are still unique to it.
+ * more useful options, but AFS integration and -K and -H are still unique to
+ * it.
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
  */
@@ -24,17 +25,25 @@
 #include <portable/system.h>
 
 #include <errno.h>
+#include <krb5.h>
 #include <netdb.h>
 #include <pwd.h>
-#include <sys/signal.h>
+#include <signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
+#include <syslog.h>
 #include <time.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/command.h>
+#include <util/concat.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/messages-krb5.h>
+#include <util/perms.h>
+#include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)
@@ -56,7 +65,7 @@ struct options {
     char *service;
     krb5_principal ksprinc;
     krb5_ccache ccache;
-    krb5_get_init_creds_opt kopts;
+    krb5_get_init_creds_opt *kopts;
     const char *keytab;
     int happy_ticket;
     int keep_ticket;
@@ -91,6 +100,7 @@ Usage: k5start [options] [name [command]]\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
+   -L                   Log messages via syslog as well as stderr\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
    -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
    -o <owner>           Set ticket cache owner to <owner>\n\
@@ -108,6 +118,12 @@ If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
+/* Included in the usage message if AFS support is compiled in. */
+const char usage_message_kafs[] = "\n\
+When invoked with -t and a command, k5start will create a new AFS PAG for\n\
+the command before running the AKLOG program to keep its AFS credentials\n\
+isolated from other processes.\n";
+
 
 /*
  * Print out the usage message and then exit with the status given as the
@@ -121,6 +137,9 @@ usage(int status)
             ((PATH_AKLOG[0] == '\0')
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
+#ifdef HAVE_KAFS
+    fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
+#endif
     exit(status);
 }
 
@@ -139,16 +158,16 @@ alarm_handler(int s UNUSED)
  * Given a context and a principal, get the realm.  This works differently in
  * MIT Kerberos and Heimdal, unfortunately.
  */
-static char *
+static const char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
-#ifdef HAVE_KRB5_REALM
-    krb5_realm *realm;
+#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
+    const char *realm;
 
-    realm = krb5_princ_realm(ctx, princ);
+    realm = krb5_principal_get_realm(ctx, princ);
     if (realm == NULL)
         die("cannot get local Kerberos realm");
-    return krb5_realm_data(*realm);
+    return realm;
 #else
     krb5_data *data;
 
@@ -220,10 +239,10 @@ authenticate(krb5_context ctx, struct options *options)
         if (status != 0)
             warn_krb5(ctx, status, "error unparsing name");
         else {
-            printf("Principal: %s\n", p);
+            notice("authenticating as %s", p);
             free(p);
         }
-        printf("Service principal: %s\n", options->service);
+        notice("getting tickets for %s", options->service);
     }
     if (options->keytab != NULL) {
         status = krb5_kt_resolve(ctx, options->keytab, &keytab);
@@ -232,12 +251,12 @@ authenticate(krb5_context ctx, struct options *options)
                      options->keytab);
         status = krb5_get_init_creds_keytab(ctx, &creds, options->kprinc,
                                             keytab, 0, options->service,
-                                            &options->kopts);
+                                            options->kopts);
     } else if (!options->stdin_passwd) {
         status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
                                               NULL, krb5_prompter_posix, NULL,
                                               0, options->service,
-                                              &options->kopts);
+                                              options->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
@@ -252,7 +271,7 @@ authenticate(krb5_context ctx, struct options *options)
         status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
                                               buffer, NULL, NULL, 0,
                                               options->service,
-                                              &options->kopts);
+                                              options->kopts);
     }
     if (status != 0)
         die_krb5(ctx, status, "error getting credentials");
@@ -342,7 +361,8 @@ main(int argc, char *argv[])
     pid_t child = 0;
     bool clean_cache = false;
     bool search_keytab = false;
-    static const char optstring[] = "bc:Ff:g:H:hI:i:K:k:l:m:no:Pp:qr:S:stUu:v";
+    static const char optstring[]
+        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:v";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -387,7 +407,19 @@ main(int argc, char *argv[])
                 die("-K interval argument %s out of range", optarg);
             break;
         case 'k':
-            cache = concat("FILE:", optarg, (char *) 0);
+            if (strncmp(optarg, "FILE:", strlen("FILE:")) == 0)
+                cache = xstrdup(optarg);
+            else
+                cache = concat("FILE:", optarg, (char *) 0);
+            break;
+        case 'L':
+            openlog(message_program_name, LOG_PID, LOG_DAEMON);
+            message_handlers_notice(2, message_log_stdout,
+                                    message_log_syslog_notice);
+            message_handlers_warn(2, message_log_stderr,
+                                  message_log_syslog_warning);
+            message_handlers_die(2, message_log_stderr,
+                                 message_log_syslog_err);
             break;
         case 'l':
             code = krb5_string_to_deltat(optarg, &life_secs);
@@ -496,7 +528,7 @@ main(int argc, char *argv[])
     }
     if (cache == NULL) {
         code = krb5_cc_default(ctx, &options.ccache);
-        if (code != 0)
+        if (code == 0)
             cache = krb5_cc_get_name(ctx, options.ccache);
     } else {
         if (setenv("KRB5CCNAME", cache, 1) != 0)
@@ -536,7 +568,10 @@ main(int argc, char *argv[])
     /*
      * Display the identity that we're obtaining Kerberos tickets for.  We do
      * this by unparsing the principal rather than using username and inst
-     * since that way we get the default realm appended by K5.
+     * since that way we get the default realm appended by the Kerberos
+     * libraries.
+     *
+     * We intentionally don't use notice() here to avoid prepending k5start.
      */
     if (!options.quiet) {
         char *p;
@@ -572,17 +607,24 @@ main(int argc, char *argv[])
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
-    krb5_get_init_creds_opt_init(&options.kopts);
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    code = krb5_get_init_creds_opt_alloc(ctx, &options.kopts);
+    if (code != 0)
+        die_krb5(ctx, code, "error allocating credential options");
+#else
+    options.kopts = xcalloc(1, sizeof(krb5_get_init_creds_opt));
+    krb5_get_init_creds_opt_init(options.kopts);
+#endif
 #ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
                                               options.kprinc->realm,
-                                              &options.kopts);
+                                              options.kopts);
 #endif
-    krb5_get_init_creds_opt_set_tkt_life(&options.kopts, life_secs);
+    krb5_get_init_creds_opt_set_tkt_life(options.kopts, life_secs);
     if (nonforwardable)
-        krb5_get_init_creds_opt_set_forwardable(&options.kopts, 0);
+        krb5_get_init_creds_opt_set_forwardable(options.kopts, 0);
     if (nonproxiable)
-        krb5_get_init_creds_opt_set_proxiable(&options.kopts, 0);
+        krb5_get_init_creds_opt_set_proxiable(options.kopts, 0);
 
     /*
      * If we're just checking the service ticket, do that and exit if okay.

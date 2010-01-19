@@ -1,5 +1,36 @@
                        User-Visible kstart Changes
 
+kstart 3.16 (2010-01-19)
+
+    Add the -L option to k5start and krenew, saying to log messages to
+    syslog as well as standard output or standard error.
+
+    Correctly set the ticket cache path in k5start when the -k option was
+    not given, fixing a NULL pointer dereference when the -o, -g, or -m
+    options were given without -k.  Thanks, Garrett Wollman.
+
+    Allow the argument to -k to start with FILE: and strip off that prefix
+    to form the ticket cache name.  -k still forces its argument to be a
+    file-based cache, however; FILE: is the only cache type designator
+    supported.  Use the KRB5CCNAME environment variable for other ticket
+    cache types.
+
+    k5start and krenew now say, in -h output, if they will attempt to
+    create a new AFS PAG for commands run in combination with -t (enabled
+    by --enable-setpag), allowing one to determine whether that support
+    was compiled in.
+
+    Include the proper header for signal handling functions, fixing a
+    build problem on Solaris 9.  Thanks, Tim Bishop.
+
+    Avoid Heimdal functions marked as deprecated.  Also fix the test suite
+    to pass with Heimdal user space.
+
+    Update to rra-c-util 2.2:
+
+    * Add GCC function attributes alloc_size, malloc, and nonnull.
+    * Use AC_TYPE_LONG_LONG_INT instead of AC_CHECK_TYPES([long long]).
+
 kstart 3.15 (2009-08-15)
 
     k5start and krenew now catch SIGALRM and immediately refresh the

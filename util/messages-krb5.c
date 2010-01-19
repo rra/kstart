@@ -28,7 +28,10 @@
 # endif
 #endif
 
-#include <util/util.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/messages-krb5.h>
+#include <util/xmalloc.h>
 
 /*
  * This string is returned for unknown error messages.  We use a static
