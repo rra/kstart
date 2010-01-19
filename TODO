@@ -41,9 +41,6 @@ Documentation:
 
 Test suite:
 
- * Run the test suite under Heimdal and adjust it for any differences in
-   command output of things like klist.
-
  * Test more of krenew's basic functionality, preferrably by parsing klist
    output more thoroughly and seeing if tickets really were renewed.
 

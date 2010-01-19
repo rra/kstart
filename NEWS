@@ -23,7 +23,8 @@ kstart 3.16 (unreleased)
     Include the proper header for signal handling functions, fixing a
     build problem on Solaris 9.  Thanks, Tim Bishop.
 
-    Avoid Heimdal functions marked as deprecated.
+    Avoid Heimdal functions marked as deprecated.  Also fix the test suite
+    to pass with Heimdal user space.
 
 kstart 3.15 (2009-08-15)
 
