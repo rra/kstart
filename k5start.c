@@ -606,7 +606,7 @@ main(int argc, char *argv[])
         die_krb5(ctx, code, "error allocating credential options");
 #else
     options.kopts = xcalloc(1, sizeof(krb5_get_init_creds_opt));
-    krb5_get_init_creds_opt_init(&options.kopts);
+    krb5_get_init_creds_opt_init(options.kopts);
 #endif
 #ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
