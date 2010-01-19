@@ -77,7 +77,9 @@
 # define LOG_CRIT       EVENTLOG_ERROR_TYPE
 #endif
 
-#include <util/util.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/xmalloc.h>
 
 /* The default handler lists. */
 static message_handler_func stdout_handlers[2] = {
@@ -198,7 +200,7 @@ message_log_syslog(int pri, int len, const char *fmt, va_list args, int err)
 
         eventlog = RegisterEventSource(NULL, message_program_name);
         if (eventlog != NULL) {
-            ReportEvent(eventlog, pri, 0, 0, NULL, 1, 0, &buffer, NULL);
+            ReportEvent(eventlog, (WORD) pri, 0, 0, NULL, 1, 0, &buffer, NULL);
             CloseEventLog(eventlog);
         }
     }

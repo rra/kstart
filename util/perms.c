@@ -18,7 +18,8 @@
 #include <pwd.h>
 #include <sys/stat.h>
 
-#include <util/util.h>
+#include <util/messages.h>
+#include <util/perms.h>
 
 
 /*

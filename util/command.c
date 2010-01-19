@@ -16,7 +16,9 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include <util/util.h>
+#include <util/command.h>
+#include <util/macros.h>
+#include <util/messages.h>
 
 /* Global so that it can be used in signal handlers. */
 static pid_t global_child_pid;
@@ -32,13 +34,13 @@ command_run(const char *aklog, bool verbose)
     int status;
 
     /*
-     * IRIX 6.5's WEXITSTATUS() macro is  broken and can't cope with being
+     * IRIX 6.5's WEXITSTATUS() macro is broken and can't cope with being
      * called directly on the return value of system().
      */
     status = system(aklog);
     status = WEXITSTATUS(status);
     if (verbose)
-        printf("%s exited with status %d\n", aklog, status);
+        notice("%s exited with status %d\n", aklog, status);
 }
 
 

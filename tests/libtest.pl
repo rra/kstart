@@ -80,9 +80,15 @@ sub klist {
     my $flag = $k4 ? '-4' : '-5';
     my $output = `klist -f $flag 2>&1`;
     return unless $? == 0;
-    my ($default) = ($output =~ /^(?:Default p|P)rincipal: (\S+)/m);
-    my ($service) = ($output =~ / [Pp]rincipal\n(?:\S+\s+){4}(\S+)/);
+    my ($default) = ($output =~ /^(?:Default p|\s*P)rincipal: (\S+)/m);
+    my ($service) = ($output =~ / Service principal\n(?:\S+\s+){4}(\S+)/);
+    unless ($service) {
+        ($service) = ($output =~ / Principal\n(?:\S+\s+){7}(\S+)/);
+    }
     my ($flags) = ($output =~ /\sFlags: (\S+)/);
+    unless ($flags) {
+        ($flags) = ($output =~ / Flags\s+Principal\n(?:\S+\s+){6}(\S+)/);
+    }
     return ($default, $service, $flags);
 }
 

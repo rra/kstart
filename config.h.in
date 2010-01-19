@@ -71,6 +71,9 @@
 /* Define to 1 if you have the `krb5_get_err_txt' function. */
 #undef HAVE_KRB5_GET_ERR_TXT
 
+/* Define to 1 if you have the `krb5_get_init_creds_opt_alloc' function. */
+#undef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+
 /* Define to 1 if you have the `krb5_get_init_creds_opt_set_default_flags'
    function. */
 #undef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
@@ -78,8 +81,8 @@
 /* Define to 1 if you have the `krb5_get_renewed_creds' function. */
 #undef HAVE_KRB5_GET_RENEWED_CREDS
 
-/* Define to 1 if the system has the type `krb5_realm'. */
-#undef HAVE_KRB5_REALM
+/* Define to 1 if you have the `krb5_principal_get_realm' function. */
+#undef HAVE_KRB5_PRINCIPAL_GET_REALM
 
 /* Define to 1 if you have the `krb5_svc_get_msg' function. */
 #undef HAVE_KRB5_SVC_GET_MSG
@@ -90,8 +93,8 @@
 /* Define to 1 if you have the k_hasafs function. */
 #undef HAVE_K_HASAFS
 
-/* Define to 1 if the system has the type `long long'. */
-#undef HAVE_LONG_LONG
+/* Define to 1 if the system has the type `long long int'. */
+#undef HAVE_LONG_LONG_INT
 
 /* Define to 1 if you have the OpenAFS lsetpag function. */
 #undef HAVE_LSETPAG

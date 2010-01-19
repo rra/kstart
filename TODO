@@ -24,6 +24,14 @@ k5start:
    command has been started, so it can simply exit after spawning the
    command.
 
+ * Add a flag similar to krenew -i that continues running despite errors.
+
+krenew:
+
+ * If we encounter an error renewing the ticket cache and the -i flag is
+   in use, don't wait the normal period; instead, shorten the wakeup
+   period and keep retrying until the error resolves itself.
+
 Documentation:
 
  * Document how to start Apache with tickets and AFS tokens, either using
@@ -32,9 +40,6 @@ Documentation:
    using tokens with servers.
 
 Test suite:
-
- * Run the test suite under Heimdal and adjust it for any differences in
-   command output of things like klist.
 
  * Test more of krenew's basic functionality, preferrably by parsing klist
    output more thoroughly and seeing if tickets really were renewed.

@@ -8,7 +8,7 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009
+ * Copyright 2006, 2007, 2008, 2009, 2010
  *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
@@ -17,15 +17,22 @@
 #include <config.h>
 #include <portable/system.h>
 
-#include <sys/signal.h>
+#include <krb5.h>
+#include <signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
+#include <syslog.h>
 #include <time.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/command.h>
+#include <util/concat.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/messages-krb5.h>
+#include <util/xmalloc.h>
 
 /*
  * The number of seconds of fudge to add to the check for whether we need to
@@ -48,6 +55,7 @@ Usage: krenew [options] [command]\n\
    -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
    -k <file>            Use <file> as the ticket cache\n\
+   -L                   Log messages via syslog as well as stderr\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
@@ -55,6 +63,12 @@ Usage: krenew [options] [command]\n\
 If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
+
+/* Included in the usage message if AFS support is compiled in. */
+const char usage_message_kafs[] = "\n\
+When invoked with -t and a command, krenew will create a new AFS PAG for\n\
+the command before running the AKLOG program to keep its AFS credentials\n\
+isolated from other processes.\n";
 
 
 /*
@@ -69,6 +83,9 @@ usage(int status)
             ((PATH_AKLOG[0] == '\0')
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
+#ifdef HAVE_KAFS
+    fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
+#endif
     exit(status);
 }
 
@@ -87,16 +104,11 @@ alarm_handler(int s UNUSED)
  * Given a context and a principal, get the realm.  This works differently in
  * MIT Kerberos and Heimdal, unfortunately.
  */
-static char *
+static const char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
-#ifdef HAVE_KRB5_REALM
-    krb5_realm *realm;
-
-    realm = krb5_princ_realm(ctx, princ);
-    if (realm == NULL)
-        return NULL;
-    return krb5_realm_data(*realm);
+#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
+    return krb5_principal_get_realm(ctx, princ);
 #else
     krb5_data *data;
 
@@ -117,7 +129,7 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 static krb5_error_code
 get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 {
-    char *realm;
+    const char *realm;
 
     realm = get_realm(ctx, user);
     if (realm == NULL)
@@ -358,7 +370,7 @@ main(int argc, char *argv[])
     message_program_name = "krenew";
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bc:H:hiK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qtv")) != EOF)
         switch (option) {
         case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
@@ -380,6 +392,15 @@ main(int argc, char *argv[])
             break;
         case 'k':
             cachename = concat("FILE:", optarg, (char *) 0);
+            break;
+        case 'L':
+            openlog(message_program_name, LOG_PID, LOG_DAEMON);
+            message_handlers_notice(2, message_log_stdout,
+                                    message_log_syslog_notice);
+            message_handlers_warn(2, message_log_stderr,
+                                  message_log_syslog_warning);
+            message_handlers_die(2, message_log_stderr,
+                                 message_log_syslog_err);
             break;
 
         default:

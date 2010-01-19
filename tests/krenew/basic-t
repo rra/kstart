@@ -63,8 +63,9 @@ is ($out, '', ' and no output');
 ok ($status == 0 || $status == 1, 'krenew with command succeeds');
 ok ($err eq '' || $err eq "klist: You have no tickets cached\n",
     ' with no or expected errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^\s*(Ticket|Credentials)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
 ok (!$cache || !-f $cache, ' and the new cache file was deleted');
@@ -74,8 +75,9 @@ ok (-f 'krb5cc_test', ' but the default one was unaffected');
 ($out, $err, $status) = command ($KRENEW, '--', 'klist', '-5');
 is ($status, 0, 'krenew with command and -- succeeds');
 is ($err, '', ' with no errors');
-like ($out, qr,^Ticket\ cache:\ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
-               Default\ principal:\ \Q$principal\E(\@\S+)?\n,xm,
+like ($out, qr,^\s*(Ticket|Credentials)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
       ' and the right output');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
 ok (!$cache || !-f $cache, ' and the new cache file was deleted');

@@ -1,13 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 dnl     Board of Trustees, Leland Stanford Jr. University
 dnl
 dnl See LICENSE for licensing terms.
 
 AC_PREREQ([2.64])
-AC_INIT([kstart], [3.15], [rra@stanford.edu])
+AC_INIT([kstart], [3.16], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
@@ -38,13 +38,13 @@ RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
 AC_CHECK_FUNCS([krb5_cc_copy_creds \
     krb5_free_keytab_entry_contents \
+    krb5_get_init_creds_opt_alloc \
     krb5_get_init_creds_opt_set_default_flags \
+    krb5_principal_get_realm \
     krb5_get_renewed_creds])
-AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 RRA_LIB_KRB5_RESTORE
 
-dnl Allow the user to disable Kerberos v4 support.  Useful for building
-dnl against just Heimdal, without KTH Kerberos.  If the user doesn't
+dnl Allow the user to disable Kerberos v4 support.  If the user doesn't
 dnl explicitly disable k4start, it's built if Kerberos v4 libraries are found
 dnl and isn't built otherwise.
 rra_build_k4start=
@@ -75,7 +75,7 @@ AC_CHECK_HEADERS([sys/bitypes.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
-AC_CHECK_TYPES([long long])
+AC_TYPE_LONG_LONG_INT
 AC_CHECK_TYPE([sig_atomic_t], ,
     [AC_DEFINE([sig_atomic_t], [int],
         [Define to int if <signal.h> does not define.])],

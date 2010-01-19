@@ -31,7 +31,12 @@
 #include <time.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/command.h>
+#include <util/concat.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/perms.h>
+#include <util/xmalloc.h>
 
 /*
  * The number of seconds of fudge to add to the check for whether we need to

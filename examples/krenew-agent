@@ -1,0 +1,34 @@
+#!/bin/bash
+# krenew-agent - 
+
+DATE=`date '+%Y-%m-%d %H:%M:%S'`
+FILE="/tmp/krb5cc_$1"
+PIDFILE="${FILE}.pid"
+LOGFILE="${FILE}.log"
+KRENEW_ARGS="-K 10 -t -v -p ${PIDFILE}"
+
+if [ "x$1" == "x" ] ; then
+    echo "Usage: $0 USER"
+    exit 0
+fi
+
+if [ ! -f ${FILE} ] ; then
+    echo "No ticket cache to work with: ${FILE}"
+    exit 0
+fi
+
+touch ${LOGFILE}
+
+if [ ! -f ${PIDFILE} ] ; then
+    echo "${DATE} Starting new krenew" | tee -a ${LOGFILE}
+    touch ${LOGFILE}
+    krenew ${KRENEW_ARGS} 2>&1 & >> ${LOGFILE}
+else
+    PID=`cat ${PIDFILE}`
+    if kill -0 ${PID}  2>/dev/null; then
+        echo "${DATE} Already running (pid ${PID})" | tee -a ${LOGFILE}
+    else
+        echo "${DATE} Restarting krenew" | tee -a ${LOGFILE}
+        krenew ${KRENEW_ARGS} 2>&1 >> ${LOGFILE} &
+    fi
+fi

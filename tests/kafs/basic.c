@@ -20,7 +20,7 @@
 #include <portable/system.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/messages.h>
 
 int
 main(void)
