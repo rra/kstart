@@ -1,3 +1,10 @@
+kstart (3.16-2) unstable; urgency=low
+
+  * Don't attempt to build with setpag support on non-Linux systems.
+    kfreebsd-* isn't supported by OpenAFS (at least yet).
+
+ -- Russ Allbery <rra@debian.org>  Tue, 19 Jan 2010 11:28:18 -0800
+
 kstart (3.16-1) unstable; urgency=low
 
   * New upstream release.
