@@ -45,7 +45,7 @@ portable_libportable_a_SOURCES = portable/dummy.c portable/macros.h \
 portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/command.h util/concat.c	   \
 	util/concat.h util/messages.c util/messages.h util/messages-krb5.c \
-	util/messages-krb5.h util/perms.c utils/perms.h util/xmalloc.c	   \
+	util/messages-krb5.h util/perms.c util/perms.h util/xmalloc.c	   \
 	util/xmalloc.h
 
 # Conditionally build the replacement kafs library and add it to the
