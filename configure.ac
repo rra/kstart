@@ -40,8 +40,8 @@ AC_CHECK_FUNCS([krb5_cc_copy_creds \
     krb5_free_keytab_entry_contents \
     krb5_get_init_creds_opt_alloc \
     krb5_get_init_creds_opt_set_default_flags \
+    krb5_principal_get_realm \
     krb5_get_renewed_creds])
-AC_CHECK_TYPES([krb5_realm], , , [#include <krb5.h>])
 RRA_LIB_KRB5_RESTORE
 
 dnl Allow the user to disable Kerberos v4 support.  Useful for building

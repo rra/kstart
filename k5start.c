@@ -154,7 +154,7 @@ alarm_handler(int s UNUSED)
 static const char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
-#ifdef HAVE_KRB5_REALM
+#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
     const char *realm;
 
     realm = krb5_principal_get_realm(ctx, princ);
