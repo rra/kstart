@@ -8,7 +8,7 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009
+ * Copyright 2006, 2007, 2008, 2009, 2010
  *     Board of Trustees, Leland Stanford Jr. University
  *
  * See LICENSE for licensing terms.
@@ -56,6 +56,12 @@ If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
+/* Included in the usage message if AFS support is compiled in. */
+const char usage_message_kafs[] = "\n\
+When invoked with -t and a command, krenew will create a new AFS PAG for\n\
+the command before running the AKLOG program to keep its AFS credentials\n\
+isolated from other processes.\n";
+
 
 /*
  * Print out the usage message and then exit with the status given as the
@@ -69,6 +75,9 @@ usage(int status)
             ((PATH_AKLOG[0] == '\0')
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
+#ifdef HAVE_KAFS
+    fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
+#endif
     exit(status);
 }
 

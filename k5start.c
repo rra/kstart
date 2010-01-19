@@ -9,7 +9,8 @@
  * It is based very heavily on a modified Kerberos v4 kinit, changed to call
  * the Kerberos v5 initialization functions instead.  k5start is not as useful
  * for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit supports
- * more useful options, but -K and -H are still unique to it.
+ * more useful options, but AFS integration and -K and -H are still unique to
+ * it.
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
@@ -108,6 +109,12 @@ If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
+/* Included in the usage message if AFS support is compiled in. */
+const char usage_message_kafs[] = "\n\
+When invoked with -t and a command, k5start will create a new AFS PAG for\n\
+the command before running the AKLOG program to keep its AFS credentials\n\
+isolated from other processes.\n";
+
 
 /*
  * Print out the usage message and then exit with the status given as the
@@ -121,6 +128,9 @@ usage(int status)
             ((PATH_AKLOG[0] == '\0')
              ? "using -t is an error"
              : "the program executed will be\n" PATH_AKLOG));
+#ifdef HAVE_KAFS
+    fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
+#endif
     exit(status);
 }
 

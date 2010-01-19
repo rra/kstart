@@ -12,6 +12,11 @@ kstart 3.16 (unreleased)
     supported.  Use the KRB5CCNAME environment variable for other ticket
     cache types.
 
+    k5start and krenew now say, in -h output, if they will attempt to
+    create a new AFS PAG for commands run in combination with -t (enabled
+    by --enable-setpag), allowing one to determine whether that support
+    was compiled in.
+
     Include the proper header for signal handling functions, fixing a
     build problem on Solaris 9.  Thanks, Tim Bishop.
 
