@@ -44,8 +44,7 @@ AC_CHECK_FUNCS([krb5_cc_copy_creds \
     krb5_get_renewed_creds])
 RRA_LIB_KRB5_RESTORE
 
-dnl Allow the user to disable Kerberos v4 support.  Useful for building
-dnl against just Heimdal, without KTH Kerberos.  If the user doesn't
+dnl Allow the user to disable Kerberos v4 support.  If the user doesn't
 dnl explicitly disable k4start, it's built if Kerberos v4 libraries are found
 dnl and isn't built otherwise.
 rra_build_k4start=
