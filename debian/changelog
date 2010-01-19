@@ -4,6 +4,8 @@ kstart (3.16-1) UNRELEASED; urgency=low
     - Add -L option to log messages to syslog.
     - In k5start, fix use of -o, -g, and -m when -k was not given.
     - Allow the argument to k5start -k to start with FILE:.
+  * Install the upstream krenew-agent example script in examples now that
+    it's included in the distribution.
 
  -- Russ Allbery <rra@debian.org>  Tue, 19 Jan 2010 10:37:31 -0800
 
