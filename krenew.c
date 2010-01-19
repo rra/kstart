@@ -98,16 +98,11 @@ alarm_handler(int s UNUSED)
  * Given a context and a principal, get the realm.  This works differently in
  * MIT Kerberos and Heimdal, unfortunately.
  */
-static char *
+static const char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
 #ifdef HAVE_KRB5_REALM
-    krb5_realm *realm;
-
-    realm = krb5_princ_realm(ctx, princ);
-    if (realm == NULL)
-        return NULL;
-    return krb5_realm_data(*realm);
+    return krb5_principal_get_realm(ctx, princ);
 #else
     krb5_data *data;
 
@@ -128,7 +123,7 @@ get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 static krb5_error_code
 get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 {
-    char *realm;
+    const char *realm;
 
     realm = get_realm(ctx, user);
     if (realm == NULL)

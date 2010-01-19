@@ -58,7 +58,7 @@ struct options {
     char *service;
     krb5_principal ksprinc;
     krb5_ccache ccache;
-    krb5_get_init_creds_opt kopts;
+    krb5_get_init_creds_opt *kopts;
     const char *keytab;
     int happy_ticket;
     int keep_ticket;
@@ -151,16 +151,16 @@ alarm_handler(int s UNUSED)
  * Given a context and a principal, get the realm.  This works differently in
  * MIT Kerberos and Heimdal, unfortunately.
  */
-static char *
+static const char *
 get_realm(krb5_context ctx UNUSED, krb5_principal princ)
 {
 #ifdef HAVE_KRB5_REALM
-    krb5_realm *realm;
+    const char *realm;
 
-    realm = krb5_princ_realm(ctx, princ);
+    realm = krb5_principal_get_realm(ctx, princ);
     if (realm == NULL)
         die("cannot get local Kerberos realm");
-    return krb5_realm_data(*realm);
+    return realm;
 #else
     krb5_data *data;
 
@@ -244,12 +244,12 @@ authenticate(krb5_context ctx, struct options *options)
                      options->keytab);
         status = krb5_get_init_creds_keytab(ctx, &creds, options->kprinc,
                                             keytab, 0, options->service,
-                                            &options->kopts);
+                                            options->kopts);
     } else if (!options->stdin_passwd) {
         status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
                                               NULL, krb5_prompter_posix, NULL,
                                               0, options->service,
-                                              &options->kopts);
+                                              options->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
@@ -264,7 +264,7 @@ authenticate(krb5_context ctx, struct options *options)
         status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
                                               buffer, NULL, NULL, 0,
                                               options->service,
-                                              &options->kopts);
+                                              options->kopts);
     }
     if (status != 0)
         die_krb5(ctx, status, "error getting credentials");
@@ -600,17 +600,24 @@ main(int argc, char *argv[])
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    code = krb5_get_init_creds_opt_alloc(ctx, &options.kopts);
+    if (code != 0)
+        die_krb5(ctx, code, "error allocating credential options");
+#else
+    options.kopts = xcalloc(1, sizeof(krb5_get_init_creds_opt));
     krb5_get_init_creds_opt_init(&options.kopts);
+#endif
 #ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
                                               options.kprinc->realm,
-                                              &options.kopts);
+                                              options.kopts);
 #endif
-    krb5_get_init_creds_opt_set_tkt_life(&options.kopts, life_secs);
+    krb5_get_init_creds_opt_set_tkt_life(options.kopts, life_secs);
     if (nonforwardable)
-        krb5_get_init_creds_opt_set_forwardable(&options.kopts, 0);
+        krb5_get_init_creds_opt_set_forwardable(options.kopts, 0);
     if (nonproxiable)
-        krb5_get_init_creds_opt_set_proxiable(&options.kopts, 0);
+        krb5_get_init_creds_opt_set_proxiable(options.kopts, 0);
 
     /*
      * If we're just checking the service ticket, do that and exit if okay.
