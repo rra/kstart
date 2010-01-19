@@ -156,8 +156,9 @@ SKIP: {
     $short =~ s/\@stanford\.edu$//;
     like ($out, qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
                    \ for\ service\ \Q$short\E(\@\S+)?\n
-                   Principal:\ \Q$principal\E(\@\S+)?\n
-                   Service\ principal:\ \Q$principal\E(\@\S+)?\n\z/x,
+                   k5start:\ authenticating\ as\ \Q$principal\E(\@\S+)?\n
+                   k5start:\ getting\ tickets\ for
+                   \ \Q$principal\E(\@\S+)?\n\z/x,
           ' and the right output');
     ($default, $service) = klist ();
     like ($default, qr/^\Q$principal\E(\@\S+)?\z/,

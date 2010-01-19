@@ -232,10 +232,10 @@ authenticate(krb5_context ctx, struct options *options)
         if (status != 0)
             warn_krb5(ctx, status, "error unparsing name");
         else {
-            notice("Principal: %s\n", p);
+            notice("authenticating as %s", p);
             free(p);
         }
-        notice("Service principal: %s\n", options->service);
+        notice("getting tickets for %s", options->service);
     }
     if (options->keytab != NULL) {
         status = krb5_kt_resolve(ctx, options->keytab, &keytab);
