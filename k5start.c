@@ -32,6 +32,7 @@
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
+#include <syslog.h>
 #include <time.h>
 
 #include <kafs/kafs.h>
@@ -92,6 +93,7 @@ Usage: k5start [options] [name [command]]\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
+   -L                   Log messages via syslog as well as stderr\n\
    -l <lifetime>        Ticket lifetime in minutes\n\
    -m <mode>            Set ticket cache permissions to <mode> (octal)\n\
    -o <owner>           Set ticket cache owner to <owner>\n\
@@ -230,10 +232,10 @@ authenticate(krb5_context ctx, struct options *options)
         if (status != 0)
             warn_krb5(ctx, status, "error unparsing name");
         else {
-            printf("Principal: %s\n", p);
+            notice("Principal: %s\n", p);
             free(p);
         }
-        printf("Service principal: %s\n", options->service);
+        notice("Service principal: %s\n", options->service);
     }
     if (options->keytab != NULL) {
         status = krb5_kt_resolve(ctx, options->keytab, &keytab);
@@ -352,7 +354,8 @@ main(int argc, char *argv[])
     pid_t child = 0;
     bool clean_cache = false;
     bool search_keytab = false;
-    static const char optstring[] = "bc:Ff:g:H:hI:i:K:k:l:m:no:Pp:qr:S:stUu:v";
+    static const char optstring[]
+        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:v";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -401,6 +404,15 @@ main(int argc, char *argv[])
                 cache = xstrdup(optarg);
             else
                 cache = concat("FILE:", optarg, (char *) 0);
+            break;
+        case 'L':
+            openlog(message_program_name, LOG_PID, LOG_DAEMON);
+            message_handlers_notice(2, message_log_stdout,
+                                    message_log_syslog_notice);
+            message_handlers_warn(2, message_log_stderr,
+                                  message_log_syslog_warning);
+            message_handlers_die(2, message_log_stderr,
+                                 message_log_syslog_err);
             break;
         case 'l':
             code = krb5_string_to_deltat(optarg, &life_secs);
@@ -549,7 +561,10 @@ main(int argc, char *argv[])
     /*
      * Display the identity that we're obtaining Kerberos tickets for.  We do
      * this by unparsing the principal rather than using username and inst
-     * since that way we get the default realm appended by K5.
+     * since that way we get the default realm appended by the Kerberos
+     * libraries.
+     *
+     * We intentionally don't use notice() here to avoid prepending k5start.
      */
     if (!options.quiet) {
         char *p;

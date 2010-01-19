@@ -22,6 +22,7 @@
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
+#include <syslog.h>
 #include <time.h>
 
 #include <kafs/kafs.h>
@@ -48,6 +49,7 @@ Usage: krenew [options] [command]\n\
    -h                   Display this usage message and exit\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
    -k <file>            Use <file> as the ticket cache\n\
+   -L                   Log messages via syslog as well as stderr\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
@@ -367,7 +369,7 @@ main(int argc, char *argv[])
     message_program_name = "krenew";
 
     /* Parse command-line options. */
-    while ((option = getopt(argc, argv, "bc:H:hiK:k:p:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qtv")) != EOF)
         switch (option) {
         case 'b': background = true;            break;
         case 'c': childfile = optarg;           break;
@@ -389,6 +391,15 @@ main(int argc, char *argv[])
             break;
         case 'k':
             cachename = concat("FILE:", optarg, (char *) 0);
+            break;
+        case 'L':
+            openlog(message_program_name, LOG_PID, LOG_DAEMON);
+            message_handlers_notice(2, message_log_stdout,
+                                    message_log_syslog_notice);
+            message_handlers_warn(2, message_log_stderr,
+                                  message_log_syslog_warning);
+            message_handlers_die(2, message_log_stderr,
+                                 message_log_syslog_err);
             break;
 
         default:

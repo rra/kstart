@@ -2,6 +2,9 @@
 
 kstart 3.16 (unreleased)
 
+    Add the -L option to k5start and krenew, saying to log messages to
+    syslog as well as standard output or standard error.
+
     Correctly set the ticket cache path in k5start when the -k option was
     not given, fixing a NULL pointer dereference when the -o, -g, or -m
     options were given without -k.  Thanks, Garrett Wollman.

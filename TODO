@@ -7,9 +7,6 @@ General:
    that differ between the three programs, which will significantly reduce
    code duplication.
 
- * Add optional syslog logging of errors, particularly useful when
-   backgrounded with -b.
-
 k5start:
 
  * Add support to k5start for obtaining K4 tickets in addition to K5

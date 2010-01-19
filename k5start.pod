@@ -3,20 +3,20 @@
 k5start - Obtain and optionally keep active a Kerberos v5 ticket.
 
 =for stopwords
--bFhnPqstv keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
+-bFhLnPqstv keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
 init AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
 forwardable proxiable
 
 =head1 SYNOPSIS
 
-B<k5start> [B<-bFhnPqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
+B<k5start> [B<-bFhLnPqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
     [B<-l> I<time string>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bFhnPqstv>] [B<-c> I<child pid file>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstv>] [B<-c> I<child pid file>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<time string>]
     [B<-m> I<mode>] [B<-o> I<owner>] [B<-p> I<pid file>]
@@ -97,6 +97,9 @@ using the B<-b> flag will disassociate B<k5start> from the existing ticket
 cache.  When using B<-b> in conjunction with B<-K> on Mac OS X, you
 probably also want to use the B<-k> flag to specify a ticket cache file
 and force the use of a file cache.
+
+When using this option, consider also using B<-L> to report B<k5start>
+errors to syslog.
 
 =item B<-c> I<child pid file>
 
@@ -180,6 +183,16 @@ environment variable KRB5CCNAME or the library default.  Using this option
 forces a file-based ticket cache.  If you wish to use a different type of
 ticket cache, don't specify B<-k> and instead set KRB5CCNAME to the
 designator of the cache you wish to use.
+
+=item B<-L>
+
+Report messages to syslog as well as to standard output or standard error.
+All messages will be logged with facility LOG_DAEMON.  Regular messages
+that are displayed on standard output are logged with level LOG_NOTICE.
+Errors that don't cause B<k5start> to terminate are logged with level
+LOG_WARNING.  Fatal errors are logged with level LOG_ERR.
+
+This is useful when debugging problems in combination with B<-b>.
 
 =item B<-l> I<time string>
 
