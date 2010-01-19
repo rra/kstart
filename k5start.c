@@ -25,6 +25,7 @@
 #include <portable/system.h>
 
 #include <errno.h>
+#include <krb5.h>
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
@@ -36,7 +37,13 @@
 #include <time.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/command.h>
+#include <util/concat.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/messages-krb5.h>
+#include <util/perms.h>
+#include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)

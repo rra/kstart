@@ -26,6 +26,11 @@ kstart 3.16 (unreleased)
     Avoid Heimdal functions marked as deprecated.  Also fix the test suite
     to pass with Heimdal user space.
 
+    Update to rra-c-util 2.2:
+
+    * Add GCC function attributes alloc_size, malloc, and nonnull.
+    * Use AC_TYPE_LONG_LONG_INT instead of AC_CHECK_TYPES([long long]).
+
 kstart 3.15 (2009-08-15)
 
     k5start and krenew now catch SIGALRM and immediately refresh the

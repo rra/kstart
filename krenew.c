@@ -17,6 +17,7 @@
 #include <config.h>
 #include <portable/system.h>
 
+#include <krb5.h>
 #include <signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
@@ -26,7 +27,12 @@
 #include <time.h>
 
 #include <kafs/kafs.h>
-#include <util/util.h>
+#include <util/command.h>
+#include <util/concat.h>
+#include <util/macros.h>
+#include <util/messages.h>
+#include <util/messages-krb5.h>
+#include <util/xmalloc.h>
 
 /*
  * The number of seconds of fudge to add to the check for whether we need to

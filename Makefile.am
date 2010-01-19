@@ -1,7 +1,7 @@
 # Makefile.am -- Automake makefile for kstart.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
 #    Board of Trustees, Leland Stanford Jr. University
 #
 # See LICENSE for licensing terms.
@@ -43,8 +43,10 @@ noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/dummy.c portable/macros.h \
 	portable/stdbool.h portable/system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
-util_libutil_a_SOURCES = util/command.c util/concat.c util/messages.c \
-	util/messages-krb5.c util/perms.c util/util.h util/xmalloc.c
+util_libutil_a_SOURCES = util/command.c util/command.h util/concat.c	   \
+	util/concat.h util/messages.c util/messages.h util/messages-krb5.c \
+	util/messages-krb5.h util/perms.c utils/perms.h util/xmalloc.c	   \
+	util/xmalloc.h
 
 # Conditionally build the replacement kafs library and add it to the
 # libraries used by the other programs.
