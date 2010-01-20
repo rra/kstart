@@ -92,8 +92,11 @@ REQUIREMENTS
   CPAN) and either aspell or ispell with the american dictionary are also
   required.  The user's path is searched for aspell or ispell and aspell
   is preferred.  Spelling tests are disabled by default since spelling
-  dictionaries differ too much between systems.  To enable those tests,
-  set RRA_MAINTAINER_TESTS to a true value.
+  dictionaries differ too much between systems.
+
+  To enable tests that may be sensitive to the local environment or that
+  produce a lot of false positives without uncovering many problems,
+  including the spelling tests, set RRA_MAINTAINER_TESTS to a true value.
 
   To bootstrap from a Git checkout, or if you change the Automake files
   and need to regenerate Makefile.in, you will need Automake 1.11 or
