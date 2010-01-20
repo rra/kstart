@@ -3,7 +3,7 @@
 # Test suite for xmalloc and friends.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
 # Copyright 2004, 2005, 2006
 #     by Internet Systems Consortium, Inc. ("ISC")
 # Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
@@ -40,6 +40,13 @@ ok_xmalloc () {
     fi
 }
 
+# Skip this test suite unless maintainer-mode tests are enabled.  All of the
+# failures in automated testing have been problems with the assumptions around
+# memory allocation or problems with the test suite, not problems with the
+# underlying xmalloc code.
+if [ -z "$RRA_MAINTAINER_TESTS" ] ; then
+    skip_all 'xmalloc tests only run for maintainer'
+fi
 
 # Total tests.
 plan 36
