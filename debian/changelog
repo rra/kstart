@@ -1,3 +1,10 @@
+kstart (3.16-3) unstable; urgency=low
+
+  * Skip the xmalloc test by default.  It's too fragile and isn't catching
+    actual bugs.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 21 Jan 2010 15:27:57 -0800
+
 kstart (3.16-2) unstable; urgency=low
 
   * Don't attempt to build with setpag support on non-Linux systems.
