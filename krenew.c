@@ -15,9 +15,9 @@
 */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
-#include <krb5.h>
 #include <signal.h>
 #include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
@@ -101,26 +101,6 @@ alarm_handler(int s UNUSED)
 
 
 /*
- * Given a context and a principal, get the realm.  This works differently in
- * MIT Kerberos and Heimdal, unfortunately.
- */
-static const char *
-get_realm(krb5_context ctx UNUSED, krb5_principal princ)
-{
-#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
-    return krb5_principal_get_realm(ctx, princ);
-#else
-    krb5_data *data;
-
-    data = krb5_princ_realm(ctx, princ);
-    if (data == NULL || data->data == NULL)
-        return NULL;
-    return data->data;
-#endif
-}
-
-
-/*
  * Get the principal name for the krbtgt ticket for the local realm.  The
  * caller is responsible for freeing the principal.  Takes an existing
  * principal to get the realm from and returns a Kerberos v5 error on
@@ -131,7 +111,7 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 {
     const char *realm;
 
-    realm = get_realm(ctx, user);
+    realm = krb5_principal_get_realm(ctx, user);
     if (realm == NULL)
         return KRB5_CONFIG_NODEFREALM;
     return krb5_build_principal(ctx, princ, strlen(realm), realm, "krbtgt",
@@ -235,11 +215,7 @@ copy_cache(krb5_context ctx, krb5_ccache *cache)
     if (status != 0)
         die_krb5(ctx, status, "error initializing new cache");
     krb5_free_principal(ctx, princ);
-#ifdef HAVE_KRB5_CC_COPY_CREDS
-    status = krb5_cc_copy_creds(ctx, old, new);
-#else
     status = krb5_cc_copy_cache(ctx, old, new);
-#endif
     if (status != 0)
         die_krb5(ctx, status, "error copying credentials");
     status = krb5_cc_close(ctx, old);
@@ -259,13 +235,8 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
 {
     krb5_error_code status;
     krb5_principal user = NULL;
-    krb5_creds creds, *out;
+    krb5_creds creds;
     bool creds_valid = false;
-#ifndef HAVE_KRB5_GET_RENEWED_CREDS
-    krb5_kdc_flags flags;
-    krb5_creds in, *old = NULL;
-    bool in_valid = false;
-#endif
 
     memset(&creds, 0, sizeof(creds));
     status = krb5_cc_get_principal(ctx, cache, &user);
@@ -284,33 +255,8 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
             free(name);
         }
     }
-#ifdef HAVE_KRB5_GET_RENEWED_CREDS
     status = krb5_get_renewed_creds(ctx, &creds, user, cache, NULL);
     creds_valid = true;
-    out = &creds;
-#else
-    flags.i = 0;
-    flags.b.renewable = 1;
-    flags.b.renew = 1;
-    memset(&in, 0, sizeof(in));
-    in_valid = true;
-    status = krb5_copy_principal(ctx, user, &in.client);
-    if (status != 0) {
-        warn_krb5(ctx, status, "error copying principal");
-        goto done;
-    }
-    status = get_krbtgt_princ(ctx, in.client, &in.server);
-    if (status != 0) {
-        warn_krb5(ctx, status, "error building ticket name");
-        goto done;
-    }
-    status = krb5_get_credentials(ctx, 0, cache, &in, &old);
-    if (status != 0) {
-        warn_krb5(ctx, status, "cannot get current credentials");
-        goto done;
-    }
-    status = krb5_get_kdc_cred(ctx, cache, flags, NULL, NULL, old, &out);
-#endif
     if (status != 0) {
         warn_krb5(ctx, status, "error renewing credentials");
         goto done;
@@ -321,7 +267,7 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
         warn_krb5(ctx, status, "error reinitializing cache");
         goto done;
     }
-    status = krb5_cc_store_cred(ctx, cache, out);
+    status = krb5_cc_store_cred(ctx, cache, &creds);
     if (status != 0) {
         warn_krb5(ctx, status, "error storing credentials");
         goto done;
@@ -330,17 +276,8 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
 done:
     if (user != NULL)
         krb5_free_principal(ctx, user);
-#ifdef HAVE_KRB5_GET_RENEWED_CREDS
     if (creds_valid)
         krb5_free_cred_contents(ctx, &creds);
-#else
-    if (in_valid)
-        krb5_free_cred_contents(ctx, &in);
-    if (old != NULL)
-        krb5_free_creds(ctx, old);
-    if (out != NULL)
-        krb5_free_creds(ctx, out);
-#endif
     return status;
 }
 

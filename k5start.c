@@ -22,10 +22,10 @@
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
 #include <errno.h>
-#include <krb5.h>
 #include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
@@ -151,31 +151,6 @@ static void
 alarm_handler(int s UNUSED)
 {
     alarm_signaled = 1;
-}
-
-
-/*
- * Given a context and a principal, get the realm.  This works differently in
- * MIT Kerberos and Heimdal, unfortunately.
- */
-static const char *
-get_realm(krb5_context ctx UNUSED, krb5_principal princ)
-{
-#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
-    const char *realm;
-
-    realm = krb5_principal_get_realm(ctx, princ);
-    if (realm == NULL)
-        die("cannot get local Kerberos realm");
-    return realm;
-#else
-    krb5_data *data;
-
-    data = krb5_princ_realm(ctx, princ);
-    if (data == NULL || data->data == NULL)
-        die("cannot get local Kerberos realm");
-    return data->data;
-#endif
 }
 
 
@@ -316,11 +291,7 @@ first_principal(krb5_context ctx, const char *path)
         status = krb5_unparse_name(ctx, entry.principal, &principal);
         if (status != 0)
             die_krb5(ctx, status, "error unparsing name from %s", path);
-#ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
-        krb5_free_keytab_entry_contents(ctx, &entry);
-#else
         krb5_kt_free_entry(ctx, &entry);
-#endif
     }
     krb5_kt_end_seq_get(ctx, keytab, &cursor);
     krb5_kt_close(ctx, keytab);
@@ -593,7 +564,9 @@ main(int argc, char *argv[])
 
     /* Flesh out the name of the service ticket that we're obtaining. */
     if (srealm == NULL)
-        srealm = get_realm(ctx, options.kprinc);
+        srealm = krb5_principal_get_realm(ctx, options.kprinc);
+    if (srealm == NULL)
+        die_krb5(ctx, code, "cannot get service ticket realm");
     if (sname == NULL)
         sname = "krbtgt";
     if (sinst == NULL)
@@ -607,19 +580,12 @@ main(int argc, char *argv[])
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
-#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
     code = krb5_get_init_creds_opt_alloc(ctx, &options.kopts);
     if (code != 0)
         die_krb5(ctx, code, "error allocating credential options");
-#else
-    options.kopts = xcalloc(1, sizeof(krb5_get_init_creds_opt));
-    krb5_get_init_creds_opt_init(options.kopts);
-#endif
-#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
                                               options.kprinc->realm,
                                               options.kopts);
-#endif
     krb5_get_init_creds_opt_set_tkt_life(options.kopts, life_secs);
     if (nonforwardable)
         krb5_get_init_creds_opt_set_forwardable(options.kopts, 0);

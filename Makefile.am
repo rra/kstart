@@ -40,8 +40,9 @@ endif
 AM_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
-portable_libportable_a_SOURCES = portable/dummy.c portable/macros.h \
-	portable/stdbool.h portable/system.h
+portable_libportable_a_SOURCES = portable/dummy.c portable/krb5.h	\
+	portable/krb5-extra.c portable/macros.h portable/stdbool.h	\
+	portable/system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
 util_libutil_a_SOURCES = util/command.c util/command.h util/concat.c	    \
 	util/concat.h util/macros.h util/messages.c util/messages.h	    \

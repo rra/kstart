@@ -36,12 +36,14 @@ dnl Check for the Kerberos v5 libraries and for portability between MIT and
 dnl Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
-AC_CHECK_FUNCS([krb5_cc_copy_creds \
-    krb5_free_keytab_entry_contents \
+AC_CHECK_FUNCS([krb5_cc_copy_cache \
     krb5_get_init_creds_opt_alloc \
     krb5_get_init_creds_opt_set_default_flags \
-    krb5_principal_get_realm \
-    krb5_get_renewed_creds])
+    krb5_kt_free_entry \
+    krb5_principal_get_realm])
+AC_CHECK_FUNCS([krb5_get_renewed_creds], ,
+    [AC_CHECK_FUNCS([krb5_copy_creds_contents])
+     AC_LIBOBJ([krb5-renew])])
 RRA_LIB_KRB5_RESTORE
 
 dnl Allow the user to disable Kerberos v4 support.  If the user doesn't
