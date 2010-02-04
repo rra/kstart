@@ -39,7 +39,7 @@ BEGIN_DECLS
 #endif
 
 /* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */
-#ifndef HAVE_KRB5_FREE_UNPARSED_NAME
+#ifdef HAVE_KRB5_XFREE
 # define krb5_free_unparsed_name(c, p) krb5_xfree(p)
 #endif
 

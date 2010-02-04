@@ -37,11 +37,11 @@ dnl Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
 AC_CHECK_FUNCS([krb5_cc_copy_cache \
-    krb5_free_unparsed_name \
     krb5_get_init_creds_opt_alloc \
     krb5_get_init_creds_opt_set_default_flags \
     krb5_kt_free_entry \
-    krb5_principal_get_realm])
+    krb5_principal_get_realm \
+    krb5_xfree])
 AC_CHECK_FUNCS([krb5_get_renewed_creds], ,
     [AC_CHECK_FUNCS([krb5_copy_creds_contents])
      AC_LIBOBJ([krb5-renew])])
