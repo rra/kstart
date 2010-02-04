@@ -38,6 +38,11 @@ BEGIN_DECLS
 # define krb5_cc_copy_cache(c, o, n) krb5_cc_copy_creds((c), (o), (n))
 #endif
 
+/* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */
+#ifndef HAVE_KRB5_FREE_UNPARSED_NAME
+# define krb5_free_unparsed_name(c, p) krb5_xfree(p)
+#endif
+
 /*
  * krb5_{get,free}_error_message are the preferred APIs for both current MIT
  * and current Heimdal, but there are tons of older APIs we may have to fall

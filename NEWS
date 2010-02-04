@@ -1,5 +1,11 @@
                        User-Visible kstart Changes
 
+kstart 3.17 (unreleased)
+
+    Diagnose the nonsensical combination of -U and -u or -i options in
+    k5start and report an error rather than ignoring -u and appending the
+    instance from -i onto the principal obtained via -U.
+
 kstart 3.16 (2010-01-19)
 
     Add the -L option to k5start and krenew, saying to log messages to

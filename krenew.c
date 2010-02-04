@@ -252,7 +252,7 @@ renew(krb5_context ctx, krb5_ccache cache, int verbose)
             warn_krb5(ctx, status, "error unparsing name");
         else {
             notice("renewing credentials for %s", name);
-            free(name);
+            krb5_free_unparsed_name(name);
         }
     }
     status = krb5_get_renewed_creds(ctx, &creds, user, cache, NULL);

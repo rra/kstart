@@ -215,7 +215,7 @@ authenticate(krb5_context ctx, struct options *options)
             warn_krb5(ctx, status, "error unparsing name");
         else {
             notice("authenticating as %s", p);
-            free(p);
+            krb5_free_unparsed_name(ctx, p);
         }
         notice("getting tickets for %s", options->service);
     }
@@ -267,9 +267,9 @@ authenticate(krb5_context ctx, struct options *options)
 
 
 /*
- * Find the principal of the first entry of a keytab and return it as a
- * string in newly allocated memory.  The caller is responsible for freeing.
- * Exit on error.
+ * Find the principal of the first entry of a keytab and return it as a string
+ * in newly allocated memory.  The caller is responsible for freeing the
+ * result with krb5_free_unparsed_name.  Exit on error.
  */
 static char *
 first_principal(krb5_context ctx, const char *path)
@@ -444,6 +444,8 @@ main(int argc, char *argv[])
         die("instance specified in the principal and with -i");
     if (search_keytab && options.keytab == NULL)
         die("-U option requires a keytab be specified with -f");
+    if (search_keytab && (principal != NULL || inst != NULL))
+        die("-U option cannot be used with -u or -i options");
     if (options.happy_ticket > 0 && options.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
     if (childfile != NULL && command == NULL)
@@ -551,7 +553,7 @@ main(int argc, char *argv[])
         if (code != 0)
             die_krb5(ctx, code, "error unparsing name %s", principal);
         printf("Kerberos initialization for %s", p);
-        free(p);
+        krb5_free_unparsed_name(ctx, p);
         if (sname != NULL) {
             printf(" for service %s", sname);
             if (sinst != NULL)
