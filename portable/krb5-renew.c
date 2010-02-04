@@ -51,11 +51,11 @@ krb5_get_renewed_creds(krb5_context ctx, krb5_creds *creds,
         if (code != 0)
             goto done;
     } else {
-        code = krb5_parse_name(context, in_tkt_service, &in.server);
+        code = krb5_parse_name(ctx, in_tkt_service, &in.server);
         if (code != 0)
             goto done;
     }
-    code = krb5_get_credentials(ctx, 0, cache, &in, &old);
+    code = krb5_get_credentials(ctx, 0, ccache, &in, &old);
     if (code != 0)
         goto done;
     flags.b.forwardable = old->flags.b.forwardable;
