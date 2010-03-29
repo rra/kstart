@@ -1,16 +1,14 @@
-%define rel %(cat /etc/redhat-release | cut -d' ' -f7 | cut -d'.' -f1)
-
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 3.15
-Release: 1.%{rel}
+Version: 3.16
+Release: 1%{?dist}
 License: MIT
 Group: System Environment/Base
 URL: http://www.eyrie.org/~eagle/software/kstart/
 Source: http://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
-Requires: krb5-workstation
+Requires: krb5-libs
 Vendor: Stanford University
 
 %description
@@ -24,7 +22,7 @@ ticket has expired, or obtaining an AFS token along with the ticket by
 running an external program automatically.
 
 %prep
-%setup
+%setup -q -n kstart-%{version}
 
 %build
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
@@ -46,6 +44,10 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Mon Mar 29 2010 Andy Cobaugh <phalenor@bx.psu.edu> 3.16-1
+- New version for 3.16 release.
+- Require krb5-libs instead of krb5-workstation.
+
 * Sat Aug 15 2008 Russ Allbery <rra@stanford.edu> 3.15-1
 - New version for 3.15 release.
 
