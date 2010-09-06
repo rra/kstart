@@ -9,6 +9,12 @@ General:
 
 k5start:
 
+ * Attempt to renew the ticket before prompting the user for a new
+   password when run with the -H flag with a ticket that will be expiring.
+
+ * Provide a flag like -H that checks the status of the ticket but
+   just exits with a zero or non-zero exit status instead of prompting.
+
  * Add support to k5start for obtaining K4 tickets in addition to K5
    tickets, using the DES key in a keytab.
 
