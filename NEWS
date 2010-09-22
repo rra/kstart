@@ -2,6 +2,10 @@
 
 kstart 3.17 (unreleased)
 
+    Set signal handlers with sigaction instead of signal, which may fix
+    problems propagating multiple signals to child processes in k5start
+    and krenew.
+
     Diagnose the nonsensical combination of -U and -u or -i options in
     k5start and report an error rather than ignoring -u and appending the
     instance from -i onto the principal obtained via -U.

@@ -79,14 +79,25 @@ pid_t
 command_start(const char *command, char **argv)
 {
     pid_t child;
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
 
     /* Ignored. */
-    signal(SIGCHLD, child_handler);
+    sa.sa_handler = child_handler;
+    sa.sa_flags = SA_NOCLDSTOP;
+    if (sigaction(SIGCHLD, &sa, NULL) < 0)
+        return -1;
 
     /* Propagated to child process. */
-    signal(SIGHUP, propagate_handler);
-    signal(SIGTERM, propagate_handler);
-    signal(SIGQUIT, propagate_handler);
+    sa.sa_handler = propagate_handler;
+    sa.sa_flags = 0;
+    if (sigaction(SIGHUP, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGTERM, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGQUIT, &sa, NULL) < 0)
+        return -1;
 
     child = fork();
     if (child < 0)
