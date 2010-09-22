@@ -6,6 +6,7 @@ k5start/afs
 k5start/basic
 k5start/daemon
 k5start/flags
+k5start/sigchld
 kafs/basic
 krenew/afs
 krenew/basic
