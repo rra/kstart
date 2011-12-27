@@ -10,6 +10,15 @@ kstart 3.17 (unreleased)
     k5start and report an error rather than ignoring -u and appending the
     instance from -i onto the principal obtained via -U.
 
+    Update to C TAP Harness 1.9:
+
+    * Add a usage message and -h option to runtests.
+    * Honor -s and SOURCE in runtests even if BUILD is not set.
+    * Improve test summary at the end of a C test case.
+    * Flush stderr before printing TAP output.
+    * Improve portability of output functions in the shell libtap.sh.
+    * Add notices to all files copied from  C TAP Harness.
+
 kstart 3.16 (2010-01-19)
 
     Add the -L option to k5start and krenew, saying to log messages to
