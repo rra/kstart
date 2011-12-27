@@ -55,7 +55,7 @@
 
 /*
  * Holds the various command-line options for passing to functions, after
- * processing in the main routine and conversion to internal K5 data
+ * processing in the main routine and conversion to internal Kerberos data
  * structures where appropriate.
  */
 struct options {
@@ -458,7 +458,7 @@ main(int argc, char *argv[])
     if (options.aklog[0] == '\0' && options.run_aklog)
         die("set AKLOG to specify the path to aklog");
 
-    /* Establish a K5 context. */
+    /* Establish a Kerberos context. */
     code = krb5_init_context(&ctx);
     if (code != 0)
         die_krb5(ctx, code, "error initializing Kerberos");

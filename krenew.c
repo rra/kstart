@@ -367,7 +367,7 @@ main(int argc, char *argv[])
     if (aklog[0] == '\0' && do_aklog)
         die("set AKLOG to specify the path to aklog");
 
-    /* Establish a K5 context and set the ticket cache. */
+    /* Establish a Kerberos context and set the ticket cache. */
     code = krb5_init_context(&ctx);
     if (code != 0)
         die_krb5(ctx, code, "error initializing Kerberos");

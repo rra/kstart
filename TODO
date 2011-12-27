@@ -15,8 +15,8 @@ k5start:
  * Provide a flag like -H that checks the status of the ticket but
    just exits with a zero or non-zero exit status instead of prompting.
 
- * Add support to k5start for obtaining K4 tickets in addition to K5
-   tickets, using the DES key in a keytab.
+ * Add support to k5start for obtaining Kerberos v4 tickets using the DES
+   key in a keytab.
 
  * Add a flag saying to start a command in a PAG and with tokens and then
    keep running even if the command exits.  This would be useful to spawn
