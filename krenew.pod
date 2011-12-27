@@ -4,7 +4,7 @@ Allbery Bense designator krenew
 
 =head1 NAME
 
-krenew - Renew a Kerberos v5 ticket
+krenew - Renew a Kerberos ticket
 
 =head1 SYNOPSIS
 

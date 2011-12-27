@@ -5,7 +5,7 @@ forwardable proxiable designator
 
 =head1 NAME
 
-k5start - Obtain and optionally keep active a Kerberos v5 ticket.
+k5start - Obtain and optionally keep active a Kerberos ticket
 
 =head1 SYNOPSIS
 
@@ -24,11 +24,11 @@ B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstv>] [B<-c> I<child pid file>]
 
 =head1 DESCRIPTION
 
-B<k5start> obtains and caches an initial Kerberos v5 ticket-granting
-ticket for a principal.  B<k5start> can be used as an alternative to
-B<kinit>, but it is primarily intended to be used by programs that want to
-use a keytab to obtain Kerberos credentials, such as a web server that
-needs to authenticate to another service such as an LDAP server.
+B<k5start> obtains and caches an initial Kerberos ticket-granting ticket
+for a principal.  B<k5start> can be used as an alternative to B<kinit>,
+but it is primarily intended to be used by programs that want to use a
+keytab to obtain Kerberos credentials, such as a web server that needs to
+authenticate to another service such as an LDAP server.
 
 Normally, the principal for which to give tickets should be specified as
 the first argument.  I<username> may be either just a principal name

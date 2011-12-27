@@ -1,22 +1,20 @@
 /*
- * Kerberos v5 kinit replacement suitable for daemon authentication.
+ * Kerberos kinit replacement suitable for daemon authentication.
  *
- * This is a replacement for the standard Kerberos v5 kinit that is more
- * suitable for use with programs.  It can run as a daemon and renew a ticket
+ * This is a replacement for the standard Kerberos kinit that is more suitable
+ * for use with programs.  It can run as a daemon and renew a ticket
  * periodically and can check the expiration of a ticket and only prompt to
  * renew if it's too old.
  *
  * It is based very heavily on a modified Kerberos v4 kinit, changed to call
- * the Kerberos v5 initialization functions instead.  k5start is not as useful
- * for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit supports
- * more useful options, but AFS integration and -K and -H are still unique to
- * it.
+ * the Kerberos v5 initialization functions instead.
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009, 2010, 2011
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */

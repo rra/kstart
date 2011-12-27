@@ -35,7 +35,7 @@ AC_ARG_WITH([aklog],
 AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
     [Full path to aklog binary.])
 
-dnl Check for the Kerberos v5 libraries and for portability between MIT and
+dnl Check for the Kerberos libraries and for portability between MIT and
 dnl Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH

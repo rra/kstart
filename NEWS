@@ -18,6 +18,10 @@ kstart 4.0 (unreleased)
     Update the included kafs library to the version from rra-c-util 4.0,
     adding support for Mac OS X and Solaris 11.
 
+    Change references to Kerberos v5 to just Kerberos in the
+    documentation.  Kerberos v5 has been the default version of Kerberos
+    for over ten years now.
+
     Update to rra-c-util 4.0:
 
     * Build on systems where krb5/krb5.h exists but krb5.h does not.

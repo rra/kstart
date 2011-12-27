@@ -1,5 +1,5 @@
 /*
- * Automatically renew a Kerberos v5 ticket.
+ * Automatically renew a Kerberos ticket.
  *
  * Similar to k5start, krenew can run as a daemon or run a specified program
  * and wait until it completes.  Rather than obtaining fresh Kerberos
@@ -8,8 +8,8 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010
- *     Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
 */
@@ -103,8 +103,7 @@ alarm_handler(int s UNUSED)
 /*
  * Get the principal name for the krbtgt ticket for the local realm.  The
  * caller is responsible for freeing the principal.  Takes an existing
- * principal to get the realm from and returns a Kerberos v5 error on
- * failure.
+ * principal to get the realm from and returns a Kerberos error on failure.
  */
 static krb5_error_code
 get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
