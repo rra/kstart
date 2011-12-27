@@ -15,6 +15,7 @@
 */
 
 #include <config.h>
+#include <portable/kafs.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
 
@@ -26,7 +27,6 @@
 #include <syslog.h>
 #include <time.h>
 
-#include <kafs/kafs.h>
 #include <util/command.h>
 #include <util/concat.h>
 #include <util/macros.h>

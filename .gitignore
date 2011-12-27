@@ -23,8 +23,10 @@
 /tests/portable/snprintf-t
 /tests/portable/strlcat-t
 /tests/portable/strlcpy-t
+/tests/portable/strndup-t
 /tests/runtests
 /tests/util/concat-t
+/tests/util/messages-krb5-t
 /tests/util/messages-t
 /tests/util/xmalloc
 .deps

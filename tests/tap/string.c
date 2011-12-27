@@ -1,12 +1,13 @@
 /*
- * Prototypes for error handling for Kerberos.
+ * String utilities for the TAP protocol.
+ *
+ * Additional string utilities that can't be included with C TAP Harness
+ * because they rely on additional portability code from rra-c-util.
  *
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010
- *     The Board of Trustees of the Leland Stanford Junior University
+ * Copyright 2011 Russ Allbery <rra@stanford.edu>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,32 +28,41 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef UTIL_MESSAGES_KRB5_H
-#define UTIL_MESSAGES_KRB5_H 1
-
 #include <config.h>
-#include <portable/macros.h>
+#include <portable/system.h>
 
-#include <krb5.h>
-#include <sys/types.h>
+#include <tests/tap/basic.h>
+#include <tests/tap/string.h>
 
-BEGIN_DECLS
-
-/* Default to a hidden visibility for all util functions. */
-#pragma GCC visibility push(hidden)
 
 /*
- * The Kerberos versions of the reporting functions.  These take a context and
- * an error code to get the Kerberos error.
+ * vsprintf into a newly allocated string, reporting a fatal error with bail
+ * on failure.
  */
-void die_krb5(krb5_context, krb5_error_code, const char *, ...)
-    __attribute__((__nonnull__, __noreturn__, __format__(printf, 3, 4)));
-void warn_krb5(krb5_context, krb5_error_code, const char *, ...)
-    __attribute__((__nonnull__, __format__(printf, 3, 4)));
+int
+bvasprintf(char **strp, const char *fmt, va_list args)
+{
+    int status;
 
-/* Undo default visibility change. */
-#pragma GCC visibility pop
+    status = vasprintf(strp, fmt, args);
+    if (status < 0)
+        sysbail("failed to allocate memory for vasprintf");
+    return status;
+}
 
-END_DECLS
 
-#endif /* UTIL_MESSAGES_KRB5_H */
+/*
+ * sprintf into a newly allocated string, reporting a fatal error with bail on
+ * failure.
+ */
+int
+basprintf(char **strp, const char *fmt, ...)
+{
+    va_list args;
+    int status;
+
+    va_start(args, fmt);
+    status = bvasprintf(strp, fmt, args);
+    va_end(args);
+    return status;
+}

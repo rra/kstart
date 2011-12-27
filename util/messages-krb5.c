@@ -5,11 +5,30 @@
  * Kerberos error code and append the Kerberos error message to the provided
  * formatted message.
  *
+ * The canonical version of this file is maintained in the rra-c-util package,
+ * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+ *
  * Written by Russ Allbery <rra@stanford.edu>
  * Copyright 2006, 2007, 2008, 2009, 2010
- *     Board of Trustees, Leland Stanford Jr. University
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
- * See LICENSE for licensing terms.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #include <config.h>
@@ -32,12 +51,16 @@ die_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     char *message;
     va_list args;
 
-    k5_msg = krb5_get_error_message(ctx, code);
+    if (ctx != NULL)
+        k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
     if (xvasprintf(&message, format, args) < 0)
         die("internal error: unable to format error message");
     va_end(args);
-    die("%s: %s", message, k5_msg);
+    if (k5_msg == NULL)
+        die("%s", message);
+    else
+        die("%s: %s", message, k5_msg);
 }
 
 
@@ -51,12 +74,17 @@ warn_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     char *message;
     va_list args;
 
-    k5_msg = krb5_get_error_message(ctx, code);
+    if (ctx != NULL)
+        k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
     if (xvasprintf(&message, format, args) < 0)
         die("internal error: unable to format error message");
     va_end(args);
-    warn("%s: %s", message, k5_msg);
+    if (k5_msg == NULL)
+        warn("%s", message);
+    else
+        warn("%s: %s", message, k5_msg);
     free(message);
-    krb5_free_error_message(ctx, k5_msg);
+    if (k5_msg != NULL)
+        krb5_free_error_message(ctx, k5_msg);
 }

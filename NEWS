@@ -10,6 +10,29 @@ kstart 3.17 (unreleased)
     k5start and report an error rather than ignoring -u and appending the
     instance from -i onto the principal obtained via -U.
 
+    Update the included kafs library to the version from rra-c-util 4.0,
+    adding support for Mac OS X and Solaris 11.
+
+    Update to rra-c-util 4.0:
+
+    * Build on systems where krb5/krb5.h exists but krb5.h does not.
+    * Build with OpenBSD Heimdal where there is no separate roken library.
+    * Kerberos probes no longer assume transitive library dependencies.
+    * Fix removal of /usr/include from Kerberos CPPFLAGS.
+    * Add notices to all files copied from rra-c-util.
+    * Fix replacement of krb5_free_error_message.
+    * Support older Heimdal with no-context krb5_get_init_creds_opt_free.
+    * Improve probe for krb5_kt_free_entry.
+    * Fix use of long long, where available, in replacement mkstemp.
+    * Include strings.h where present for more POSIX string functions.
+    * Use typedef for a missing sig_atomic_t.
+    * Avoid passing a NULL context to krb5_get_error_message.
+    * Fix integer data types in the messages utility library.
+    * Use configure-detected aklog path in the test suite.
+    * Add replacement for a missing strndup (such as on Mac OS X).
+    * Add tests for messages-krb5 utility functions.
+    * Update compiler warning flags for make warnings to gcc 4.6.1.
+
     Update to C TAP Harness 1.9:
 
     * Add a usage message and -h option to runtests.

@@ -1,9 +1,5 @@
 /*
- * Dummy symbol to prevent an empty library.
- *
- * On platforms that already have all of the functions that libportable would
- * supply, Automake builds an empty library and then calls ar with nonsensical
- * arguments.  Ensure that libportable always contains at least one symbol.
+ * Replacement for a missing strndup.
  *
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
@@ -19,11 +15,38 @@
  * work.
  */
 
-/* Prototype to avoid gcc warnings. */
-int portable_dummy(void);
+#include <config.h>
+#include <portable/system.h>
 
-int
-portable_dummy(void)
+#include <errno.h>
+
+/*
+ * If we're running the test suite, rename the functions to avoid conflicts
+ * with the system versions.
+ */
+#if TESTING
+# undef strndup
+# define strndup test_strndup
+char *test_strndup(const char *, size_t);
+#endif
+
+char *
+strndup(const char *s, size_t n)
 {
-    return 42;
+    size_t length;
+    char *copy;
+
+    if (s == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+    length = strlen(s);
+    if (length > n)
+        length = n;
+    copy = malloc(length + 1);
+    if (copy == NULL)
+        return NULL;
+    memcpy(copy, s, length);
+    copy[length] = '\0';
+    return copy;
 }

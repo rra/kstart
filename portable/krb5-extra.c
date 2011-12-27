@@ -6,8 +6,18 @@
  * Everything in this file will be protected by #ifndef.  If the native
  * Kerberos libraries are fully capable, this file will be skipped.
  *
+ * The canonical version of this file is maintained in the rra-c-util package,
+ * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+ *
  * Written by Russ Allbery <rra@stanford.edu>
- * This work is hereby placed in the public domain by its author.
+ *
+ * The authors hereby relinquish any claim to any copyright that they may have
+ * in this work, whether granted under contract or by operation of law or
+ * international treaty, and hereby commit to the public, at large, that they
+ * shall not, at any time in the future, seek to enforce any copyright in this
+ * work against any person or entity, or prevent any person or entity from
+ * copying, publishing, distributing or creating derivative works of this
+ * work.
  */
 
 #include <config.h>
@@ -77,7 +87,7 @@ krb5_get_error_message(krb5_context ctx UNUSED, krb5_error_code code UNUSED)
  * krb5_free_error_message is a subset of those with krb5_get_error_message.
  * If this assumption ever breaks, we may call the wrong free function.
  */
-static void
+void
 krb5_free_error_message(krb5_context ctx UNUSED, const char *msg)
 {
     if (msg == error_unknown)
@@ -97,7 +107,8 @@ krb5_free_error_message(krb5_context ctx UNUSED, const char *msg)
  * assumes that an all-zero bit pattern will create a NULL pointer.
  */
 krb5_error_code
-krb5_get_init_creds_opt_alloc(krb5_context ctx, krb5_get_init_creds_opt **opts)
+krb5_get_init_creds_opt_alloc(krb5_context ctx UNUSED,
+                              krb5_get_init_creds_opt **opts)
 {
     *opts = calloc(1, sizeof(krb5_get_init_creds_opt));
     if (*opts == NULL)

@@ -22,6 +22,7 @@
  */
 
 #include <config.h>
+#include <portable/kafs.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
 
@@ -36,7 +37,6 @@
 #include <syslog.h>
 #include <time.h>
 
-#include <kafs/kafs.h>
 #include <util/command.h>
 #include <util/concat.h>
 #include <util/macros.h>
@@ -525,15 +525,9 @@ main(int argc, char *argv[])
      * support the -u and -i flags being used independently by tacking the
      * instance onto the end of the username.
      */
-    if (inst != NULL) {
-        size_t len;
-        char *p;
-
-        len = strlen(principal) + 1 + strlen(inst) + 1;
-        if (xasprintf(&p, "%s/%s", principal, inst) < 0)
+    if (inst != NULL)
+        if (xasprintf(&principal, "%s/%s", principal, inst) < 0)
             die("cannot format principal name");
-        principal = p;
-    }
     code = krb5_parse_name(ctx, principal, &options.kprinc);
     if (code != 0)
         die_krb5(ctx, code, "error parsing %s", principal);
