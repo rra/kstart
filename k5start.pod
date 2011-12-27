@@ -1,11 +1,11 @@
-=head1 NAME
-
-k5start - Obtain and optionally keep active a Kerberos v5 ticket.
-
 =for stopwords
 -bFhLnPqstv keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
 init AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
-forwardable proxiable
+forwardable proxiable designator
+
+=head1 NAME
+
+k5start - Obtain and optionally keep active a Kerberos v5 ticket.
 
 =head1 SYNOPSIS
 

@@ -1,13 +1,10 @@
-=head1 NAME
-
-=for stopwords
-krenew
-
-krenew - Renew a Kerberos v5 ticket
-
 =for stopwords
 -bhiLtv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense
+Allbery Bense designator krenew
+
+=head1 NAME
+
+krenew - Renew a Kerberos v5 ticket
 
 =head1 SYNOPSIS
 
