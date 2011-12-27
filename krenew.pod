@@ -95,7 +95,7 @@ command line and is most useful in conjunction with B<-b> to allow
 management of the running child process.
 
 Note that, when used with B<-b>, the PID file is written out after
-B<k4start> is backgrounded and changes its working directory to F</>, so
+B<krenew> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
 

@@ -2,10 +2,10 @@
 
 General:
 
- * k4start, k5start, and krenew have almost identical structure.  Redesign
-   them to use a standard driver frontend with callbacks for the things
-   that differ between the three programs, which will significantly reduce
-   code duplication.
+ * k5start and krenew have almost identical structure.  Redesign them to
+   use a standard driver frontend with callbacks for the things that
+   differ between the three programs, which will significantly reduce code
+   duplication.
 
 k5start:
 
@@ -53,11 +53,11 @@ Test suite:
  * Test that -K and running a command wakes up periodically and renews
    tickets for both krenew and k5start.
 
- * Add tests for k4start and k5start password prompting, either from
-   standard input or from a TTY.
+ * Add tests for k5start password prompting, either from standard input or
+   from a TTY.
 
  * Add error tests for invalid combinations of command-line options or
-   invalid settings for those options in k4start, k5start, and krenew.
+   invalid settings for those options in k5start and krenew.
 
  * Add tests of -o, -g, and -m.  Testing -o and -g will require using
    fakeroot.

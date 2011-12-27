@@ -1,6 +1,11 @@
                        User-Visible kstart Changes
 
-kstart 3.17 (unreleased)
+kstart 4.0 (unreleased)
+
+    Remove k4start from the distribution.  I no longer have a Kerberos v4
+    environment with which to test and therefore no way to refactor and
+    restructure the code for other changes to the package.  Users who
+    still need k4start should use an older version of the package.
 
     Set signal handlers with sigaction instead of signal, which may fix
     problems propagating multiple signals to child processes in k5start

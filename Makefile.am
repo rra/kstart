@@ -1,35 +1,31 @@
-# Makefile.am -- Automake makefile for kstart.
+# Automake makefile for kstart.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-#    2011 Board of Trustees, Leland Stanford Jr. University
+#    2011 The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k4start.1	\
-	k4start.pod k5start.pod krenew.pod kstart.spec tests/TESTS	\
-	tests/data/README tests/data/command tests/data/fake-aklog	\
-	tests/docs/pod-spelling-t tests/docs/pod-t tests/k4start/afs-t	\
-	tests/k4start/basic-t tests/k5start/afs-t tests/k5start/basic-t	\
-	tests/k5start/daemon-t tests/k5start/flags-t tests/kafs/basic-t	\
-	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	\
+EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k5start.pod  \
+	krenew.pod kstart.spec tests/TESTS tests/data/README		   \
+	tests/data/command tests/data/fake-aklog tests/docs/pod-spelling-t \
+	tests/docs/pod-t tests/k5start/afs-t tests/k5start/basic-t	   \
+	tests/k5start/daemon-t tests/k5start/flags-t tests/kafs/basic-t	   \
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	   \
 	tests/libtest.pl tests/tap/libtap.sh tests/util/xmalloc-t
 
 # The following library order matters for annoying reasons.  Older
 # libafsauthent contains its own com_err implementation, which we do not
 # want to pick up.
 #
-# With krb4, we have to link with the AFS libraries first, since otherwise
-# in the --enable-reduced-depends case the linker may try to resolve the
-# com_err symbols in libkrb4 from the AFS libraries.
-#
-# With krb5, if k5start calls com_err functions directly, configure adds
-# -lcom_err to the link line explicitly.  In that case, we want to link with
-# the AFS libraries last, after -lcom_err, so that we don't use its com_err
-# implementation.  If k5start doesn't call com_err functions, we want to do
-# the same thing we do with krb4 for the --enable-reduced-depends case.
-K4START_LIBS = $(KAFS_LIBS) $(KRB4_LIBS)
+# If k5start calls com_err functions directly, configure adds -lcom_err to
+# the link line explicitly.  In that case, we want to link with the AFS
+# libraries last, after -lcom_err, so that we don't use its com_err
+# implementation.  If k5start doesn't call com_err functions, we want to
+# link with the AFS libraries first, since otherwise in the
+# --enable-reduced-depends case the linker may try to resolve the com_err
+# symbols in libkrb5 from the AFS libraries.
 if KRB5_USES_COM_ERR
     K5START_LIBS = $(KRB5_LIBS) $(KAFS_LIBS)
 else
@@ -37,7 +33,7 @@ else
 endif
 
 # We potentially need these for everything due to the libkafs library.
-AM_CPPFLAGS = $(KRB4_CPPFLAGS) $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
+AM_CPPFLAGS = $(KRB5_CPPFLAGS) $(KAFS_CPPFLAGS)
 
 noinst_LIBRARIES = portable/libportable.a util/libutil.a
 portable_libportable_a_SOURCES = portable/dummy.c portable/kafs.h	\
@@ -69,21 +65,11 @@ krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
 dist_man_MANS = k5start.1 krenew.1
 
-# Conditionally add k4start to the build.
-if K4START
-    bin_PROGRAMS += k4start
-    k4start_SOURCES = k4start.c portable/krb4.h
-    k4start_LDFLAGS = $(KRB4_LDFLAGS) $(KAFS_LDFLAGS)
-    k4start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
-	$(K4START_LIBS)
-    dist_man_MANS += k4start.1
-endif
-
 DISTCLEANFILES = tests/data/.placeholder
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \
 	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
 	build-aux/install-sh build-aux/missing config.h.in config.h.in~ \
-	configure k4start.1 k5start.1 krenew.1
+	configure k5start.1 krenew.1
 
 # A set of flags for warnings.	Add -O because gcc won't find some warnings
 # without optimization turned on.  Desirable warnings that can't be turned

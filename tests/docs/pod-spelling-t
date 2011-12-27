@@ -47,7 +47,7 @@ my @pod = map {
     my $pod = "$ENV{SOURCE}/../" . $_;
     $pod =~ s,[^/.][^/]*/../,,g;
     $pod;
-} qw(k4start.pod k5start.pod krenew.pod);
+} qw(k5start.pod krenew.pod);
 plan tests => scalar @pod;
 
 # Finally, do the checks.

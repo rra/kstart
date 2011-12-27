@@ -2,7 +2,7 @@
  * Set owner and mode of ticket files.
  *
  * Holds common code to set the owner and mode of ticket cache files, used by
- * both k4start and k5start.
+ * k5start.
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Copyright 2008 Board of Trustees, Leland Stanford Jr. University

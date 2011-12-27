@@ -110,7 +110,7 @@ command line and is most useful in conjunction with B<-b> to allow
 management of the running child process.
 
 Note that, when used with B<-b>, the PID file is written out after
-B<k4start> is backgrounded and changes its working directory to F</>, so
+B<k5start> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
 
@@ -215,7 +215,8 @@ command.
 
 =item B<-n>
 
-Ignored, present for option compatibility with B<k4start>.
+Ignored, present for option compatibility with the now-obsolete
+B<k4start>.
 
 =item B<-o> I<owner>
 
@@ -395,10 +396,10 @@ the UID B<k5start> is running as and %s is a random string.
 
 =head1 SEE ALSO
 
-k4start(1), kinit(1), krenew(1)
+kinit(1), krenew(1)
 
 The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<k4start>, B<k5start>, and B<krenew>.
+will have the current version of B<k5start> and B<krenew>.
 
 =head1 AUTHORS
 

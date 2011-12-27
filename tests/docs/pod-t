@@ -9,7 +9,7 @@
 
 use Test::More;
 
-my @files = qw(k4start.pod k5start.pod krenew.pod);
+my @files = qw(k5start.pod krenew.pod);
 my $total = scalar (@files);
 plan tests => $total;
 

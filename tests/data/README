@@ -8,12 +8,6 @@ key in the keytab on a single line ending with a newline.  The presence
 of these two files will enable the tests that actually do Kerberos
 authentication.
 
-To enable k4start tests, also create a test.srvtab file containing a
-srvtab for the same principal (the one named in test.principal).  The K4
-principal name will be derived from the contents of test.principal with
-everything after the first period stripped and then all slashes changed to
-periods.
-
 In order to test AFS PAG and token handling (only applicable if built with
 --enable-setpag), be sure that you have an AFS token before you run the
 test suite.  (It doesn't matter which user you have an AFS token for.)

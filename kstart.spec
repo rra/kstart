@@ -12,14 +12,14 @@ Requires: krb5-libs
 Vendor: Stanford University
 
 %description
-Kerberos kinit variant supporting ticket refreshing.  k5start (for
-Kerberos v5) and k4start (for Kerberos v4) can be used instead of kinit to
-obtain Kerberos tickets.  krenew can renew an existing ticket cache.  They
-are intended primarily for use with automated processes and support some
-additional features useful for that purpose, such as running as a daemon
-and refreshing the ticket periodically, checking to see if an existing
-ticket has expired, or obtaining an AFS token along with the ticket by
-running an external program automatically.
+k5start and krenew are modified versions of kinit which add support for
+running as a daemon to maintain a ticket cache, running a command with
+credentials from a keytab and maintaining a ticket cache until that command
+completes, obtaining AFS tokens (via an external aklog) after obtaining
+tickets, and creating an AFS PAG for a command.  They are primarily useful in
+conjunction with long-running jobs; for moving ticket handling code out of
+servers, cron jobs, or daemons; and to obtain tickets and AFS tokens with a
+single command.
 
 %prep
 %setup -q -n kstart-%{version}
@@ -44,6 +44,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Tue Dec 27 2011 Russ Allbery <rra@stanford.edu> 3.16-2
+- Remove references to k4start from description.
+
 * Mon Mar 29 2010 Andy Cobaugh <phalenor@bx.psu.edu> 3.16-1
 - New version for 3.16 release.
 - Require krb5-libs instead of krb5-workstation.
