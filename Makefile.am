@@ -60,6 +60,7 @@ bin_PROGRAMS = k5start krenew
 k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
+krenew_SOURCES = framework.c internal.h krenew.c
 krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)

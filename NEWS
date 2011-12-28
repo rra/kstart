@@ -7,6 +7,10 @@ kstart 4.0 (unreleased)
     restructure the code for other changes to the package.  Users who
     still need k4start should use an older version of the package.
 
+    krenew now defaults to staying running if renewing credentials fails.
+    It will still exit by default (unless -i is used) if the renewable
+    lifetime has expired or if the ticket cache has been removed.
+
     Set signal handlers with sigaction instead of signal, which may fix
     problems propagating multiple signals to child processes in k5start
     and krenew.
