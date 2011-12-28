@@ -3,7 +3,8 @@
 # Tests for krenew daemon functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009, 2011
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
@@ -34,7 +35,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 31;
+    plan tests => 34;
 }
 
 # Start a krenew daemon and be sure it gets tickets and stays running.
@@ -62,7 +63,7 @@ unlink 'krb5cc_test';
 kill (14, $pid) or warn "Can't kill $pid: $!\n";
 is (waitpid ($pid, 0), $pid, ' and it dies after failure to renew');
 is (($? >> 8), 1, ' with non-zero exit status');
-unlink 'pid';
+ok (!-f 'pid', ' and the PID file was removed');
 kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
 
 # Try again with the -b flag.
@@ -160,4 +161,6 @@ is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
 ok (eof OUT, 'No more child output written');
 chomp $cache;
 ok (! -f $cache, 'New child cache removed');
-unlink 'krb5cc_test', 'pid', 'child-pid', 'child-out';
+ok (!-f 'pid', ' and the PID file was removed');
+ok (!-f 'child-pid', ' and the child PID file was removed');
+unlink 'krb5cc_test', 'child-out';
