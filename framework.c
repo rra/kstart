@@ -212,8 +212,10 @@ run_framework(krb5_context ctx, struct config *config)
         if (code != 0)
             code = config->auth(ctx, config, code);
     }
+    if (code != 0)
+        status = 1;
     if (code != 0 && !config->ignore_errors)
-        exit(1);
+        exit_cleanup(ctx, config, status);
 
     /* If requested, run the aklog program. */
     if (config->do_aklog)
