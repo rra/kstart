@@ -7,6 +7,14 @@ kstart 4.0 (unreleased)
     restructure the code for other changes to the package.  Users who
     still need k4start should use an older version of the package.
 
+    Ticket caches passed to k5start or krenew with the -k option are now
+    used as-is without prepending "FILE:".  This allows both programs to
+    be used with non-file caches (unles the -o, -g, or -m options were
+    given to k5start, of course).  However, users who were relying on
+    k5start or krenew prepending "FILE:" may now need to add this
+    explicitly to the -k argument if they want the ticket cache to be set
+    in the environment with that prefix.
+
     krenew now defaults to staying running if renewing credentials fails.
     It will still exit by default (unless -i is used) if the renewable
     lifetime has expired or if the ticket cache has been removed.
@@ -15,6 +23,15 @@ kstart 4.0 (unreleased)
     as a daemon.  It does still exit if the first attempt to obtain
     credentials during startup (before backgrounding) fails, to make it
     easier to diagnose configuration errors.
+
+    k5start, when run with the -o, -g, or -m options to change ticket
+    cache ownership or permissions, now writes a temporary ticket cache in
+    the same directory, sets its ownership and permissions, and then
+    replaces the existing cache with an atomic rename.  It also sets
+    permissions properly if it has to reauthenticate after backgrounding
+    itself.  This closes two windows where the cache may not be accessible
+    to the program using it if k5start were in the middle of refreshing
+    it.  Thanks to Harry Coin for the report.
 
     Set signal handlers with sigaction instead of signal, which may fix
     problems propagating multiple signals to child processes in k5start

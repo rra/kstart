@@ -81,9 +81,9 @@ usage(int status)
  * name of the cache.
  */
 static char *
-copy_cache(krb5_context ctx, krb5_ccache *cache)
+copy_cache(krb5_context ctx, krb5_ccache *ccache)
 {
-    krb5_error_code status;
+    krb5_error_code code;
     krb5_ccache old, new;
     krb5_principal princ = NULL;
     char *name;
@@ -96,24 +96,24 @@ copy_cache(krb5_context ctx, krb5_ccache *cache)
         sysdie("cannot create ticket cache file");
     if (fchmod(fd, 0600) < 0)
         sysdie("cannot chmod ticket cache file");
-    status = krb5_cc_resolve(ctx, name, &new);
-    if (status != 0)
-        die_krb5(ctx, status, "error initializing new ticket cache");
-    old = *cache;
-    status = krb5_cc_get_principal(ctx, old, &princ);
-    if (status != 0)
-        die_krb5(ctx, status, "error getting principal from old cache");
-    status = krb5_cc_initialize(ctx, new, princ);
-    if (status != 0)
-        die_krb5(ctx, status, "error initializing new cache");
+    code = krb5_cc_resolve(ctx, name, &new);
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing new ticket cache");
+    old = *ccache;
+    code = krb5_cc_get_principal(ctx, old, &princ);
+    if (code != 0)
+        die_krb5(ctx, code, "error getting principal from old cache");
+    code = krb5_cc_initialize(ctx, new, princ);
+    if (code != 0)
+        die_krb5(ctx, code, "error initializing new cache");
     krb5_free_principal(ctx, princ);
-    status = krb5_cc_copy_cache(ctx, old, new);
-    if (status != 0)
-        die_krb5(ctx, status, "error copying credentials");
-    status = krb5_cc_close(ctx, old);
-    if (status != 0)
-        die_krb5(ctx, status, "error closing old ticket cache");
-    *cache = new;
+    code = krb5_cc_copy_cache(ctx, old, new);
+    if (code != 0)
+        die_krb5(ctx, code, "error copying credentials");
+    code = krb5_cc_close(ctx, old);
+    if (code != 0)
+        die_krb5(ctx, code, "error closing old ticket cache");
+    *ccache = new;
     return name;
 }
 
@@ -134,6 +134,7 @@ copy_cache(krb5_context ctx, krb5_ccache *cache)
 static krb5_error_code
 renew(krb5_context ctx, struct config *config, krb5_error_code status)
 {
+    krb5_ccache ccache = NULL;
     krb5_error_code code;
     krb5_principal user = NULL;
     krb5_creds creds;
@@ -151,9 +152,17 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
         return status;
     }
     memset(&creds, 0, sizeof(creds));
-    code = krb5_cc_get_principal(ctx, config->cache, &user);
+    code = krb5_cc_resolve(ctx, config->cache, &ccache);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error opening ticket cache");
+        if (!config->ignore_errors)
+            exit_cleanup(ctx, config, 1);
+        return code;
+    }
+    code = krb5_cc_get_principal(ctx, ccache, &user);
     if (code != 0) {
         warn_krb5(ctx, code, "error reading cache");
+        krb5_cc_close(ctx, ccache);
         if (!config->ignore_errors)
             exit_cleanup(ctx, config, 1);
         return code;
@@ -175,7 +184,7 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
      * given, which means we return an error code and let the framework handle
      * it.
      */
-    code = krb5_get_renewed_creds(ctx, &creds, user, config->cache, NULL);
+    code = krb5_get_renewed_creds(ctx, &creds, user, ccache, NULL);
     creds_valid = true;
     if (code != 0) {
         warn_krb5(ctx, code, "error renewing credentials");
@@ -189,18 +198,20 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
      * to just store the renewed credentials without creating a cache that
      * grows forever.
      */
-    code = krb5_cc_initialize(ctx, config->cache, user);
+    code = krb5_cc_initialize(ctx, ccache, user);
     if (code != 0) {
         warn_krb5(ctx, code, "error reinitializing cache");
         goto done;
     }
-    code = krb5_cc_store_cred(ctx, config->cache, &creds);
+    code = krb5_cc_store_cred(ctx, ccache, &creds);
     if (code != 0) {
         warn_krb5(ctx, code, "error storing credentials");
         goto done;
     }
 
 done:
+    if (ccache != NULL)
+        krb5_cc_close(ctx, ccache);
     if (user != NULL)
         krb5_free_principal(ctx, user);
     if (creds_valid)
@@ -213,10 +224,10 @@ int
 main(int argc, char *argv[])
 {
     int option;
-    char *cachename = NULL;
     krb5_context ctx;
     krb5_error_code code;
     struct config config;
+    krb5_ccache ccache;
 
     /* Initialize logging. */
     message_program_name = "krenew";
@@ -231,6 +242,7 @@ main(int argc, char *argv[])
         case 'c': config.childfile = optarg;    break;
         case 'h': usage(0);                     break;
         case 'i': config.ignore_errors = true;  break;
+        case 'k': config.cache = optarg;        break;
         case 'p': config.pidfile = optarg;      break;
         case 't': config.do_aklog = true;       break;
         case 'v': config.verbose = true;        break;
@@ -244,9 +256,6 @@ main(int argc, char *argv[])
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
                 die("-K interval argument %s invalid", optarg);
-            break;
-        case 'k':
-            cachename = concat("FILE:", optarg, (char *) 0);
             break;
         case 'L':
             openlog(message_program_name, LOG_PID, LOG_DAEMON);
@@ -283,21 +292,23 @@ main(int argc, char *argv[])
     code = krb5_init_context(&ctx);
     if (code != 0)
         die_krb5(ctx, code, "error initializing Kerberos");
-    if (cachename == NULL)
-        code = krb5_cc_default(ctx, &config.cache);
+    if (config.cache == NULL)
+        code = krb5_cc_default(ctx, &ccache);
     else
-        code = krb5_cc_resolve(ctx, cachename, &config.cache);
+        code = krb5_cc_resolve(ctx, config.cache, &ccache);
     if (code != 0)
-        die_krb5(ctx, code, "error initializing ticket cache");
+        die_krb5(ctx, code, "error opening default ticket cache");
     if (config.command != NULL) {
-        cachename = copy_cache(ctx, &config.cache);
+        config.cache = copy_cache(ctx, &ccache);
         config.clean_cache = true;
     }
-    if (cachename != NULL)
-        if (setenv("KRB5CCNAME", cachename, 1) != 0) {
-            warn("cannot set KRB5CCNAME environment variable");
-            exit_cleanup(ctx, &config, 1);
-        }
+    if (config.cache == NULL)
+        config.cache = xstrdup(krb5_cc_get_name(ctx, ccache));
+    else {
+        if (setenv("KRB5CCNAME", config.cache, 1) != 0)
+            die("cannot set KRB5CCNAME environment variable");
+    }
+    krb5_cc_close(ctx, ccache);
 
     /* Do the actual work. */
     run_framework(ctx, &config);

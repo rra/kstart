@@ -23,6 +23,9 @@
 #include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <ctype.h>
+#include <errno.h>
+#include <grp.h>
 #include <pwd.h>
 #include <sys/stat.h>
 #include <syslog.h>
@@ -33,7 +36,6 @@
 #include <util/macros.h>
 #include <util/messages.h>
 #include <util/messages-krb5.h>
-#include <util/perms.h>
 #include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -51,9 +53,10 @@ struct k5start_private {
     const char *keytab;         /* Keytab to use to authenticate. */
     bool quiet;                 /* Whether to silence even normal output. */
     bool stdin_passwd;          /* Whether to get the password from stdin. */
-    const char *owner;          /* Owner of created ticket cache. */
-    const char *group;          /* Group of created ticket cache. */
-    const char *mode;           /* Mode of created ticket cache. */
+    uid_t owner;                /* Owner of created ticket cache. */
+    uid_t group;                /* Group of created ticket cache. */
+    mode_t mode;                /* Mode of created ticket cache. */
+    bool set_perms;             /* Whether to set owner and perms on cache. */
     const char *cache;          /* Path to destination cache. */
     krb5_get_init_creds_opt *kopts;
 };
@@ -124,6 +127,34 @@ usage(int status)
 
 
 /*
+ * Given the path to a file and the private configuration information, set the
+ * owner, group, or mode.  Owner and group may be either the name of a user or
+ * group or a numeric UID or GID (as a string).  If the owner is specified as
+ * a username (but not if it is specified as a UID), set the GID, if
+ * unspecified, to the primary group of that user.
+ *
+ * Returns an errno on failure and zero on success.
+ */
+static krb5_error_code
+set_permissions(const char *file, const struct k5start_private *private)
+{
+    if (private->owner != (uid_t) -1 || private->group != (gid_t) -1)
+        if (chown(file, private->owner, private->group) < 0) {
+            syswarn("cannot chown %s to %ld:%ld", file, (long) private->owner,
+                    (long) private->group);
+            return errno;
+        }
+    if (private->mode != 0)
+        if (chmod(file, private->mode) < 0) {
+            syswarn("cannot chmod %s to %o", file,
+                    (unsigned int) private->mode);
+            return errno;
+        }
+    return 0;
+}
+
+
+/*
  * Authenticate, given the context and the processed command-line options.
  * Dies on failure.
  */
@@ -135,8 +166,34 @@ authenticate(krb5_context ctx, struct config *config,
     krb5_error_code code;
     krb5_keytab keytab = NULL;
     krb5_creds creds;
+    const char *cache = config->cache;
+    krb5_ccache ccache = NULL;
 
-    memset(&creds, 0, sizeof(creds));
+    /*
+     * If we have owner, group, or mode information, we have to create a
+     * separate temporary ticket cache, change its ownership, and then rename
+     * it.
+     */
+    if (private->set_perms) {
+        int fd;
+        char *tmp;
+
+        if (xasprintf(&tmp, "%s_XXXXXX", config->cache) < 0)
+            die("cannot format ticket cache name");
+        fd = mkstemp(tmp);
+        if (fd < 0) {
+            syswarn("cannot create temporary ticket cache file");
+            return errno;
+        }
+        if (fchmod(fd, 0600) < 0) {
+            syswarn("cannot chmod temporary ticket cache file");
+            return errno;
+        }
+        close(fd);
+        cache = tmp;
+    }
+
+    /* Verbose logging of what we're doing. */
     if (config->verbose) {
         char *p;
 
@@ -149,6 +206,9 @@ authenticate(krb5_context ctx, struct config *config,
         }
         notice("getting tickets for %s", private->service);
     }
+
+    /* Obtain new credentials. */
+    memset(&creds, 0, sizeof(creds));
     if (private->keytab != NULL) {
         code = krb5_kt_resolve(ctx, private->keytab, &keytab);
         if (code != 0) {
@@ -186,27 +246,47 @@ authenticate(krb5_context ctx, struct config *config,
         warn_krb5(ctx, code, "error getting credentials");
         goto done;
     }
-    code = krb5_cc_initialize(ctx, config->cache, private->kprinc);
+
+    /* Set up the new ticket cache. */
+    code = krb5_cc_resolve(ctx, cache, &ccache);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error creating ticket cache");
+        goto done;
+    }
+    code = krb5_cc_initialize(ctx, ccache, private->kprinc);
     if (code != 0) {
         warn_krb5(ctx, code, "error initializing ticket cache");
         goto done;
     }
-    code = krb5_cc_store_cred(ctx, config->cache, &creds);
+    code = krb5_cc_store_cred(ctx, ccache, &creds);
     if (code != 0) {
         warn_krb5(ctx, code, "error storing credentials");
         goto done;
     }
+    krb5_cc_close(ctx, ccache);
+    ccache = NULL;
 
-    /* If requested, set the owner, group, and mode of the resulting cache. */
-    if (private->owner != NULL || private->group != NULL
-        || private->mode != NULL)
-        file_permissions(private->cache, private->owner, private->group,
-                         private->mode);
+    /*
+     * If we aren't changing ownership or permissions, we're done.  If we are,
+     * set the owner, group, and mode of the resulting cache, and then rename
+     * it into place.
+     */
+    if (private->set_perms) {
+        code = set_permissions(cache, private);
+        if (code != 0)
+            goto done;
+        if (rename(cache, config->cache) < 0)
+            code = errno;
+    }
 
 done:
     /* Make sure that we don't free princ; we use it later. */
     if (creds.client == private->kprinc)
         creds.client = NULL;
+    if (cache != config->cache)
+        free((char *) cache);
+    if (ccache != NULL)
+        krb5_cc_close(ctx, ccache);
     krb5_free_cred_contents(ctx, &creds);
     if (keytab != NULL)
         krb5_kt_close(ctx, keytab);
@@ -252,13 +332,37 @@ first_principal(krb5_context ctx, const char *path)
 }
 
 
+/*
+ * Strips the cache prefix from the Kerberos ticket cache name if it's a
+ * file-based cache.  Otherwise, dies with an error indicating that cache type
+ * is not allowed with -o, -g, or -m options.
+ */
+static const char *
+strip_cache_prefix(const char *cache)
+{
+    const char *p;
+
+    if (strncmp(cache, "FILE:", strlen("FILE:")) == 0)
+        return cache + strlen("FILE:");
+    if (strncmp(cache, "WRFILE:", strlen("WRFILE:")) == 0)
+        return cache += strlen("WRFILE:");
+    for (p = cache; *p != '\0'; p++) {
+        if (p > cache && *p == ':')
+            die("cache type %.*s not allowed with -o, -g, or -m",
+                (int) (p - cache), cache);
+        else if (!isupper((unsigned char) *p))
+            return cache;
+    }
+    return cache;
+}
+
+
 int
 main(int argc, char *argv[])
 {
     struct config config;
     struct k5start_private private;
     int opt;
-    krb5_error_code code;
     const char *inst = NULL;
     const char *sname = NULL;
     const char *sinst = NULL;
@@ -267,6 +371,9 @@ main(int argc, char *argv[])
     bool nonforwardable = false;
     bool nonproxiable = false;
     int lifetime = DEFAULT_LIFETIME;
+    krb5_error_code code;
+    struct passwd *pw = NULL;
+    struct group *gr;
     krb5_context ctx;
     krb5_deltat life_secs;
     bool search_keytab = false;
@@ -281,18 +388,18 @@ main(int argc, char *argv[])
     memset(&private, 0, sizeof(private));
     config.private.k5start = &private;
     config.auth = authenticate;
+    private.owner = (uid_t) -1;
+    private.group = (gid_t) -1;
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
         case 'F': nonforwardable = true;        break;
-        case 'g': private.group = optarg;       break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
-        case 'm': private.mode = optarg;        break;
+        case 'k': config.cache = optarg;        break;
         case 'n': /* Ignored */                 break;
-        case 'o': private.owner = optarg;       break;
         case 'P': nonproxiable = true;          break;
         case 'p': config.pidfile = optarg;      break;
         case 'q': private.quiet = true;         break;
@@ -306,6 +413,16 @@ main(int argc, char *argv[])
         case 'f':
             private.keytab = optarg;
             break;
+        case 'g':
+            private.group = convert_number(optarg, 10);
+            if (private.group == (gid_t) -1) {
+                gr = getgrnam(optarg);
+                if (gr == NULL)
+                    die("unknown group %s", optarg);
+                private.group = gr->gr_gid;
+            }
+            private.set_perms = true;
+            break;
         case 'H':
             config.happy_ticket = convert_number(optarg, 10);
             if (config.happy_ticket <= 0)
@@ -315,12 +432,6 @@ main(int argc, char *argv[])
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
                 die("-K interval argument %s invalid", optarg);
-            break;
-        case 'k':
-            if (strncmp(optarg, "FILE:", strlen("FILE:")) == 0)
-                private.cache = xstrdup(optarg);
-            else
-                private.cache = concat("FILE:", optarg, (char *) 0);
             break;
         case 'L':
             openlog(message_program_name, LOG_PID, LOG_DAEMON);
@@ -336,6 +447,22 @@ main(int argc, char *argv[])
             if (code != 0 || life_secs == 0)
                 die("bad lifetime value %s, use 10h 10m format", optarg);
             lifetime = life_secs / 60;
+            break;
+        case 'm':
+            private.mode = convert_number(optarg, 8);
+            if (private.mode <= 0)
+                die("-m mode argument %s invalid", optarg);
+            private.set_perms = true;
+            break;
+        case 'o':
+            private.owner = convert_number(optarg, 10);
+            if (private.owner == (uid_t) -1) {
+                pw = getpwnam(optarg);
+                if (pw == NULL)
+                    die("unknown user %s", optarg);
+                private.owner = pw->pw_uid;
+            }
+            private.set_perms = true;
             break;
         case 's':
             private.stdin_passwd = true;
@@ -364,6 +491,13 @@ main(int argc, char *argv[])
     }
     if (argc >= 1)  
         config.command = argv;
+
+    /*
+     * If an owner was provided but no group, and the owner was given as a
+     * username, set the group to the primary group of that user.
+     */
+    if (private.group == (gid_t) -1 && pw != NULL)
+        private.group = pw->pw_gid;
 
     /* Check the arguments for consistency. */
     if (config.background && private.keytab == NULL)
@@ -417,9 +551,9 @@ main(int argc, char *argv[])
      * into the environment in case we're going to run aklog.  Either way, set
      * up the cache in the Kerberos libraries.
      */
-    if (private.cache == NULL && config.command != NULL) {
+    if (config.cache == NULL && config.command != NULL) {
         int fd;
-        char *tmp;
+        char *tmp, *cache;
 
         if (xasprintf(&tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
             die("cannot format ticket cache name");
@@ -428,20 +562,26 @@ main(int argc, char *argv[])
             sysdie("cannot create ticket cache file");
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
-        private.cache = tmp;
+        if (xasprintf(&cache, "FILE:%s", tmp) < 0)
+            die("cannot format ticket cache name");
+        free(tmp);
+        config.cache = cache;
         config.clean_cache = true;
     }
-    if (private.cache == NULL) {
-        code = krb5_cc_default(ctx, &config.cache);
-        if (code == 0)
-            private.cache = krb5_cc_get_name(ctx, config.cache);
+    if (config.cache == NULL) {
+        krb5_ccache ccache;
+
+        code = krb5_cc_default(ctx, &ccache);
+        if (code != 0)
+            die_krb5(ctx, code, "error opening default ticket cache");
+        config.cache = xstrdup(krb5_cc_get_name(ctx, ccache));
+        krb5_cc_close(ctx, ccache);
     } else {
-        if (setenv("KRB5CCNAME", private.cache, 1) != 0)
+        if (setenv("KRB5CCNAME", config.cache, 1) != 0)
             die("cannot set KRB5CCNAME environment variable");
-        code = krb5_cc_resolve(ctx, private.cache, &config.cache);
     }
-    if (code != 0)
-        die_krb5(ctx, code, "error initializing ticket cache");
+    if (private.set_perms)
+        config.cache = strip_cache_prefix(config.cache);
 
     /*
      * If -K, -H, or -b were given, set quiet automatically unless verbose was

@@ -43,7 +43,7 @@ struct config {
     const char *childfile;      /* Path to child PID file to write out. */
     const char *pidfile;        /* Path to PID file to write out. */
 
-    krb5_ccache cache;          /* Ticket cache to maintain. */
+    const char *cache;          /* Ticket cache to maintain. */
 
     /* Private data for the two programs. */
     union {

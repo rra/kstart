@@ -43,6 +43,7 @@
 #include <util/macros.h>
 #include <util/messages-krb5.h>
 #include <util/messages.h>
+#include <util/xmalloc.h>
 
 /*
  * The number of seconds of fudge to add to the check for whether we need to
@@ -115,32 +116,38 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
 static krb5_error_code
 ticket_expired(krb5_context ctx, struct config *config)
 {
+    krb5_ccache ccache = NULL;
     krb5_creds increds, *outcreds = NULL;
     bool increds_valid = false;
     time_t now, then, offset;
-    krb5_error_code status;
+    krb5_error_code code;
 
     /* Obtain the ticket. */
     memset(&increds, 0, sizeof(increds));
-    status = krb5_cc_get_principal(ctx, config->cache, &increds.client);
-    if (status != 0) {
-        warn_krb5(ctx, status, "error reading cache");
+    code = krb5_cc_resolve(ctx, config->cache, &ccache);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error opening cache");
         goto done;
     }
-    status = get_krbtgt_princ(ctx, increds.client, &increds.server);
-    if (status != 0) {
-        warn_krb5(ctx, status, "error building ticket name");
+    code = krb5_cc_get_principal(ctx, ccache, &increds.client);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error reading cache");
         goto done;
     }
-    status = krb5_get_credentials(ctx, 0, config->cache, &increds, &outcreds);
-    if (status != 0) {
-        warn_krb5(ctx, status, "cannot get current credentials");
+    code = get_krbtgt_princ(ctx, increds.client, &increds.server);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error building ticket name");
+        goto done;
+    }
+    code = krb5_get_credentials(ctx, 0, ccache, &increds, &outcreds);
+    if (code != 0) {
+        warn_krb5(ctx, code, "cannot get current credentials");
         goto done;
     }
     increds_valid = true;
 
-    /* Check the expiration time. */
-    if (status == 0) {
+    /* Check the expiration time and renewal limit. */
+    if (code == 0) {
         now = time(NULL);
         then = outcreds->times.endtime;
         if (config->happy_ticket > 0)
@@ -148,7 +155,7 @@ ticket_expired(krb5_context ctx, struct config *config)
         else
             offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
         if (then < now + offset)
-            status = KRB5KRB_AP_ERR_TKT_EXPIRED;
+            code = KRB5KRB_AP_ERR_TKT_EXPIRED;
 
         /*
          * The error code for an inability to renew the ticket for long enough
@@ -158,18 +165,19 @@ ticket_expired(krb5_context ctx, struct config *config)
          */
         then = outcreds->times.renew_till;
         if (then < now + offset) {
-            status = KRB5KDC_ERR_KEY_EXP;
+            code = KRB5KDC_ERR_KEY_EXP;
             goto done;
         }
     }
 
 done:
-    /* Free memory. */
+    if (ccache != NULL)
+        krb5_cc_close(ctx, ccache);
     if (increds_valid)
         krb5_free_cred_contents(ctx, &increds);
     if (outcreds != NULL)
         krb5_free_creds(ctx, outcreds);
-    return status;
+    return code;
 }
 
 
@@ -334,9 +342,12 @@ void
 exit_cleanup(krb5_context ctx, struct config *config, int status)
 {
     krb5_error_code code;
+    krb5_ccache ccache;
 
     if (config->clean_cache) {
-        code = krb5_cc_destroy(ctx, config->cache);
+        code = krb5_cc_resolve(ctx, config->cache, &ccache);
+        if (code == 0)
+            code = krb5_cc_destroy(ctx, ccache);
         if (code != 0)
             warn_krb5(ctx, code, "cannot destroy ticket cache");
     }

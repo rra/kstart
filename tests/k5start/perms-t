@@ -35,7 +35,7 @@ if ($> != 0) {
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 28;
+    plan tests => 34;
 } else {
     plan skip_all => 'no keytab configuration';
     exit 0;
@@ -106,6 +106,20 @@ is ($err, '', ' with no errors');
 is (($mode & 0777), 0400, ' mode is correct');
 is ($uid, 0, ' owner is correct');
 is ($gid, 0, ' group is correct');
+
+# Test handling of FILE: prefixes for the cache.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-Uf', "$DATA/test.keytab", '-o', 42, '-g', 42,
+               '-m', 440, '-k', 'FILE:krb5cc_test');
+is ($status, 0, 'k5start -o 42 -g 42 -m 440 -k succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+      ' and the right output');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0440, ' mode is correct');
+is ($uid, 42, ' owner is correct');
+is ($gid, 42, ' group is correct');
 
 # Clean up.
 unlink 'krb5cc_test';

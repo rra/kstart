@@ -145,7 +145,7 @@ is ($child, $daemon, 'Child PID is correct');
 my $dir = <OUT>;
 is ($dir, "/\n", 'Child working directory is /');
 my $cache = <OUT>;
-is ($cache, "FILE:$cwd/krb5cc_child\n", 'Child cache is correct');
+is ($cache, "$cwd/krb5cc_child\n", 'Child cache is correct');
 is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
 is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
 ok (eof OUT, 'No more child output written');
