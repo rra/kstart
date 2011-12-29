@@ -35,7 +35,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 50;
+    plan tests => 51;
 }
 
 # Start a krenew daemon and be sure it gets tickets and stays running.
@@ -43,7 +43,8 @@ my $pid = fork;
 if (!defined $pid) {
     BAIL_OUT ("can't fork: $!");
 } elsif ($pid == 0) {
-    close STDERR;
+    open (STDERR, '>', 'krenew-errors')
+        or BAIL_OUT ("can't create krenew-errors: $!");
     exec ($KRENEW, '-K', 30, '-p', 'pid')
         or BAIL_OUT ("can't run $KRENEW: $!");
 }
@@ -63,6 +64,13 @@ unlink 'krb5cc_test';
 kill (14, $pid) or warn "Can't kill $pid: $!\n";
 is (waitpid ($pid, 0), $pid, ' and it dies after failure to renew');
 is (($? >> 8), 1, ' with non-zero exit status');
+if (open (ERRORS, '<', 'krenew-errors')) {
+    like (scalar (<ERRORS>), qr/^krenew: error reading cache: /,
+          ' and the correct error message');
+} else {
+    ok (0, ' and the correct error message');
+}
+unlink 'krenew-errors';
 ok (!-f 'pid', ' and the PID file was removed');
 kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m');
 
