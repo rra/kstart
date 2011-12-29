@@ -236,14 +236,14 @@ main(int argc, char *argv[])
         case 'v': config.verbose = true;        break;
 
         case 'H':
-            config.happy_ticket = atoi(optarg);
+            config.happy_ticket = convert_number(optarg, 10);
             if (config.happy_ticket <= 0)
-                die("-H limit argument %s out of range", optarg);
+                die("-H limit argument %s invalid", optarg);
             break;
         case 'K':
-            config.keep_ticket = atoi(optarg);
+            config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
-                die("-K interval argument %s out of range", optarg);
+                die("-K interval argument %s invalid", optarg);
             break;
         case 'k':
             cachename = concat("FILE:", optarg, (char *) 0);

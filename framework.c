@@ -31,6 +31,7 @@
 #include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <errno.h>
 #include <signal.h>
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
@@ -55,6 +56,25 @@
  * up immediately and reauthenticate.
  */
 static volatile sig_atomic_t alarm_signaled = 0;
+
+
+/*
+ * Convert from a string to a number, checking errors, and return -1 on any
+ * error or for any negative number.  This doesn't really belong here, but
+ * it's a tiny function used by both k5start and krenew.
+ */
+long
+convert_number(const char *string, int base)
+{
+    long number;
+    char *end;
+
+    errno = 0;
+    number = strtol(string, &end, base);
+    if (errno != 0 || *end != '\0')
+        return -1;
+    return number;
+}
 
 
 /*

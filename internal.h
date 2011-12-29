@@ -73,6 +73,10 @@ void run_framework(krb5_context, struct config *)
 void exit_cleanup(krb5_context, struct config *, int status)
     __attribute__((__nonnull__, __noreturn__));
 
+/* A small helper routine for parsing command-line options. */
+long convert_number(const char *string, int base)
+    __attribute__((__nonnull__));
+
 END_DECLS
 
 #endif /* !INTERNAL_H */

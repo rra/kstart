@@ -3,6 +3,7 @@ docs/pod-spelling
 k5start/afs
 k5start/basic
 k5start/daemon
+k5start/errors
 k5start/flags
 k5start/sigchld
 kafs/basic
@@ -10,6 +11,7 @@ kafs/haspag
 krenew/afs
 krenew/basic
 krenew/daemon
+krenew/errors
 portable/asprintf
 portable/daemon
 portable/mkstemp
