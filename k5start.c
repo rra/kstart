@@ -569,19 +569,20 @@ main(int argc, char *argv[])
         free(tmp);
         config.cache = cache;
         config.clean_cache = true;
-    }
-    if (config.cache == NULL) {
+    } else {
         krb5_ccache ccache;
 
-        code = krb5_cc_default(ctx, &ccache);
+        if (config.cache == NULL)
+            code = krb5_cc_default(ctx, &ccache);
+        else
+            code = krb5_cc_resolve(ctx, config.cache, &ccache);
         if (code != 0)
-            die_krb5(ctx, code, "error opening default ticket cache");
+            die_krb5(ctx, code, "error opening ticket cache");
         config.cache = xstrdup(krb5_cc_get_name(ctx, ccache));
         krb5_cc_close(ctx, ccache);
-    } else {
-        if (setenv("KRB5CCNAME", config.cache, 1) != 0)
-            die("cannot set KRB5CCNAME environment variable");
     }
+    if (setenv("KRB5CCNAME", config.cache, 1) != 0)
+        die("cannot set KRB5CCNAME environment variable");
     if (private.set_perms)
         config.cache = strip_cache_prefix(config.cache);
 

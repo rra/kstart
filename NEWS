@@ -15,6 +15,11 @@ kstart 4.0 (unreleased)
     explicitly to the -k argument if they want the ticket cache to be set
     in the environment with that prefix.
 
+    Always canonicalize the ticket cache name in k5start before
+    propagating KRB5CCNAME to child processes.  This combined with the
+    previous change allows -k to specify a ticket cache name that changes
+    once the cache is created, such as when creating new PIPE caches.
+
     krenew now defaults to staying running if renewing credentials fails.
     The new -x option restores the previous behavior of exiting on any
     error.  It will still exit by default (unless -i is used) if the
