@@ -191,6 +191,14 @@ PAG.
 Be verbose.  This will print out a bit of additional information about
 what is being attempted and what the results are.
 
+=item B<-x>
+
+Exit immediately on any error.  Normally, when running a command or when
+run with the B<-K> option, B<krenew> keeps running even if it fails to
+renew the ticket cache as long as the ticket cache still exists and
+appears to be renewable.  It tries again at the next check interval.  With
+this option, B<krenew> will instead exit.
+
 =back
 
 =head1 RETURN VALUES

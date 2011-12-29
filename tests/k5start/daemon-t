@@ -30,7 +30,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 67;
+    plan tests => 72;
 } else {
     plan skip_all => "no keytab configuration";
     exit 0;
@@ -138,6 +138,22 @@ if (open (ERRORS, '<', "$TMP/k5start-errors")) {
 }
 unlink "$TMP/k5start-errors";
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
+unlink "$TMP/pid";
+
+# If we do that again with -x, k5start should exit.
+($out, $err, $status)
+    = command ($K5START, '-xbK', 1, '-f', "$DATA/test.keytab", '-p',
+               "$TMP/pid", $principal);
+is ($status, 0, 'k5start -xb works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and -q was added implicitly');
+$pid = contents ("$TMP/pid");
+ok (kill (0, $pid), 'k5start -xb started');
+chmod 0555, $TMP or BAIL_OUT ("cannot chmod $TMP: $!");
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.5);
+ok (!kill (0, $pid), ' and it exits on a non-writeable cache');
+chmod 0755, $TMP or BAIL_OUT ("cannot chmod $TMP: $!");
 unlink "$TMP/pid";
 
 # Now, run a command in the background.

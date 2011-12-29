@@ -95,6 +95,7 @@ Usage: k5start [options] [name [command]]\n\
                         principal and don't look for a principal on the\n\
                         command line\n\
    -v                   Verbose\n\
+   -x                   Exit immediately on any error\n\
 \n\
 If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
@@ -378,7 +379,7 @@ main(int argc, char *argv[])
     krb5_deltat life_secs;
     bool search_keytab = false;
     static const char optstring[]
-        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:v";
+        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -409,6 +410,7 @@ main(int argc, char *argv[])
         case 'v': config.verbose = true;        break;
         case 'U': search_keytab = true;         break;
         case 'u': principal = optarg;           break;
+        case 'x': config.exit_errors = true;    break;
 
         case 'f':
             private.keytab = optarg;

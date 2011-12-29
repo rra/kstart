@@ -9,14 +9,14 @@ k5start - Obtain and optionally keep active a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<k5start> [B<-bFhLnPqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
+B<k5start> [B<-bFhLnPqstvx>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket cache>]
     [B<-l> I<time string>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstv>] [B<-c> I<child pid file>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstvx>] [B<-c> I<child pid file>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-l> I<time string>]
     [B<-m> I<mode>] [B<-o> I<owner>] [B<-p> I<pid file>]
@@ -301,6 +301,13 @@ giving the principal on the command line as the first regular argument.
 
 Be verbose.  This will print out a bit of additional information about
 what is being attempted and what the results are.
+
+=item B<-x>
+
+Exit immediately on any error.  Normally, when running a command or when
+run with the B<-K> option, B<k5start> keeps running even if it fails to
+refresh the ticket cache and will try again at the next check interval.
+With this option, B<k5start> will instead exit.
 
 =back
 

@@ -41,7 +41,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 54;
+    plan tests => 59;
 }
 
 # Start a krenew daemon and be sure it gets tickets and stays running.
@@ -165,6 +165,20 @@ if (open (ERRORS, '<', "$TMP/krenew-errors")) {
 }
 unlink "$TMP/krenew-errors";
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
+unlink "$TMP/pid";
+
+# If we do that again with -x, krenew should exit.
+($out, $err, $status) = command ($KRENEW, '-xbK', 30, '-p', "$TMP/pid");
+is ($status, 0, 'krenew -xb works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and no regular output');
+$pid = contents ("$TMP/pid");
+ok (kill (0, $pid), 'krenew -xb started');
+chmod 0555, $TMP or BAIL_OUT ("cannot chmod $TMP: $!");
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.5);
+ok (!kill (0, $pid), ' and it exits on a non-writeable cache');
+chmod 0755, $TMP or BAIL_OUT ("cannot chmod $TMP: $!");
 unlink "$TMP/pid";
 
 # Now, run a command in the background.

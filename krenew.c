@@ -46,6 +46,7 @@ Usage: krenew [options] [command]\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
+   -x                   Exit immediately on any error\n\
 \n\
 If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
@@ -240,7 +241,7 @@ main(int argc, char *argv[])
     memset(&config, 0, sizeof(config));
     config.private.krenew = NULL;
     config.auth = renew;
-    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qtv")) != EOF)
+    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qtvx")) != EOF)
         switch (option) {
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
@@ -250,6 +251,7 @@ main(int argc, char *argv[])
         case 'p': config.pidfile = optarg;      break;
         case 't': config.do_aklog = true;       break;
         case 'v': config.verbose = true;        break;
+        case 'x': config.exit_errors = true;    break;
 
         case 'H':
             config.happy_ticket = convert_number(optarg, 10);
