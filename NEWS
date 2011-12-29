@@ -17,7 +17,9 @@ kstart 4.0 (unreleased)
 
     Diagnose the nonsensical combination of -U and -u or -i options in
     k5start and report an error rather than ignoring -u and appending the
-    instance from -i onto the principal obtained via -U.
+    instance from -i onto the principal obtained via -U.  Also diagnose
+    the non-sensical combination of -H and a command to run in both
+    k5start and krenew; just omit the -H flag for this case.
 
     Update the included kafs library to the version from rra-c-util 4.0,
     adding support for Mac OS X and Solaris 11.
