@@ -1,12 +1,5 @@
                             kstart To-Do List
 
-General:
-
- * k5start and krenew have almost identical structure.  Redesign them to
-   use a standard driver frontend with callbacks for the things that
-   differ between the three programs, which will significantly reduce code
-   duplication.
-
 k5start:
 
  * Attempt to renew the ticket before prompting the user for a new
@@ -29,8 +22,6 @@ k5start:
    In this case, there's no reason for k5start to keep running once the
    command has been started, so it can simply exit after spawning the
    command.
-
- * Add a flag similar to krenew -i that continues running despite errors.
 
 krenew:
 
@@ -55,9 +46,3 @@ Test suite:
 
  * Add tests for k5start password prompting, either from standard input or
    from a TTY.
-
- * Add error tests for invalid combinations of command-line options or
-   invalid settings for those options in k5start and krenew.
-
- * Add tests of -o, -g, and -m.  Testing -o and -g will require using
-   fakeroot.
