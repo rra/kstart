@@ -102,18 +102,18 @@ unlink 'krb5cc_test';
 ($out, $err, $status) = command ($KRENEW);
 is ($status, 1, 'krenew fails with no ticket cache');
 is ($out, '', ' with no output');
-like ($err, qr/^krenew: error reading cache: /, ' and the right error');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
 ($out, $err, $status) = command ($KRENEW, '-vH', 5);
 is ($status, 1, 'krenew -H fails with no ticket cache');
 is ($out, '', ' with no output');
-like ($err, qr/^krenew: error reading cache: /, ' and the right error');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
 
 # We should still exit with the same error if -i was given.
 ($out, $err, $status) = command ($KRENEW, '-vi');
 is ($status, 1, 'krenew -i fails with no ticket cache');
 is ($out, '', ' with no output');
-like ($err, qr/^krenew: error reading cache: /, ' and the right error');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
 ($out, $err, $status) = command ($KRENEW, '-viH', 5);
 is ($status, 1, 'krenew -iH fails with no ticket cache');
 is ($out, '', ' with no output');
-like ($err, qr/^krenew: error reading cache: /, ' and the right error');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
