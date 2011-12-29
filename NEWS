@@ -11,6 +11,11 @@ kstart 4.0 (unreleased)
     It will still exit by default (unless -i is used) if the renewable
     lifetime has expired or if the ticket cache has been removed.
 
+    k5start no longer exits on failure to obtain credentials when running
+    as a daemon.  It does still exit if the first attempt to obtain
+    credentials during startup (before backgrounding) fails, to make it
+    easier to diagnose configuration errors.
+
     Set signal handlers with sigaction instead of signal, which may fix
     problems propagating multiple signals to child processes in k5start
     and krenew.

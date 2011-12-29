@@ -57,6 +57,7 @@ if NEED_KAFS
 endif
 
 bin_PROGRAMS = k5start krenew
+k5start_SOURCES = framework.c internal.h k5start.c
 k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)

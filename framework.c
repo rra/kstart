@@ -93,16 +93,16 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
  * situation.
  */
 static krb5_error_code
-ticket_expired(krb5_context ctx, krb5_ccache cache, unsigned long keep_ticket)
+ticket_expired(krb5_context ctx, struct config *config)
 {
     krb5_creds increds, *outcreds = NULL;
     bool increds_valid = false;
-    time_t now, then;
+    time_t now, then, offset;
     krb5_error_code status;
 
     /* Obtain the ticket. */
     memset(&increds, 0, sizeof(increds));
-    status = krb5_cc_get_principal(ctx, cache, &increds.client);
+    status = krb5_cc_get_principal(ctx, config->cache, &increds.client);
     if (status != 0) {
         warn_krb5(ctx, status, "error reading cache");
         goto done;
@@ -112,7 +112,7 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, unsigned long keep_ticket)
         warn_krb5(ctx, status, "error building ticket name");
         goto done;
     }
-    status = krb5_get_credentials(ctx, 0, cache, &increds, &outcreds);
+    status = krb5_get_credentials(ctx, 0, config->cache, &increds, &outcreds);
     if (status != 0) {
         warn_krb5(ctx, status, "cannot get current credentials");
         goto done;
@@ -123,7 +123,11 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, unsigned long keep_ticket)
     if (status == 0) {
         now = time(NULL);
         then = outcreds->times.endtime;
-        if (then < now + 60 * (time_t) keep_ticket + EXPIRE_FUDGE)
+        if (config->happy_ticket > 0)
+            offset = 60 * config->happy_ticket;
+        else
+            offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
+        if (then < now + offset)
             status = KRB5KRB_AP_ERR_TKT_EXPIRED;
 
         /*
@@ -133,7 +137,7 @@ ticket_expired(krb5_context ctx, krb5_ccache cache, unsigned long keep_ticket)
          * check in krenew's authentication callback.
          */
         then = outcreds->times.renew_till;
-        if (then < now + 60 * (time_t) keep_ticket + EXPIRE_FUDGE) {
+        if (then < now + offset) {
             status = KRB5KDC_ERR_KEY_EXP;
             goto done;
         }
@@ -178,10 +182,22 @@ write_pidfile(const char *path, pid_t pid)
 void
 run_framework(krb5_context ctx, struct config *config)
 {
+    const char *aklog;
     krb5_error_code code = 0;
     pid_t child = 0;
     int result;
     int status = 0;
+
+    /* Set aklog from AKLOG, KINIT_PROG, or the compiled-in default. */
+    aklog = getenv("AKLOG");
+    if (aklog == NULL)
+        aklog = getenv("KINIT_PROG");
+    if (aklog == NULL)
+        aklog = PATH_AKLOG;
+    if (aklog[0] == '\0' && config->do_aklog) {
+        warn("set AKLOG to specify the path to aklog");
+        exit_cleanup(ctx, config, 1);
+    }
 
     /*
      * If built with setpag support and we're running a command, create the
@@ -208,7 +224,7 @@ run_framework(krb5_context ctx, struct config *config)
     if (config->happy_ticket == 0)
         code = config->auth(ctx, config, code);
     else {
-        code = ticket_expired(ctx, config->cache, config->happy_ticket);
+        code = ticket_expired(ctx, config);
         if (code != 0)
             code = config->auth(ctx, config, code);
     }
@@ -219,7 +235,7 @@ run_framework(krb5_context ctx, struct config *config)
 
     /* If requested, run the aklog program. */
     if (config->do_aklog)
-        command_run(config->aklog, config->verbose);
+        command_run(aklog, config->verbose);
 
     /*
      * If told to background, background ourselves.  We do this late so that
@@ -272,13 +288,13 @@ run_framework(krb5_context ctx, struct config *config)
             timeout.tv_sec = config->keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
-            code = ticket_expired(ctx, config->cache, config->keep_ticket);
+            code = ticket_expired(ctx, config);
             if (alarm_signaled || code != 0) {
                 code = config->auth(ctx, config, code);
                 if (code != 0 && config->exit_errors)
                     exit_cleanup(ctx, config, 1);
                 if (code == 0 && config->do_aklog)
-                    command_run(config->aklog, config->verbose);
+                    command_run(aklog, config->verbose);
             }
             alarm_signaled = 0;
         }
