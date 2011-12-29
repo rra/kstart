@@ -91,12 +91,13 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/kafs/basic tests/portable/asprintf-t  \
-	tests/portable/daemon-t tests/portable/mkstemp-t		    \
-	tests/portable/setenv-t tests/portable/snprintf-t		    \
-	tests/portable/strlcat-t tests/portable/strlcpy-t		    \
-	tests/portable/strndup-t tests/util/concat-t			    \
-	tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	\
+	tests/portable/asprintf-t tests/portable/daemon-t		\
+	tests/portable/mkstemp-t tests/portable/setenv-t		\
+	tests/portable/snprintf-t tests/portable/strlcat-t		\
+	tests/portable/strlcpy-t tests/portable/strndup-t		\
+	tests/util/concat-t tests/util/messages-krb5-t			\
+	tests/util/messages-t tests/util/xmalloc
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 check_LIBRARIES = tests/tap/libtap.a
@@ -107,13 +108,18 @@ tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
 
 # kafs tests are buit differently depending on whether we use our local
 # libkafs replacement.
+tests_kafs_basic_CPPFLAGS = $(KAFS_CPPFLAGS)
+tests_kafs_basic_LDFLAGS = $(KAFS_LDFLAGS)
+tests_kafs_haspag_t_CPPFLAGS = $(KAFS_CPPFLAGS)
+tests_kafs_haspag_t_LDFLAGS = $(KAFS_LDFLAGS)
 if NEED_KAFS
-    tests_kafs_basic_CPPFLAGS = $(KAFS_CPPFLAGS)
-    tests_kafs_basic_LDFLAGS = $(KAFS_LDFLAGS)
-    tests_kafs_basic_LDADD = kafs/libkafs.a util/libutil.a \
+    tests_kafs_basic_LDADD = kafs/libkafs.a portable/libportable.a \
+	$(KAFS_LIBS)
+    tests_kafs_haspag_t_LDADD = kafs/libkafs.a tests/tap/libtap.a \
 	portable/libportable.a $(KAFS_LIBS)
 else
-    tests_kafs_basic_LDADD = util/libutil.a portable/libportable.a \
+    tests_kafs_basic_LDADD = portable/libportable.a $(KAFS_LIBS)
+    tests_kafs_haspag_t_LDADD = tests/tap/libtap.a portable/libportable.a \
 	$(KAFS_LIBS)
 endif
 
