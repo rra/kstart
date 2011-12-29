@@ -1,6 +1,6 @@
 =for stopwords
--bhiLtv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew
+-bhiLtvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense designator krenew Ctrl-C
 
 =head1 NAME
 
@@ -8,7 +8,7 @@ krenew - Renew a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhiLtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-bhiLtvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-p> I<pid file>]
     [I<command> ...]
 
