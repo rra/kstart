@@ -20,18 +20,11 @@
  */
 
 #include <config.h>
-#include <portable/kafs.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
 
-#include <errno.h>
-#include <netdb.h>
 #include <pwd.h>
-#include <signal.h>
 #include <sys/stat.h>
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
 #include <syslog.h>
 #include <time.h>
 
