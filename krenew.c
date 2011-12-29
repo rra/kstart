@@ -284,15 +284,6 @@ main(int argc, char *argv[])
     if (config.childfile != NULL && config.command == NULL)
         die("-c option only makes sense with a command to run");
 
-    /* Set aklog from AKLOG, KINIT_PROG, or the compiled-in default. */
-    config.aklog = getenv("AKLOG");
-    if (config.aklog == NULL)
-        config.aklog = getenv("KINIT_PROG");
-    if (config.aklog == NULL)
-        config.aklog = PATH_AKLOG;
-    if (config.aklog[0] == '\0' && config.do_aklog)
-        die("set AKLOG to specify the path to aklog");
-
     /* Establish a Kerberos context and set the ticket cache. */
     code = krb5_init_context(&ctx);
     if (code != 0)
