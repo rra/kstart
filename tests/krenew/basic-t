@@ -52,7 +52,7 @@ like ($out,
 # But we fail if we try to get 3 hour tickets, since we can't renew for
 # that long.
 ($out, $err, $status) = command ($KRENEW, '-vH', '180');
-is ($status, 1, 'krenew -H 120 fails');
+is ($status, 1, 'krenew -H 180 fails');
 is ($err, "krenew: ticket cannot be renewed for long enough\n",
     ' with the right error');
 is ($out, '', ' and no output');
