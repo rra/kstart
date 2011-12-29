@@ -11,14 +11,14 @@ k5start - Obtain and optionally keep active a Kerberos ticket
 
 B<k5start> [B<-bFhLnPqstv>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
-    [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket file>]
+    [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket cache>]
     [B<-l> I<time string>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
     [B<-u> I<client principal>] [I<username> [I<command> ...]]
 
 B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstv>] [B<-c> I<child pid file>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
-    [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-l> I<time string>]
+    [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-l> I<time string>]
     [B<-m> I<mode>] [B<-o> I<owner>] [B<-p> I<pid file>]
     [B<-r> I<service realm>] [B<-S> I<service name>] [I<command> ...]
 
@@ -59,12 +59,13 @@ If the command contains command-line options (like C<-c>), put -- on the
 command line before the beginning of the command to tell B<k5start> to not
 parse those options as its own.
 
-When running a command, B<k5start> propagates HUP, TERM, and QUIT signals
-to the child process and does not exit when those signals are received.
-(If the propagated signal causes the child process to exit, B<k5start>
-will then exit.)  This allows B<k5start> to react properly when run under
-a command supervision system such as runit(8) or svscan(8) that uses
-signals to control supervised commands.
+When running a command, B<k5start> propagates HUP, TERM, INT, and QUIT
+signals to the child process and does not exit when those signals are
+received.  (If the propagated signal causes the child process to exit,
+B<k5start> will then exit.)  This allows B<k5start> to react properly when
+run under a command supervision system such as runit(8) or svscan(8) that
+uses signals to control supervised commands, and to run interactive
+commands that should receive Ctrl-C.
 
 If a running B<k5start> receives an ALRM signal, it immediately refreshes
 the ticket cache regardless of whether it is in danger of expiring.
@@ -132,11 +133,6 @@ which may be either the name of a group or a numeric group ID.  Ticket
 caches are created with C<0600> permissions by default, so this will have
 no useful effect unless used with B<-m>.
 
-If this option is used with a command or with the B<-K> option, there may
-be a short window after each authentication during which the group
-ownership of the cache will be the default group of the B<k5start>
-process.
-
 =item B<-H> I<minutes>
 
 Check for a happy ticket, defined as one that has a remaining lifetime of
@@ -176,13 +172,16 @@ new ticket if needed.  If this option is not given but a command was given
 on the command line, an interval appropriate for the ticket lifetime will
 be used.
 
-=item B<-k> I<ticket file>
+=item B<-k> I<ticket cache>
 
-Use I<ticket file> as the ticket cache rather than the contents of the
-environment variable KRB5CCNAME or the library default.  Using this option
-forces a file-based ticket cache.  If you wish to use a different type of
-ticket cache, don't specify B<-k> and instead set KRB5CCNAME to the
-designator of the cache you wish to use.
+Use I<ticket cache> as the ticket cache rather than the contents of the
+environment variable KRB5CCNAME or the library default.  I<ticket cache>
+may be any ticket cache identifier recognized by the underlying Kerberos
+libraries.  This generally supports a path to a file, with or without a
+leading C<FILE:> string, but may also support other ticket cache types.
+
+If any of B<-o>, B<-g>, or B<-m> are given, I<ticket cache> must be either
+a simple path to a file or start with C<FILE:> or C<WRFILE:>.
 
 =item B<-L>
 
@@ -206,12 +205,9 @@ more information, see kinit(1).
 After creating the ticket cache, change its file permissions to I<mode>,
 which must be a file mode in octal (C<640> or C<444>, for example).
 
-If this option is used with a command or with the B<-K> option, there may
-be a short window after each authentication during which the file
-permissions of the ticket cache will be C<600>.  Setting a I<mode> that
-does not allow B<k5start> to read or write to the ticket cache will cause
-B<k5start> to fail and exit when using the B<-K> option or running a
-command.
+Setting a I<mode> that does not allow B<k5start> to read or write to the
+ticket cache will cause B<k5start> to fail and exit when using the B<-K>
+option or running a command.
 
 =item B<-n>
 
@@ -224,10 +220,6 @@ After creating the ticket cache, change its ownership to I<owner>, which
 may be either the name of a user or a numeric user ID.  If I<owner> is
 the name of a user and B<-g> was not also given, also change the group
 ownership of the ticket cache to the default group for that user.
-
-If this option is used with a command or with the B<-K> option, there may
-be a short window after each authentication during which the ownership of
-the cache will be the user the B<k5start> process is running as.
 
 =item B<-P>
 

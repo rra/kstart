@@ -38,8 +38,10 @@ Usage: krenew [options] [command]\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
                         otherwise renew the ticket\n\
    -h                   Display this usage message and exit\n\
+   -i                   Keep running even if the ticket cache goes away or\n\
+                        the ticket can no longer be renewed\n\
    -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
-   -k <file>            Use <file> as the ticket cache\n\
+   -k <cache>           Use <cache> as the ticket cache\n\
    -L                   Log messages via syslog as well as stderr\n\
    -p <file>            Write process ID (PID) to <file>\n\
    -t                   Get AFS token via aklog or AKLOG\n\
