@@ -49,3 +49,9 @@ Test suite:
 
  * Add tests for k5start password prompting, either from standard input or
    from a TTY.
+
+ * Move tests/libtest.pl into rra-c-util and break it apart into
+   functionality groups.
+
+ * Refactor all test cases to reduce copy-and-paste code and use more
+   helper functions.
