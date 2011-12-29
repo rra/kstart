@@ -3,7 +3,8 @@
 # Test for proper SIGCHLD handling in k5start.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2010 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2010
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
@@ -60,5 +61,5 @@ sleep 1;
 kill (SIGTERM, $child) or BAIL_OUT ("cannot send SIGTERM to child $child\n");
 waitpid ($pid, 0);
 is ($?, 0, 'command succeeded');
-ok (time < $start + 4, 'k5start got SIGCHLD and woke up properly');
+ok (time < $start + 5, 'k5start got SIGCHLD and woke up properly');
 unlink 'child-pid';
