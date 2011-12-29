@@ -95,9 +95,11 @@ command_start(const char *command, char **argv)
     sa.sa_flags = 0;
     if (sigaction(SIGHUP, &sa, NULL) < 0)
         return -1;
-    if (sigaction(SIGTERM, &sa, NULL) < 0)
+    if (sigaction(SIGINT, &sa, NULL) < 0)
         return -1;
     if (sigaction(SIGQUIT, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGTERM, &sa, NULL) < 0)
         return -1;
 
     child = fork();

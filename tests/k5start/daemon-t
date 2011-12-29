@@ -3,7 +3,7 @@
 # Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009
+# Copyright 2008, 2009, 2011
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -23,7 +23,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 31;
+    plan tests => 64;
 } else {
     plan skip_all => "no keytab configuration";
     exit 0;
@@ -132,21 +132,108 @@ while (not -S 'child-out' and $tries < 10) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
-kill (1, $child) or warn "Cannot send HUP to $child: $!\n";
+kill (1, $child) or warn "Cannot send HUP to child $child: $!\n";
 select (undef, undef, undef, 0.1);
-kill (15, $child) or warn "Cannot send TERM to $child: $!\n";
+kill (2, $child) or warn "Cannot send INT to child $child: $!\n";
+select (undef, undef, undef, 0.1);
+kill (15, $child) or warn "Cannot send TERM to child $child: $!\n";
 select (undef, undef, undef, 0.2);
 ok (!kill (0, $pid), 'k5start is no longer running');
 ok (!kill (0, $child), 'The child process is no longer running');
 open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
-my $daemon = <OUT>;
-chomp $daemon;
-is ($child, $daemon, 'Child PID is correct');
-my $dir = <OUT>;
-is ($dir, "/\n", 'Child working directory is /');
-my $cache = <OUT>;
-is ($cache, "$cwd/krb5cc_child\n", 'Child cache is correct');
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+is (scalar (<OUT>), "$cwd/krb5cc_child\n", 'Child cache is correct');
 is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
+is (scalar (<OUT>), "got SIGINT\n", 'SIGINT was recorded');
 is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
 ok (eof OUT, 'No more child output written');
-unlink 'krb5cc_child', 'pid', 'child-pid', 'child-out';
+close OUT;
+ok (!-f 'pid', 'PID file cleaned up');
+ok (!-f 'child-pid', 'Child PID file cleaned up');
+
+# Now, do that again, but test signal propagation from the parent to the
+# child.
+unlink 'krb5cc_child', 'child-out';
+($out, $err, $status)
+    = command ($K5START, '-bK', 1, '-k', "$cwd/krb5cc_child", '-f',
+               "$DATA/test.keytab", '-p', "$cwd/pid", '-c', "$cwd/child-pid",
+               $principal, '--', "$ENV{SOURCE}/data/command",
+               "$cwd/child-out");
+is ($status, 0, 'Backgrounding k5start works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and output was redirected properly');
+$tries = 0;
+while (not -f 'child-pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), 'k5start is running');
+$child = contents ('child-pid');
+ok (kill (0, $child), 'The child process is running');
+$tries = 0;
+while (not -S 'child-out' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+kill (1, $pid) or warn "Cannot send HUP to parent $pid: $!\n";
+select (undef, undef, undef, 0.1);
+kill (2, $pid) or warn "Cannot send INT to parent $pid: $!\n";
+select (undef, undef, undef, 0.1);
+kill (15, $pid) or warn "Cannot send TERM to parent $pid: $!\n";
+select (undef, undef, undef, 0.2);
+ok (!kill (0, $pid), 'k5start is no longer running');
+ok (!kill (0, $child), 'The child process is no longer running');
+open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+is (scalar (<OUT>), "$cwd/krb5cc_child\n", 'Child cache is correct');
+is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was propagated');
+is (scalar (<OUT>), "got SIGINT\n", 'SIGINT was propagated');
+is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was propagated');
+ok (eof OUT, 'No more child output written');
+close OUT;
+ok (!-f 'pid', 'PID file cleaned up');
+ok (!-f 'child-pid', 'Child PID file cleaned up');
+
+# One more time to test SIGQUIT.
+unlink 'krb5cc_child', 'child-out';
+($out, $err, $status)
+    = command ($K5START, '-bK', 1, '-k', "$cwd/krb5cc_child", '-f',
+               "$DATA/test.keytab", '-p', "$cwd/pid", '-c', "$cwd/child-pid",
+               $principal, '--', "$ENV{SOURCE}/data/command",
+               "$cwd/child-out");
+is ($status, 0, 'Backgrounding k5start works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and output was redirected properly');
+$tries = 0;
+while (not -f 'child-pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), 'k5start is running');
+$child = contents ('child-pid');
+ok (kill (0, $child), 'The child process is running');
+$tries = 0;
+while (not -S 'child-out' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+kill (3, $pid) or warn "Cannot send QUIT to parent $pid: $!\n";
+select (undef, undef, undef, 0.2);
+ok (!kill (0, $pid), 'k5start is no longer running');
+ok (!kill (0, $child), 'The child process is no longer running');
+open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+is (scalar (<OUT>), "$cwd/krb5cc_child\n", 'Child cache is correct');
+is (scalar (<OUT>), "got SIGQUIT\n", 'SIGQUIT was propagated');
+ok (eof OUT, 'No more child output written');
+close OUT;
+ok (!-f 'pid', 'PID file cleaned up');
+ok (!-f 'child-pid', 'Child PID file cleaned up');
+
+# Clean up.
+unlink 'krb5cc_child', 'child-out';

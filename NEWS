@@ -33,6 +33,9 @@ kstart 4.0 (unreleased)
     to the program using it if k5start were in the middle of refreshing
     it.  Thanks to Harry Coin for the report.
 
+    k5start and krenew now propagate SIGINT (Ctrl-C) to the child process
+    when running a command rather than exiting immediately.
+
     Set signal handlers with sigaction instead of signal, which may fix
     problems propagating multiple signals to child processes in k5start
     and krenew.

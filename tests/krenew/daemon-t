@@ -35,7 +35,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 34;
+    plan tests => 50;
 }
 
 # Start a krenew daemon and be sure it gets tickets and stays running.
@@ -142,25 +142,65 @@ while (not -S 'child-out' and $tries < 10) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
-kill (1, $pid) or warn "Cannot send HUP to $pid: $!\n";
+kill (1, $pid) or warn "Cannot send HUP to parent $pid: $!\n";
 select (undef, undef, undef, 0.1);
-kill (15, $pid) or warn "Cannot send TERM to $pid: $!\n";
+kill (2, $pid) or warn "Cannot send INT to parent $pid: $!\n";
 select (undef, undef, undef, 0.1);
+kill (15, $pid) or warn "Cannot send TERM to parent $pid: $!\n";
+select (undef, undef, undef, 0.2);
 ok (!kill (0, $pid), 'krenew is no longer running');
 ok (!kill (0, $child), 'The child process is no longer running');
 open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
-my $daemon = <OUT>;
-chomp $daemon;
-is ($child, $daemon, 'Child PID is correct');
-my $dir = <OUT>;
-is ($dir, "/\n", 'Child working directory is /');
-my $cache = <OUT>;
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+my $cache = scalar <OUT>;
 like ($cache, qr%^/tmp/krb5cc_%, 'Child cache is correct');
 is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
+is (scalar (<OUT>), "got SIGINT\n", 'SIGINT was recorded');
 is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
 ok (eof OUT, 'No more child output written');
 chomp $cache;
 ok (! -f $cache, 'New child cache removed');
 ok (!-f 'pid', ' and the PID file was removed');
 ok (!-f 'child-pid', ' and the child PID file was removed');
+
+# One more time to test propagation of QUIT signals.
+unlink 'child-out';
+($out, $err, $status)
+    = command ($KRENEW, '-bK', 30, '-p', "$cwd/pid", '-c', "$cwd/child-pid",
+               '--', "$ENV{SOURCE}/data/command", "$cwd/child-out");
+is ($status, 0, 'Backgrounding krenew works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and output was redirected properly');
+$tries = 0;
+while (not -f 'child-pid' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ('pid');
+ok (kill (0, $pid), 'krenew is running');
+$child = contents ('child-pid');
+ok (kill (0, $child), 'The child process is running');
+$tries = 0;
+while (not -S 'child-out' and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+kill (3, $pid) or warn "Cannot send QUIT to parent $pid: $!\n";
+select (undef, undef, undef, 0.2);
+ok (!kill (0, $pid), 'krenew is no longer running');
+ok (!kill (0, $child), 'The child process is no longer running');
+open (OUT, '<', 'child-out') or BAIL_OUT ("cannot open child-out: $!");
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+$cache = scalar <OUT>;
+like ($cache, qr%^/tmp/krb5cc_%, 'Child cache is correct');
+is (scalar (<OUT>), "got SIGQUIT\n", 'SIGQUIT was recorded');
+ok (eof OUT, 'No more child output written');
+chomp $cache;
+ok (! -f $cache, 'New child cache removed');
+ok (!-f 'pid', ' and the PID file was removed');
+ok (!-f 'child-pid', ' and the child PID file was removed');
+
+# Clean up.
 unlink 'krb5cc_test', 'child-out';
