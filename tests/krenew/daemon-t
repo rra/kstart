@@ -65,7 +65,7 @@ kill (14, $pid) or warn "Can't kill $pid: $!\n";
 is (waitpid ($pid, 0), $pid, ' and it dies after failure to renew');
 is (($? >> 8), 1, ' with non-zero exit status');
 if (open (ERRORS, '<', 'krenew-errors')) {
-    like (scalar (<ERRORS>), qr/^krenew: error reading cache: /,
+    like (scalar (<ERRORS>), qr/^krenew: error reading ticket cache: /,
           ' and the correct error message');
 } else {
     ok (0, ' and the correct error message');

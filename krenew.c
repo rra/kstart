@@ -147,6 +147,8 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
     if (status != 0 && status != KRB5KRB_AP_ERR_TKT_EXPIRED) {
         if (status == KRB5KDC_ERR_KEY_EXP)
             warn("ticket cannot be renewed for long enough");
+        else
+            warn_krb5(ctx, status, "error reading ticket cache");
         if (!config->ignore_errors)
             exit_cleanup(ctx, config, 1);
         return status;
@@ -161,7 +163,7 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
     }
     code = krb5_cc_get_principal(ctx, ccache, &user);
     if (code != 0) {
-        warn_krb5(ctx, code, "error reading cache");
+        warn_krb5(ctx, code, "error reading ticket cache");
         krb5_cc_close(ctx, ccache);
         if (!config->ignore_errors)
             exit_cleanup(ctx, config, 1);

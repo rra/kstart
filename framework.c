@@ -112,6 +112,10 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
  * which will be 0 if the ticket won't expire, KRB5KRB_AP_ERR_TKT_EXPIRED if
  * it will expire and can be renewed, or another error code for any other
  * situation.
+ *
+ * Don't report any errors here, since k5start doesn't want to warn about any
+ * of these problems.  Just return the status code.  krenew will separately
+ * report an error if appropriate.
  */
 static krb5_error_code
 ticket_expired(krb5_context ctx, struct config *config)
@@ -125,25 +129,17 @@ ticket_expired(krb5_context ctx, struct config *config)
     /* Obtain the ticket. */
     memset(&increds, 0, sizeof(increds));
     code = krb5_cc_resolve(ctx, config->cache, &ccache);
-    if (code != 0) {
-        warn_krb5(ctx, code, "error opening cache");
+    if (code != 0)
         goto done;
-    }
     code = krb5_cc_get_principal(ctx, ccache, &increds.client);
-    if (code != 0) {
-        warn_krb5(ctx, code, "error reading cache");
+    if (code != 0)
         goto done;
-    }
     code = get_krbtgt_princ(ctx, increds.client, &increds.server);
-    if (code != 0) {
-        warn_krb5(ctx, code, "error building ticket name");
+    if (code != 0)
         goto done;
-    }
     code = krb5_get_credentials(ctx, 0, ccache, &increds, &outcreds);
-    if (code != 0) {
-        warn_krb5(ctx, code, "cannot get current credentials");
+    if (code != 0)
         goto done;
-    }
     increds_valid = true;
 
     /* Check the expiration time and renewal limit. */
