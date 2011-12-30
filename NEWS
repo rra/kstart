@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 4.0 (unreleased)
+kstart 4.0 (2011-12-29)
 
     Remove k4start from the distribution.  I no longer have a Kerberos v4
     environment with which to test and therefore no way to refactor and

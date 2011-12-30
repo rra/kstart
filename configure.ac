@@ -9,7 +9,7 @@ dnl and/or distribute it, with or without modifications, as long as this
 dnl notice is preserved.
 
 AC_PREREQ([2.64])
-AC_INIT([kstart], [3.16], [rra@stanford.edu])
+AC_INIT([kstart], [4.0], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
