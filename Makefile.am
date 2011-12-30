@@ -7,13 +7,16 @@
 # See LICENSE for licensing terms.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k5start.pod  \
-	krenew.pod kstart.spec tests/TESTS tests/data/README		   \
-	tests/data/command tests/data/fake-aklog tests/docs/pod-spelling-t \
-	tests/docs/pod-t tests/k5start/afs-t tests/k5start/basic-t	   \
-	tests/k5start/daemon-t tests/k5start/flags-t tests/kafs/basic-t	   \
-	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	   \
-	tests/libtest.pl tests/tap/libtap.sh tests/util/xmalloc-t
+EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k5start.pod   \
+	krenew.pod kstart.spec tests/README tests/TESTS tests/data/README   \
+	tests/data/command tests/data/fake-aklog tests/docs/pod-spelling-t  \
+	tests/docs/pod-t tests/k5start/afs-t tests/k5start/basic-t	    \
+	tests/k5start/daemon-t tests/k5start/errors-t tests/k5start/flags-t \
+	tests/k5start/keyring-t tests/k5start/perms-t			    \
+	tests/k5start/sigchld-t tests/kafs/basic-t tests/krenew/afs-t	    \
+	tests/krenew/basic-t tests/krenew/daemon-t tests/krenew/errors-t    \
+	tests/krenew/keyring-t tests/libtest.pl tests/tap/libtap.sh	    \
+	tests/util/xmalloc-t
 
 # The following library order matters for annoying reasons.  Older
 # libafsauthent contains its own com_err implementation, which we do not
