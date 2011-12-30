@@ -1,11 +1,12 @@
 /*
- * Shared command handling for k4start, k5start, and krenew.
+ * Shared command handling for k5start and krenew.
  *
  * Run a command, possibly a long-running one for which we need to wait.
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007,
- *     2008, 2009 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009
+ *     The Board of Trustees of the Leland Stanford Junior. University
  *
  * See LICENSE for licensing terms.
  */
@@ -79,14 +80,27 @@ pid_t
 command_start(const char *command, char **argv)
 {
     pid_t child;
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
 
     /* Ignored. */
-    signal(SIGCHLD, child_handler);
+    sa.sa_handler = child_handler;
+    sa.sa_flags = SA_NOCLDSTOP;
+    if (sigaction(SIGCHLD, &sa, NULL) < 0)
+        return -1;
 
     /* Propagated to child process. */
-    signal(SIGHUP, propagate_handler);
-    signal(SIGTERM, propagate_handler);
-    signal(SIGQUIT, propagate_handler);
+    sa.sa_handler = propagate_handler;
+    sa.sa_flags = 0;
+    if (sigaction(SIGHUP, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGINT, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGQUIT, &sa, NULL) < 0)
+        return -1;
+    if (sigaction(SIGTERM, &sa, NULL) < 0)
+        return -1;
 
     child = fork();
     if (child < 0)

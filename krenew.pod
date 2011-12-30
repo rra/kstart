@@ -1,18 +1,15 @@
+=for stopwords
+-bhiLtvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense designator krenew Ctrl-C
+
 =head1 NAME
 
-=for stopwords
-krenew
-
-krenew - Renew a Kerberos v5 ticket
-
-=for stopwords
--bhiLtv aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense
+krenew - Renew a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhiLtv>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
-    [B<-K> I<minutes>] [B<-k> I<ticket file>] [B<-p> I<pid file>]
+B<krenew> [B<-bhiLtvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+    [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-p> I<pid file>]
     [I<command> ...]
 
 =head1 DESCRIPTION
@@ -46,12 +43,13 @@ with the B<-t> option, it will put the command in a separate PAG before
 obtaining AFS tokens so that they don't interfere with other processes on
 the system.
 
-When running a command, B<krenew> propagates HUP, TERM, and QUIT signals
-to the child process and does not exit when those signals are received.
-(If the propagated signal causes the child process to exit, B<krenew> will
-then exit.)  This allows B<krenew> to react properly when run under a
-command supervision system such as runit(8) or svscan(8) that uses signals
-to control supervised commands.
+When running a command, B<krenew> propagates HUP, TERM, INT, and QUIT
+signals to the child process and does not exit when those signals are
+received.  (If the propagated signal causes the child process to exit,
+B<krenew> will then exit.)  This allows B<krenew> to react properly when
+run under a command supervision system such as runit(8) or svscan(8) that
+uses signals to control supervised commands, and to run interactive
+commands that should receive Ctrl-C.
 
 If a running B<krenew> receives an ALRM signal, it immediately refreshes
 the ticket cache regardless of whether it is in danger of expiring.
@@ -89,6 +87,9 @@ like:
 
 to run B<krenew> in the background but within the current session.
 
+When using this option, consider also using B<-L> to report B<krenew>
+errors to syslog.
+
 =item B<-c> I<child pid file>
 
 Save the process ID (PID) of the child process into I<child pid file>.
@@ -98,7 +99,7 @@ command line and is most useful in conjunction with B<-b> to allow
 management of the running child process.
 
 Note that, when used with B<-b>, the PID file is written out after
-B<k4start> is backgrounded and changes its working directory to F</>, so
+B<krenew> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
 
@@ -119,16 +120,18 @@ Display a usage message and exit.
 =item B<-i>
 
 Ignore errors in renewing the ticket and keep running.  Normally,
-B<krenew> exits as soon as it fails to renew the Kerberos ticket cache.
-If this flag is given, it will complain about the failure to standard
-error (unless B<-b> was given) but continue running, waking up to try
-again after the next check interval (see B<-K>).  This is useful if some
-other process may recreate an expired ticket cache and B<krenew> should
-stay around and act on that recreated ticket cache once it's present.
+B<krenew> exits as soon as the ticket cache either disappears or the
+tickets run out of renewable lifetime.  If this flag is given, it will
+complain about the failure to standard error (unless B<-b> was given) but
+continue running, waking up to try again after the next check interval
+(see B<-K>).  This is useful if some other process may recreate an expired
+ticket cache and B<krenew> should stay around and act on that recreated
+ticket cache once it's present.
 
 Setup errors opening the Kerberos ticket cache or running the command will
 still cause B<krenew> to exit, even if this flag is given.  Only Kerberos
-errors after B<krenew> is running will be ignored.
+errors and errors after B<krenew> is running and any command has been
+started will be ignored.
 
 This flag is only useful in daemon mode or when a command was given.
 
@@ -141,14 +144,13 @@ renews the ticket if needed.  If this option is not given but a command
 was given on the command line, the default interval is 60 minutes (1
 hour).
 
-=item B<-k> I<ticket file>
+=item B<-k> I<ticket cache>
 
-Use I<ticket file> as the ticket cache rather than the contents of the
-environment variable KRB5CCNAME or the library default.  I<ticket file>
-should be the path to a file, without any leading C<FILE:> string.  Using
-this option forces a file-based ticket cache; if you wish to use a
-different type of ticket cache, don't specify B<-k> and instead set
-KRB5CCNAME to the designator of the cache you wish to use.
+Use I<ticket cache> as the ticket cache rather than the contents of the
+environment variable KRB5CCNAME or the library default.  I<ticket cache>
+may be any ticket cache identifier recognized by the underlying Kerberos
+libraries.  This generally supports a path to a file, with or without a
+leading C<FILE:> string, but may also support other ticket cache types.
 
 =item B<-L>
 
@@ -188,6 +190,14 @@ PAG.
 
 Be verbose.  This will print out a bit of additional information about
 what is being attempted and what the results are.
+
+=item B<-x>
+
+Exit immediately on any error.  Normally, when running a command or when
+run with the B<-K> option, B<krenew> keeps running even if it fails to
+renew the ticket cache as long as the ticket cache still exists and
+appears to be renewable.  It tries again at the next check interval.  With
+this option, B<krenew> will instead exit.
 
 =back
 

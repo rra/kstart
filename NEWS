@@ -1,5 +1,95 @@
                        User-Visible kstart Changes
 
+kstart 4.0 (2011-12-29)
+
+    Remove k4start from the distribution.  I no longer have a Kerberos v4
+    environment with which to test and therefore no way to refactor and
+    restructure the code for other changes to the package.  Users who
+    still need k4start should use an older version of the package.
+
+    Ticket caches passed to k5start or krenew with the -k option are now
+    used as-is without prepending "FILE:".  This allows both programs to
+    be used with non-file caches (unles the -o, -g, or -m options were
+    given to k5start, of course).  However, users who were relying on
+    k5start or krenew prepending "FILE:" may now need to add this
+    explicitly to the -k argument if they want the ticket cache to be set
+    in the environment with that prefix.
+
+    Always canonicalize the ticket cache name in k5start before
+    propagating KRB5CCNAME to child processes.  This combined with the
+    previous change allows -k to specify a ticket cache name that changes
+    once the cache is created, such as when creating new PIPE caches.
+
+    krenew now defaults to staying running if renewing credentials fails.
+    The new -x option restores the previous behavior of exiting on any
+    error.  It will still exit by default (unless -i is used) if the
+    renewable lifetime has expired or if the ticket cache has been
+    removed.
+
+    k5start no longer exits on failure to obtain credentials when running
+    as a daemon.  The new -x option restores the previous behavior of
+    exiting on any error.  It does still exit if the first attempt to
+    obtain credentials during startup (before backgrounding) fails, to
+    make it easier to diagnose configuration errors.
+
+    k5start, when run with the -o, -g, or -m options to change ticket
+    cache ownership or permissions, now writes a temporary ticket cache in
+    the same directory, sets its ownership and permissions, and then
+    replaces the existing cache with an atomic rename.  It also sets
+    permissions properly if it has to reauthenticate after backgrounding
+    itself.  This closes two windows where the cache may not be accessible
+    to the program using it if k5start were in the middle of refreshing
+    it.  Thanks to Harry Coin for the report.
+
+    k5start and krenew now propagate SIGINT (Ctrl-C) to the child process
+    when running a command rather than exiting immediately.
+
+    Set signal handlers with sigaction instead of signal, which may fix
+    problems propagating multiple signals to child processes in k5start
+    and krenew.
+
+    Diagnose the nonsensical combination of -U and -u or -i options in
+    k5start and report an error rather than ignoring -u and appending the
+    instance from -i onto the principal obtained via -U.  Also diagnose
+    the non-sensical combination of -H and a command to run in both
+    k5start and krenew; just omit the -H flag for this case.
+
+    Update the included kafs library to the version from rra-c-util 4.0,
+    adding support for Mac OS X and Solaris 11.
+
+    Change references to Kerberos v5 to just Kerberos in the
+    documentation.  Kerberos v5 has been the default version of Kerberos
+    for over ten years now.
+
+    Update to rra-c-util 4.0:
+
+    * Build on systems where krb5/krb5.h exists but krb5.h does not.
+    * Build with OpenBSD Heimdal where there is no separate roken library.
+    * Kerberos probes no longer assume transitive library dependencies.
+    * Fix removal of /usr/include from Kerberos CPPFLAGS.
+    * Add notices to all files copied from rra-c-util.
+    * Fix replacement of krb5_free_error_message.
+    * Support older Heimdal with no-context krb5_get_init_creds_opt_free.
+    * Improve probe for krb5_kt_free_entry.
+    * Fix use of long long, where available, in replacement mkstemp.
+    * Include strings.h where present for more POSIX string functions.
+    * Use typedef for a missing sig_atomic_t.
+    * Avoid passing a NULL context to krb5_get_error_message.
+    * Fix integer data types in the messages utility library.
+    * Use configure-detected aklog path in the test suite.
+    * Add replacement for a missing strndup (such as on Mac OS X).
+    * Add tests for messages-krb5 utility functions.
+    * Update compiler warning flags for make warnings to gcc 4.6.1.
+
+    Update to C TAP Harness 1.9:
+
+    * Add a usage message and -h option to runtests.
+    * Honor -s and SOURCE in runtests even if BUILD is not set.
+    * Improve test summary at the end of a C test case.
+    * Flush stderr before printing TAP output.
+    * Improve portability of output functions in the shell libtap.sh.
+    * Add notices to all files copied from  C TAP Harness.
+
 kstart 3.16 (2010-01-19)
 
     Add the -L option to k5start and krenew, saying to log messages to

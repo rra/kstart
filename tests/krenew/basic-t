@@ -3,7 +3,8 @@
 # Tests for basic krenew functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009, 2011
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
@@ -31,12 +32,12 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 22;
+    plan tests => 36;
 }
 
 # We should be okay for five minute tickets without doing anything.
 ($out, $err, $status) = command ($KRENEW, '-vH', '5');
-is ($status, 0, 'krenew -H succeeds without reauthenticating');
+is ($status, 0, 'krenew -H 5 succeeds without reauthenticating');
 is ($err, '', ' with no errors');
 is ($out, '', ' and no output');
 
@@ -51,7 +52,7 @@ like ($out,
 # But we fail if we try to get 3 hour tickets, since we can't renew for
 # that long.
 ($out, $err, $status) = command ($KRENEW, '-vH', '180');
-is ($status, 1, 'krenew -H 120 fails');
+is ($status, 1, 'krenew -H 180 fails');
 is ($err, "krenew: ticket cannot be renewed for long enough\n",
     ' with the right error');
 is ($out, '', ' and no output');
@@ -84,10 +85,35 @@ ok (!$cache || !-f $cache, ' and the new cache file was deleted');
 ok (-f 'krb5cc_test', ' but the default one was unaffected');
 
 # Test propagation of exit status from a command.
-($out, $err, $status) = command ($KRENEW, '--', 'sh', '-c', 'exit 3');
+($out, $err, $status)
+    = command ($KRENEW, '--', 'sh', '-c', 'klist -5; exit 3');
 is ($status, 3, 'krenew of exit 3 returns correct exit status');
 is ($err, '', ' with no errors');
+like ($out, qr,^\s*(Ticket|Credentials)\ cache:
+               \ (FILE:)?/tmp/krb5cc_\d+_\S{6}\n
+               \s*(Default\ )?[Pp]rincipal:\ \Q$principal\E(\@\S+)?\n,xm,
+      ' and the right output');
+($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
+ok (!$cache || !-f $cache, ' and the new cache file was deleted');
 ok (-f 'krb5cc_test', ' and the default cache file was unaffected');
 
-# Clean up.
+# Check exit status if the ticket cache doesn't exist.
 unlink 'krb5cc_test';
+($out, $err, $status) = command ($KRENEW);
+is ($status, 1, 'krenew fails with no ticket cache');
+is ($out, '', ' with no output');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
+($out, $err, $status) = command ($KRENEW, '-vH', 5);
+is ($status, 1, 'krenew -H fails with no ticket cache');
+is ($out, '', ' with no output');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
+
+# We should still exit with the same error if -i was given.
+($out, $err, $status) = command ($KRENEW, '-vi');
+is ($status, 1, 'krenew -i fails with no ticket cache');
+is ($out, '', ' with no output');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
+($out, $err, $status) = command ($KRENEW, '-viH', 5);
+is ($status, 1, 'krenew -iH fails with no ticket cache');
+is ($out, '', ' with no output');
+like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');

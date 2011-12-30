@@ -1,22 +1,21 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #
 # Test formatting of POD documentation.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2008, 2009, 2011
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
+use strict;
 use Test::More;
 
-my @files = qw(k4start.pod k5start.pod krenew.pod);
-my $total = scalar (@files);
-plan tests => $total;
+my @podfiles = qw(k5start.pod krenew.pod);
 
 eval 'use Test::Pod 1.00';
-SKIP: {
-    skip 'Test::Pod 1.00 required for testing POD', $total if $@;
-    for my $file (@files) {
-        pod_file_ok ("$ENV{SOURCE}/../$file", $file);
-    }
-}
+plan skip_all => "Test::Pod 1.00 required for testing POD" if $@;
+my $srcdir = "$ENV{SOURCE}";
+$srcdir =~ s,[^/]+/*$,,;
+chdir "$srcdir" or die "$0: cannot chdir to $srcdir: $!\n";
+all_pod_files_ok (@podfiles);

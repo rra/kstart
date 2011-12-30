@@ -1,0 +1,125 @@
+#!/usr/bin/perl -w
+#
+# Tests for k5start handling of ticket permissions.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2011
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $K5START = "$ENV{BUILD}/../k5start";
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = "$ENV{BUILD}/data";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# This test requires running under fakeroot, and therefore can't run unless
+# fakeroot is available (or it's run as root, although that's a bad idea).
+if ($> != 0) {
+    if (defined $ENV{TRY_FAKEROOT}) {
+        plan skip_all => 'fakeroot not available';
+        exit 0;
+    }
+    $ENV{TRY_FAKEROOT} = 'trying';
+    unless (exec ('fakeroot', "$ENV{SOURCE}/k5start/perms-t")) {
+        plan skip_all => 'fakeroot not available';
+        exit 0;
+    }
+}
+
+# Decide whether we have the configuration to run the tests.
+if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
+    plan tests => 34;
+} else {
+    plan skip_all => 'no keytab configuration';
+    exit 0;
+}
+
+# Get the test principal.
+my $principal = contents ("$DATA/test.principal");
+
+# Don't overwrite the user's ticket cache.
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+
+# Basic authentication test.
+unlink 'krb5cc_test';
+my ($out, $err, $status) = command ($K5START, '-qUf', "$DATA/test.keytab");
+is ($status, 0, 'Basic k5start command succeeds');
+is ($err, '', ' with no errors');
+my ($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0600, ' mode is correct');
+is ($uid, 0, ' owner is correct');
+is ($gid, 0, ' group is correct');
+
+# Basic authentication test with -o, -g, and -m.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-Uf', "$DATA/test.keytab", '-o', 42, '-g', 42,
+               '-m', 440);
+is ($status, 0, 'k5start -o 42 -g 42 -m 440 succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+      ' and the right output');
+my ($default, $service) = klist ();
+like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
+like ($service, qr%^krbtgt/%, ' and the right service');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0440, ' mode is correct');
+is ($uid, 42, ' owner is correct');
+is ($gid, 42, ' group is correct');
+
+# Just -o.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-qUf', "$DATA/test.keytab", '-o', 42);
+is ($status, 0, 'k5start -o 42 succeeds');
+is ($err, '', ' with no errors');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0600, ' mode is correct');
+is ($uid, 42, ' owner is correct');
+is ($gid, 0, ' group is correct');
+
+# Just -g.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-qUf', "$DATA/test.keytab", '-g', 42);
+is ($status, 0, 'k5start -g 42 succeeds');
+is ($err, '', ' with no errors');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0600, ' mode is correct');
+is ($uid, 0, ' owner is correct');
+is ($gid, 42, ' group is correct');
+
+# Just -m.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-qUf', "$DATA/test.keytab", '-m', 400);
+is ($status, 0, 'k5start -m 400 succeeds');
+is ($err, '', ' with no errors');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0400, ' mode is correct');
+is ($uid, 0, ' owner is correct');
+is ($gid, 0, ' group is correct');
+
+# Test handling of FILE: prefixes for the cache.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-Uf', "$DATA/test.keytab", '-o', 42, '-g', 42,
+               '-m', 440, '-k', 'FILE:krb5cc_test');
+is ($status, 0, 'k5start -o 42 -g 42 -m 440 -k succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+      ' and the right output');
+($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
+is (($mode & 0777), 0440, ' mode is correct');
+is ($uid, 42, ' owner is correct');
+is ($gid, 42, ' group is correct');
+
+# Clean up.
+unlink 'krb5cc_test';

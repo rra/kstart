@@ -13,11 +13,16 @@ dnl    #define macro(args...) fprintf(stderr, args)
 dnl
 dnl They set HAVE_C99_VAMACROS or HAVE_GNU_VAMACROS as appropriate.
 dnl
+dnl The canonical version of this file is maintained in the rra-c-util
+dnl package, available at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2006, 2008, 2009
-dnl     Board of Trustees, Leland Stanford Jr. University
+dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
-dnl See LICENSE for licensing terms.
+dnl This file is free software; the authors give unlimited permission to copy
+dnl and/or distribute it, with or without modifications, as long as this
+dnl notice is preserved.
 
 AC_DEFUN([_RRA_C_C99_VAMACROS_SOURCE], [[
 #include <stdio.h>
