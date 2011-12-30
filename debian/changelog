@@ -1,3 +1,28 @@
+kstart (4.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Ticket caches passed to k5start or krenew via -k are now used as-is
+      without prepending FILE and therefore can be of any ticket cache
+      type (unless k5start is called with -o, -g, or -m).  This may change
+      the ticket cache name exposed to programs run under them.
+    - Always canonicalize the ticket cache name for passing to commands.
+    - krenew now stays running if obtaining renewed credentials fails, and
+      only exits if the ticket cache disappears or is not renewable.  (-i
+      still keeps it running in those cases as well.)  -x restores the
+      previous behavior.
+    - k5start now keeps running despite failures.  -x restores the
+      previous behavior.
+    - When k5start is run with the -o, -g, or -m options, it generates a
+      temporary ticket cache first, sets ownership and permissions, and
+      then renames it to the real ticket cache.
+    - k5start and krenew now propagate SIGINT (Ctrl-C) to the child
+      process rather than just exiting.
+    - Set signal handlers with sigaction instead of signal to fix a bug in
+      SIGCHLD handling.
+    - Reject -U combined with -u or -i, or -H combined with a command.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 29 Dec 2011 20:18:23 -0800
+
 kstart (3.16-3) unstable; urgency=low
 
   * Skip the xmalloc test by default.  It's too fragile and isn't catching
