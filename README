@@ -66,13 +66,13 @@ REQUIREMENTS
   not given, the first of aklog or afslog that is found on your path at
   configure time will be used.
 
-  To build the the kafs portability layer, one of Linux, Mac OS X, Solaris
-  11, the kafs library that comes with either Heimdal or KTH Kerberos, the
-  kopenafs library that comes with newer OpenAFS, AFS header files (on any
-  other platform besides AIX or IRIX), or AFS libraries (on AIX and IRIX)
-  is required.  AIX binaries with AFS PAG support may not run on AIX
-  systems that do not have an AFS client installed due to how AIX handles
-  system calls.
+  For AFS PAG support, one of Linux, Mac OS X, Solaris 11, the kafs
+  library that comes with either Heimdal or KTH Kerberos, the kopenafs
+  library that comes with newer OpenAFS, AFS header files (on any other
+  platform besides AIX or IRIX), or AFS libraries (on AIX and IRIX) is
+  required.  AIX binaries with AFS PAG support may not run on AIX systems
+  that do not have an AFS client installed due to how AIX handles system
+  calls.
 
   To run the test suite, you must have the Perl 5.006 or later and the
   modules Test::More and Test::Pod installed.  Test::More comes with Perl
