@@ -578,7 +578,9 @@ main(int argc, char *argv[])
             code = krb5_cc_resolve(ctx, config.cache, &ccache);
         if (code != 0)
             die_krb5(ctx, code, "error opening ticket cache");
-        config.cache = xstrdup(krb5_cc_get_name(ctx, ccache));
+        code = krb5_cc_get_full_name(ctx, ccache, (char **) &config.cache);
+        if (code != 0)
+            die_krb5(ctx, code, "error getting ticket cache name");
         krb5_cc_close(ctx, ccache);
     }
     if (setenv("KRB5CCNAME", config.cache, 1) != 0)
