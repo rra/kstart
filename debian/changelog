@@ -20,6 +20,7 @@ kstart (4.0-1) UNRELEASED; urgency=low
     - Set signal handlers with sigaction instead of signal to fix a bug in
       SIGCHLD handling.
     - Reject -U combined with -u or -i, or -H combined with a command.
+  * Update to debhelper compatibility level V8.
 
  -- Russ Allbery <rra@debian.org>  Thu, 29 Dec 2011 20:18:23 -0800
 
