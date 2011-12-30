@@ -20,6 +20,8 @@ kstart (4.0-1) UNRELEASED; urgency=low
     - Set signal handlers with sigaction instead of signal to fix a bug in
       SIGCHLD handling.
     - Reject -U combined with -u or -i, or -H combined with a command.
+  * Remove reference to arla from README.Debian.  That package was removed
+    from Debian some years ago.
   * Update source package format to 3.0 (quilt).
   * Update to debhelper compatibility level V8.
   * Update to standards version 3.9.2 (no changes required).

@@ -3,10 +3,10 @@ kstart for Debian
 
 If you also use AFS, k5start and krenew are compiled to run /usr/bin/aklog
 to obtain an AFS token if requested with the -t option.  The openafs-krb5
-and arla packages both provide this program.  If you want to use afslog
-from heimdal-clients instead, set the environment variable AKLOG to the
-full path to that program.  You can also set that environment variable to
-the full path to any other local program you have for obtaining an AFS
-token from a Kerberos ticket.
+package provides this program.  If you want to use afslog from
+heimdal-clients instead, set the environment variable AKLOG to the full
+path to that program.  You can also set that environment variable to the
+full path to any other local program you have for obtaining an AFS token
+from a Kerberos ticket.
 
- -- Russ Allbery <rra@debian.org>, Sun,  1 Mar 2009 19:05:24 -0800
+ -- Russ Allbery <rra@debian.org>, Thu, 29 Dec 2011 20:26:58 -0800
