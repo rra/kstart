@@ -1,4 +1,4 @@
-kstart (4.0-1) UNRELEASED; urgency=low
+kstart (4.0-1) unstable; urgency=low
 
   * New upstream release.
     - Ticket caches passed to k5start or krenew via -k are now used as-is
@@ -26,7 +26,7 @@ kstart (4.0-1) UNRELEASED; urgency=low
   * Update to debhelper compatibility level V8.
   * Update to standards version 3.9.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Thu, 29 Dec 2011 20:18:23 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 29 Dec 2011 20:34:54 -0800
 
 kstart (3.16-3) unstable; urgency=low
 
