@@ -59,6 +59,14 @@ BEGIN_DECLS
 # define krb5_cc_copy_cache(c, o, n) krb5_cc_copy_creds((c), (o), (n))
 #endif
 
+/*
+ * Now present in both Heimdal and MIT, but very new in MIT and not present in
+ * older Heimdal.
+ */
+#ifndef HAVE_KRB5_CC_GET_FULL_NAME
+krb5_error_code krb5_cc_get_full_name(krb5_context, krb5_ccache, char **);
+#endif
+
 /* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */
 #ifdef HAVE_KRB5_XFREE
 # define krb5_free_unparsed_name(c, p) krb5_xfree(p)
