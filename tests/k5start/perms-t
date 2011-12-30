@@ -27,7 +27,7 @@ if ($> != 0) {
         exit 0;
     }
     $ENV{TRY_FAKEROOT} = 'trying';
-    unless (exec ('fakeroot', "$ENV{BUILD}/k5start/perms-t")) {
+    unless (exec ('fakeroot', "$ENV{SOURCE}/k5start/perms-t")) {
         plan skip_all => 'fakeroot not available';
         exit 0;
     }
