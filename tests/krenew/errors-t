@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+#
+# Tests for error handling in krenew.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2011
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $KRENEW = "$ENV{BUILD}/../krenew";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# Don't overwrite the user's ticket cache.
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+
+# Test invalid options.
+our @OPTIONS = (
+    [ [ qw/-H 0/    ], '-H limit argument 0 invalid' ],
+    [ [ qw/-H -1/   ], '-H limit argument -1 invalid' ],
+    [ [ qw/-H 4foo/ ], '-H limit argument 4foo invalid' ],
+    [ [ qw/-K 4foo/ ], '-K interval argument 4foo invalid' ],
+    [ [ qw/-H4  a/  ], '-H option cannot be used with a command' ]
+);
+
+# Test plan.
+plan tests => scalar (@OPTIONS) * 3;
+
+# Run the invalid option tests.
+for my $opt (@OPTIONS) {
+    my ($out, $err, $status) = command ($KRENEW, @{ $opt->[0] });
+    is ($status, 1, "krenew @{ $opt->[0] } fails");
+    is ($out, '', ' with no output');
+    is ($err, 'krenew: ' . $opt->[1] . "\n", ' and correct error');
+}

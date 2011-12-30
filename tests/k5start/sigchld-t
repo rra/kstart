@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+#
+# Test for proper SIGCHLD handling in k5start.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2010
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use POSIX qw(SIGCHLD SIGCONT SIGSTOP SIGTERM);
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $K5START = "$ENV{BUILD}/../k5start";
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = "$ENV{BUILD}/data";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# Decide whether we have the configuration to run the tests.
+if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
+    plan tests => 2;
+} else {
+    plan skip_all => 'no keytab configuration';
+    exit 0;
+}
+
+# Get the test principal.
+my $principal = contents ("$DATA/test.principal");
+
+# Don't overwrite the user's ticket cache.
+$ENV{KRB5CCNAME} = 'krb5cc_test';
+
+# We're going to test multiple receipt of SIGCHLD and see if k5start loses
+# track of the signal handler and then keeps running until its timeout period.
+my $start = time;
+my $pid = fork;
+if (not defined $pid) {
+    BAIL_OUT ("cannot fork: $!\n");
+} elsif ($pid == 0) {
+    exec ($K5START, '-qUf', "$DATA/test.keytab", '-K60', '-c', 'child-pid',
+          '--', 'sleep', '100');
+} else {
+    sleep 1;
+    kill (SIGCHLD, $pid) or BAIL_OUT ("cannot send SIGCHLD to child $pid\n");
+}
+open (CHILD, '<', 'child-pid') or BAIL_OUT ("cannot open child-pid: $!\n");
+my $child = <CHILD>;
+close CHILD;
+chomp $child;
+unless (kill (0, $child)) {
+    BAIL_OUT ("cannot locate child process $child\n");
+}
+kill (SIGSTOP, $child) or BAIL_OUT ("cannot send SIGSTOP to child $child\n");
+sleep 1;
+kill (SIGCONT, $child) or BAIL_OUT ("cannot send SIGCONT to child $child\n");
+sleep 1;
+kill (SIGTERM, $child) or BAIL_OUT ("cannot send SIGTERM to child $child\n");
+waitpid ($pid, 0);
+is ($?, 0, 'command succeeded');
+ok (time < $start + 5, 'k5start got SIGCHLD and woke up properly');
+unlink 'child-pid';

@@ -5,7 +5,8 @@
 # than in a separate namespace.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007, 2008, 2009 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2007, 2008, 2009
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
@@ -72,13 +73,9 @@ sub kinit {
 }
 
 # Run klist and return the default principal, the first service principal
-# found, and the flags.  If the first argument is true, runs klist -4 and
-# looks for a K4 ticket cache instead of a K5 one.  Returns both as undef if
-# klist fails.
+# found, and the flags.  Returns both as undef if klist fails.
 sub klist {
-    my ($k4) = @_;
-    my $flag = $k4 ? '-4' : '-5';
-    my $output = `klist -f $flag 2>&1`;
+    my $output = `klist -f -5 2>&1`;
     return unless $? == 0;
     my ($default) = ($output =~ /^(?:Default p|\s*P)rincipal: (\S+)/m);
     my ($service) = ($output =~ / Service principal\n(?:\S+\s+){4}(\S+)/);

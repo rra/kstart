@@ -1,83 +1,64 @@
 /*
- * Kerberos v5 kinit replacement suitable for daemon authentication.
+ * Kerberos kinit replacement suitable for daemon authentication.
  *
- * This is a replacement for the standard Kerberos v5 kinit that is more
- * suitable for use with programs.  It can run as a daemon and renew a ticket
+ * This is a replacement for the standard Kerberos kinit that is more suitable
+ * for use with programs.  It can run as a daemon and renew a ticket
  * periodically and can check the expiration of a ticket and only prompt to
  * renew if it's too old.
  *
  * It is based very heavily on a modified Kerberos v4 kinit, changed to call
- * the Kerberos v5 initialization functions instead.  k5start is not as useful
- * for Kerberos v5 as kstart is for Kerberos v4, since the v5 kinit supports
- * more useful options, but AFS integration and -K and -H are still unique to
- * it.
+ * the Kerberos v5 initialization functions instead.
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
- * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     2008, 2009, 2010, 2011
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <ctype.h>
 #include <errno.h>
-#include <krb5.h>
-#include <netdb.h>
+#include <grp.h>
 #include <pwd.h>
-#include <signal.h>
 #include <sys/stat.h>
-#ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
-#endif
 #include <syslog.h>
 #include <time.h>
 
-#include <kafs/kafs.h>
-#include <util/command.h>
+#include <internal.h>
 #include <util/concat.h>
 #include <util/macros.h>
 #include <util/messages.h>
 #include <util/messages-krb5.h>
-#include <util/perms.h>
 #include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
 #define DEFAULT_LIFETIME (10 * 60)
 
 /*
- * The number of seconds of fudge to add to the check for whether we need to
- * obtain a new ticket.  This is here to make sure that we don't wake up just
- * as the ticket is expiring.
- */
-#define EXPIRE_FUDGE 120
-
-/*
  * Holds the various command-line options for passing to functions, after
- * processing in the main routine and conversion to internal K5 data
+ * processing in the main routine and conversion to internal Kerberos data
  * structures where appropriate.
  */
-struct options {
-    krb5_principal kprinc;
-    char *service;
-    krb5_principal ksprinc;
-    krb5_ccache ccache;
+struct k5start_private {
+    krb5_principal kprinc;      /* Client principal. */
+    char *service;              /* Service for which to get credentials. */
+    krb5_principal ksprinc;     /* Service principal. */
+    const char *keytab;         /* Keytab to use to authenticate. */
+    bool quiet;                 /* Whether to silence even normal output. */
+    bool stdin_passwd;          /* Whether to get the password from stdin. */
+    uid_t owner;                /* Owner of created ticket cache. */
+    uid_t group;                /* Group of created ticket cache. */
+    mode_t mode;                /* Mode of created ticket cache. */
+    bool set_perms;             /* Whether to set owner and perms on cache. */
+    const char *cache;          /* Path to destination cache. */
     krb5_get_init_creds_opt *kopts;
-    const char *keytab;
-    int happy_ticket;
-    int keep_ticket;
-    bool quiet;
-    bool run_aklog;
-    const char *aklog;
-    bool stdin_passwd;
-    bool verbose;
 };
-
-/* Set when k5start receives SIGALRM. */
-static volatile sig_atomic_t alarm_signaled = 0;
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -113,6 +94,7 @@ Usage: k5start [options] [name [command]]\n\
                         principal and don't look for a principal on the\n\
                         command line\n\
    -v                   Verbose\n\
+   -x                   Exit immediately on any error\n\
 \n\
 If the environment variable AKLOG (or KINIT_PROG for backward compatibility)\n\
 is set to a program (such as aklog) then this program will be executed when\n\
@@ -145,79 +127,30 @@ usage(int status)
 
 
 /*
- * Signal handler for SIGALRM.  Just sets the global sentinel variable.
- */
-static void
-alarm_handler(int s UNUSED)
-{
-    alarm_signaled = 1;
-}
-
-
-/*
- * Given a context and a principal, get the realm.  This works differently in
- * MIT Kerberos and Heimdal, unfortunately.
- */
-static const char *
-get_realm(krb5_context ctx UNUSED, krb5_principal princ)
-{
-#ifdef HAVE_KRB5_PRINCIPAL_GET_REALM
-    const char *realm;
-
-    realm = krb5_principal_get_realm(ctx, princ);
-    if (realm == NULL)
-        die("cannot get local Kerberos realm");
-    return realm;
-#else
-    krb5_data *data;
-
-    data = krb5_princ_realm(ctx, princ);
-    if (data == NULL || data->data == NULL)
-        die("cannot get local Kerberos realm");
-    return data->data;
-#endif
-}
-
-
-/*
- * Check whether a ticket will expire within the given number of seconds.
- * Takes the context and the options.  Returns a Kerberos status code.
+ * Given the path to a file and the private configuration information, set the
+ * owner, group, or mode.  Owner and group may be either the name of a user or
+ * group or a numeric UID or GID (as a string).  If the owner is specified as
+ * a username (but not if it is specified as a UID), set the GID, if
+ * unspecified, to the primary group of that user.
+ *
+ * Returns an errno on failure and zero on success.
  */
 static krb5_error_code
-ticket_expired(krb5_context ctx, struct options *options)
+set_permissions(const char *file, const struct k5start_private *private)
 {
-    krb5_creds in, *out = NULL;
-    time_t now, then, offset;
-    krb5_error_code status;
-
-    /* Obtain the ticket. */
-    memset(&in, 0, sizeof(in));
-    in.client = options->kprinc;
-    in.server = options->ksprinc;
-    status = krb5_get_credentials(ctx, 0, options->ccache, &in, &out);
-
-    /*
-     * Check the expiration time.  We may be looking for a ticket that lasts a
-     * particuliar length of time based on either keep_ticket or happy_ticket.
-     * Only one of those options will be set; at least one of them will always
-     * be zero.
-     */
-    if (status == 0) {
-        now = time(NULL);
-        then = out->times.endtime;
-        if (options->happy_ticket > 0)
-            offset = 60 * options->happy_ticket;
-        else
-            offset = 60 * options->keep_ticket + EXPIRE_FUDGE;
-        if (then < now + offset)
-            status = KRB5KRB_AP_ERR_TKT_EXPIRED;
-    }
-
-    /* Free memory. */
-    if (out != NULL)
-        krb5_free_creds(ctx, out);
-
-    return status;
+    if (private->owner != (uid_t) -1 || private->group != (gid_t) -1)
+        if (chown(file, private->owner, private->group) < 0) {
+            syswarn("cannot chown %s to %ld:%ld", file, (long) private->owner,
+                    (long) private->group);
+            return errno;
+        }
+    if (private->mode != 0)
+        if (chmod(file, private->mode) < 0) {
+            syswarn("cannot chmod %s to %o", file,
+                    (unsigned int) private->mode);
+            return errno;
+        }
+    return 0;
 }
 
 
@@ -225,76 +158,146 @@ ticket_expired(krb5_context ctx, struct options *options)
  * Authenticate, given the context and the processed command-line options.
  * Dies on failure.
  */
-static void
-authenticate(krb5_context ctx, struct options *options)
+static krb5_error_code
+authenticate(krb5_context ctx, struct config *config,
+             krb5_error_code status UNUSED)
 {
-    krb5_error_code status;
+    struct k5start_private *private = config->private.k5start;
+    krb5_error_code code;
     krb5_keytab keytab = NULL;
     krb5_creds creds;
+    const char *cache = config->cache;
+    krb5_ccache ccache = NULL;
 
-    if (options->verbose) {
+    /*
+     * If we have owner, group, or mode information, we have to create a
+     * separate temporary ticket cache, change its ownership, and then rename
+     * it.
+     */
+    if (private->set_perms) {
+        int fd;
+        char *tmp;
+
+        if (xasprintf(&tmp, "%s_XXXXXX", config->cache) < 0)
+            die("cannot format ticket cache name");
+        fd = mkstemp(tmp);
+        if (fd < 0) {
+            syswarn("cannot create temporary ticket cache file");
+            return errno;
+        }
+        if (fchmod(fd, 0600) < 0) {
+            syswarn("cannot chmod temporary ticket cache file");
+            return errno;
+        }
+        close(fd);
+        cache = tmp;
+    }
+
+    /* Verbose logging of what we're doing. */
+    if (config->verbose) {
         char *p;
 
-        status = krb5_unparse_name(ctx, options->kprinc, &p);
-        if (status != 0)
-            warn_krb5(ctx, status, "error unparsing name");
+        code = krb5_unparse_name(ctx, private->kprinc, &p);
+        if (code != 0)
+            warn_krb5(ctx, code, "error unparsing name");
         else {
             notice("authenticating as %s", p);
-            free(p);
+            krb5_free_unparsed_name(ctx, p);
         }
-        notice("getting tickets for %s", options->service);
+        notice("getting tickets for %s", private->service);
     }
-    if (options->keytab != NULL) {
-        status = krb5_kt_resolve(ctx, options->keytab, &keytab);
-        if (status != 0)
-            die_krb5(ctx, status, "error resolving keytab %s",
-                     options->keytab);
-        status = krb5_get_init_creds_keytab(ctx, &creds, options->kprinc,
-                                            keytab, 0, options->service,
-                                            options->kopts);
-    } else if (!options->stdin_passwd) {
-        status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
-                                              NULL, krb5_prompter_posix, NULL,
-                                              0, options->service,
-                                              options->kopts);
+
+    /* Obtain new credentials. */
+    memset(&creds, 0, sizeof(creds));
+    if (private->keytab != NULL) {
+        code = krb5_kt_resolve(ctx, private->keytab, &keytab);
+        if (code != 0) {
+            warn_krb5(ctx, code, "error resolving keytab %s",
+                      private->keytab);
+            return code;
+        }
+        code = krb5_get_init_creds_keytab(ctx, &creds, private->kprinc,
+                                          keytab, 0, private->service,
+                                          private->kopts);
+    } else if (!private->stdin_passwd) {
+        code = krb5_get_init_creds_password(ctx, &creds, private->kprinc,
+                                            NULL, krb5_prompter_posix, NULL,
+                                            0, private->service,
+                                            private->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
-        if (!options->quiet)
+        if (!private->quiet)
             printf("Password: ");
         fgets(buffer, sizeof(buffer), stdin);
         p = strchr(buffer, '\n');
         if (p != NULL)
             *p = '\0';
-        else
-            die("password too long");
-        status = krb5_get_init_creds_password(ctx, &creds, options->kprinc,
-                                              buffer, NULL, NULL, 0,
-                                              options->service,
-                                              options->kopts);
+        else {
+            warn("password too long");
+            return KRB5_LIBOS_CANTREADPWD;
+        }
+        code = krb5_get_init_creds_password(ctx, &creds, private->kprinc,
+                                            buffer, NULL, NULL, 0,
+                                            private->service,
+                                            private->kopts);
     }
-    if (status != 0)
-        die_krb5(ctx, status, "error getting credentials");
-    status = krb5_cc_initialize(ctx, options->ccache, options->kprinc);
-    if (status != 0)
-        die_krb5(ctx, status, "error initializing ticket cache");
-    status = krb5_cc_store_cred(ctx, options->ccache, &creds);
-    if (status != 0)
-        die_krb5(ctx, status, "error storing credentials");
+    if (code != 0) {
+        warn_krb5(ctx, code, "error getting credentials");
+        goto done;
+    }
 
+    /* Set up the new ticket cache. */
+    code = krb5_cc_resolve(ctx, cache, &ccache);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error creating ticket cache");
+        goto done;
+    }
+    code = krb5_cc_initialize(ctx, ccache, private->kprinc);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error initializing ticket cache");
+        goto done;
+    }
+    code = krb5_cc_store_cred(ctx, ccache, &creds);
+    if (code != 0) {
+        warn_krb5(ctx, code, "error storing credentials");
+        goto done;
+    }
+    krb5_cc_close(ctx, ccache);
+    ccache = NULL;
+
+    /*
+     * If we aren't changing ownership or permissions, we're done.  If we are,
+     * set the owner, group, and mode of the resulting cache, and then rename
+     * it into place.
+     */
+    if (private->set_perms) {
+        code = set_permissions(cache, private);
+        if (code != 0)
+            goto done;
+        if (rename(cache, config->cache) < 0)
+            code = errno;
+    }
+
+done:
     /* Make sure that we don't free princ; we use it later. */
-    if (creds.client == options->kprinc)
+    if (creds.client == private->kprinc)
         creds.client = NULL;
+    if (cache != config->cache)
+        free((char *) cache);
+    if (ccache != NULL)
+        krb5_cc_close(ctx, ccache);
     krb5_free_cred_contents(ctx, &creds);
     if (keytab != NULL)
         krb5_kt_close(ctx, keytab);
+    return code;
 }
 
 
 /*
- * Find the principal of the first entry of a keytab and return it as a
- * string in newly allocated memory.  The caller is responsible for freeing.
- * Exit on error.
+ * Find the principal of the first entry of a keytab and return it as a string
+ * in newly allocated memory.  The caller is responsible for freeing the
+ * result with krb5_free_unparsed_name.  Exit on error.
  */
 static char *
 first_principal(krb5_context ctx, const char *path)
@@ -302,29 +305,25 @@ first_principal(krb5_context ctx, const char *path)
     krb5_keytab keytab;
     krb5_kt_cursor cursor;
     krb5_keytab_entry entry;
-    krb5_error_code status;
+    krb5_error_code code;
     char *principal = NULL;
 
-    status = krb5_kt_resolve(ctx, path, &keytab);
-    if (status != 0)
-        die_krb5(ctx, status, "error opening %s", path);
-    status = krb5_kt_start_seq_get(ctx, keytab, &cursor);
-    if (status != 0)
-        die_krb5(ctx, status, "error reading %s", path);
-    status = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
-    if (status == 0) {
-        status = krb5_unparse_name(ctx, entry.principal, &principal);
-        if (status != 0)
-            die_krb5(ctx, status, "error unparsing name from %s", path);
-#ifdef HAVE_KRB5_FREE_KEYTAB_ENTRY_CONTENTS
-        krb5_free_keytab_entry_contents(ctx, &entry);
-#else
+    code = krb5_kt_resolve(ctx, path, &keytab);
+    if (code != 0)
+        die_krb5(ctx, code, "error opening %s", path);
+    code = krb5_kt_start_seq_get(ctx, keytab, &cursor);
+    if (code != 0)
+        die_krb5(ctx, code, "error reading %s", path);
+    code = krb5_kt_next_entry(ctx, keytab, &entry, &cursor);
+    if (code == 0) {
+        code = krb5_unparse_name(ctx, entry.principal, &principal);
+        if (code != 0)
+            die_krb5(ctx, code, "error unparsing name from %s", path);
         krb5_kt_free_entry(ctx, &entry);
-#endif
     }
     krb5_kt_end_seq_get(ctx, keytab, &cursor);
     krb5_kt_close(ctx, keytab);
-    if (status == 0)
+    if (code == 0)
         return principal;
     else {
         die("no principal found in keytab file %s", path);
@@ -333,84 +332,107 @@ first_principal(krb5_context ctx, const char *path)
 }
 
 
+/*
+ * Strips the cache prefix from the Kerberos ticket cache name if it's a
+ * file-based cache.  Otherwise, dies with an error indicating that cache type
+ * is not allowed with -o, -g, or -m options.
+ */
+static const char *
+strip_cache_prefix(const char *cache)
+{
+    const char *p;
+
+    if (strncmp(cache, "FILE:", strlen("FILE:")) == 0)
+        return cache + strlen("FILE:");
+    if (strncmp(cache, "WRFILE:", strlen("WRFILE:")) == 0)
+        return cache += strlen("WRFILE:");
+    for (p = cache; *p != '\0'; p++) {
+        if (p > cache && *p == ':')
+            die("cache type %.*s not allowed with -o, -g, or -m",
+                (int) (p - cache), cache);
+        else if (!isupper((unsigned char) *p))
+            return cache;
+    }
+    return cache;
+}
+
+
 int
 main(int argc, char *argv[])
 {
-    struct options options;
-    int opt, result;
-    krb5_error_code code;
+    struct config config;
+    struct k5start_private private;
+    int opt;
     const char *inst = NULL;
     const char *sname = NULL;
     const char *sinst = NULL;
     const char *srealm = NULL;
-    const char *owner = NULL;
-    const char *group = NULL;
-    const char *mode = NULL;
-    const char *cache = NULL;
     char *principal = NULL;
-    char **command = NULL;
-    char *childfile = NULL;
-    char *pidfile = NULL;
-    bool background = false;
     bool nonforwardable = false;
     bool nonproxiable = false;
     int lifetime = DEFAULT_LIFETIME;
+    krb5_error_code code;
+    struct passwd *pw = NULL;
+    struct group *gr;
     krb5_context ctx;
     krb5_deltat life_secs;
-    int status = 0;
-    pid_t child = 0;
-    bool clean_cache = false;
     bool search_keytab = false;
     static const char optstring[]
-        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:v";
+        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
 
     /* Initialize logging. */
     message_program_name = "k5start";
 
-    /* Parse command-line options. */
-    memset(&options, 0, sizeof(options));
+    /* Set up confguration and parse command-line options. */
+    memset(&config, 0, sizeof(config));
+    memset(&private, 0, sizeof(private));
+    config.private.k5start = &private;
+    config.auth = authenticate;
+    private.owner = (uid_t) -1;
+    private.group = (gid_t) -1;
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'b': background = true;            break;
-        case 'c': childfile = optarg;           break;
+        case 'b': config.background = true;     break;
+        case 'c': config.childfile = optarg;    break;
         case 'F': nonforwardable = true;        break;
-        case 'g': group = optarg;               break;
         case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
-        case 'm': mode = optarg;                break;
+        case 'k': config.cache = optarg;        break;
         case 'n': /* Ignored */                 break;
-        case 'o': owner = optarg;               break;
         case 'P': nonproxiable = true;          break;
-        case 'p': pidfile = optarg;             break;
-        case 'q': options.quiet = true;         break;
+        case 'p': config.pidfile = optarg;      break;
+        case 'q': private.quiet = true;         break;
         case 'r': srealm = optarg;              break;
         case 'S': sname = optarg;               break;
-        case 't': options.run_aklog = true;     break;
-        case 'v': options.verbose = true;       break;
+        case 't': config.do_aklog = true;       break;
+        case 'v': config.verbose = true;        break;
         case 'U': search_keytab = true;         break;
         case 'u': principal = optarg;           break;
+        case 'x': config.exit_errors = true;    break;
 
         case 'f':
-            options.keytab = optarg;
-            if (options.stdin_passwd)
-                die("cannot use both -s and -f flags");
+            private.keytab = optarg;
+            break;
+        case 'g':
+            private.group = convert_number(optarg, 10);
+            if (private.group == (gid_t) -1) {
+                gr = getgrnam(optarg);
+                if (gr == NULL)
+                    die("unknown group %s", optarg);
+                private.group = gr->gr_gid;
+            }
+            private.set_perms = true;
             break;
         case 'H':
-            options.happy_ticket = atoi(optarg);
-            if (options.happy_ticket <= 0)
-                die("-H limit argument %s out of range", optarg);
+            config.happy_ticket = convert_number(optarg, 10);
+            if (config.happy_ticket <= 0)
+                die("-H limit argument %s invalid", optarg);
             break;
         case 'K':
-            options.keep_ticket = atoi(optarg);
-            if (options.keep_ticket <= 0)
-                die("-K interval argument %s out of range", optarg);
-            break;
-        case 'k':
-            if (strncmp(optarg, "FILE:", strlen("FILE:")) == 0)
-                cache = xstrdup(optarg);
-            else
-                cache = concat("FILE:", optarg, (char *) 0);
+            config.keep_ticket = convert_number(optarg, 10);
+            if (config.keep_ticket <= 0)
+                die("-K interval argument %s invalid", optarg);
             break;
         case 'L':
             openlog(message_program_name, LOG_PID, LOG_DAEMON);
@@ -427,10 +449,24 @@ main(int argc, char *argv[])
                 die("bad lifetime value %s, use 10h 10m format", optarg);
             lifetime = life_secs / 60;
             break;
+        case 'm':
+            private.mode = convert_number(optarg, 8);
+            if (private.mode <= 0)
+                die("-m mode argument %s invalid", optarg);
+            private.set_perms = true;
+            break;
+        case 'o':
+            private.owner = convert_number(optarg, 10);
+            if (private.owner == (uid_t) -1) {
+                pw = getpwnam(optarg);
+                if (pw == NULL)
+                    die("unknown user %s", optarg);
+                private.owner = pw->pw_uid;
+            }
+            private.set_perms = true;
+            break;
         case 's':
-            options.stdin_passwd = true;
-            if (options.keytab != NULL)
-                die("cannot use both -s and -f flags");
+            private.stdin_passwd = true;
             break;
 
         default:
@@ -455,46 +491,50 @@ main(int argc, char *argv[])
         argv++;
     }
     if (argc >= 1)  
-        command = argv;
+        config.command = argv;
+
+    /*
+     * If an owner was provided but no group, and the owner was given as a
+     * username, set the group to the primary group of that user.
+     */
+    if (private.group == (gid_t) -1 && pw != NULL)
+        private.group = pw->pw_gid;
 
     /* Check the arguments for consistency. */
-    if (background && options.keytab == NULL)
+    if (config.background && private.keytab == NULL)
         die("-b option requires a keytab be specified with -f");
-    if (background && options.keep_ticket == 0 && command == NULL)
+    if (config.background && config.keep_ticket == 0 && config.command == NULL)
         die("-b only makes sense with -K or a command to run");
-    if (options.keep_ticket > 0 && options.keytab == NULL)
+    if (config.keep_ticket > 0 && private.keytab == NULL)
         die("-K option requires a keytab be specified with -f");
-    if (command != NULL && options.keytab == NULL)
+    if (config.command != NULL && private.keytab == NULL)
         die("running a command requires a keytab be specified with -f");
-    if (lifetime > 0 && options.keep_ticket > lifetime)
+    if (lifetime > 0 && config.keep_ticket > lifetime)
         die("-K limit %d must be smaller than lifetime %d",
-            options.keep_ticket, lifetime);
+            config.keep_ticket, lifetime);
     if (principal != NULL && strchr(principal, '/') != NULL && inst != NULL)
         die("instance specified in the principal and with -i");
-    if (search_keytab && options.keytab == NULL)
+    if (search_keytab && private.keytab == NULL)
         die("-U option requires a keytab be specified with -f");
-    if (options.happy_ticket > 0 && options.keep_ticket > 0)
+    if (search_keytab && (principal != NULL || inst != NULL))
+        die("-U option cannot be used with -u or -i options");
+    if (config.happy_ticket > 0 && config.keep_ticket > 0)
         die("-H and -K options cannot be used at the same time");
-    if (childfile != NULL && command == NULL)
+    if (config.happy_ticket > 0 && config.command != NULL)
+        die("-H option cannot be used with a command");
+    if (config.childfile != NULL && config.command == NULL)
         die("-c option only makes sense with a command to run");
+    if (private.keytab != NULL && private.stdin_passwd)
+        die("cannot use both -s and -f flags");
 
-    /* Set aklog from AKLOG, KINIT_PROG, or the compiled-in default. */
-    options.aklog = getenv("AKLOG");
-    if (options.aklog == NULL)
-        options.aklog = getenv("KINIT_PROG");
-    if (options.aklog == NULL)
-        options.aklog = PATH_AKLOG;
-    if (options.aklog[0] == '\0' && options.run_aklog)
-        die("set AKLOG to specify the path to aklog");
-
-    /* Establish a K5 context. */
+    /* Establish a Kerberos context. */
     code = krb5_init_context(&ctx);
     if (code != 0)
         die_krb5(ctx, code, "error initializing Kerberos");
 
     /* If the -U option was given, figure out the principal from the keytab. */
     if (search_keytab)
-        principal = first_principal(ctx, options.keytab);
+        principal = first_principal(ctx, private.keytab);
 
     /* The default principal is the name of the local user. */
     if (principal == NULL) {
@@ -512,9 +552,9 @@ main(int argc, char *argv[])
      * into the environment in case we're going to run aklog.  Either way, set
      * up the cache in the Kerberos libraries.
      */
-    if (cache == NULL && command != NULL) {
+    if (config.cache == NULL && config.command != NULL) {
         int fd;
-        char *tmp;
+        char *tmp, *cache;
 
         if (xasprintf(&tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
             die("cannot format ticket cache name");
@@ -523,28 +563,37 @@ main(int argc, char *argv[])
             sysdie("cannot create ticket cache file");
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
-        cache = tmp;
-        clean_cache = true;
-    }
-    if (cache == NULL) {
-        code = krb5_cc_default(ctx, &options.ccache);
-        if (code == 0)
-            cache = krb5_cc_get_name(ctx, options.ccache);
+        if (xasprintf(&cache, "FILE:%s", tmp) < 0)
+            die("cannot format ticket cache name");
+        free(tmp);
+        config.cache = cache;
+        config.clean_cache = true;
     } else {
-        if (setenv("KRB5CCNAME", cache, 1) != 0)
-            die("cannot set KRB5CCNAME environment variable");
-        code = krb5_cc_resolve(ctx, cache, &options.ccache);
+        krb5_ccache ccache;
+
+        if (config.cache == NULL)
+            code = krb5_cc_default(ctx, &ccache);
+        else
+            code = krb5_cc_resolve(ctx, config.cache, &ccache);
+        if (code != 0)
+            die_krb5(ctx, code, "error opening ticket cache");
+        code = krb5_cc_get_full_name(ctx, ccache, (char **) &config.cache);
+        if (code != 0)
+            die_krb5(ctx, code, "error getting ticket cache name");
+        krb5_cc_close(ctx, ccache);
     }
-    if (code != 0)
-        die_krb5(ctx, code, "error initializing ticket cache");
+    if (setenv("KRB5CCNAME", config.cache, 1) != 0)
+        die("cannot set KRB5CCNAME environment variable");
+    if (private.set_perms)
+        config.cache = strip_cache_prefix(config.cache);
 
     /*
      * If -K, -H, or -b were given, set quiet automatically unless verbose was
      * set.
      */
-    if (options.keep_ticket > 0 || options.happy_ticket > 0 || background)
-        if (!options.verbose)
-            options.quiet = true;
+    if (config.keep_ticket > 0 || config.happy_ticket > 0 || config.background)
+        if (!config.verbose)
+            private.quiet = true;
 
     /*
      * The easiest thing for us is if the user just specifies the full
@@ -552,16 +601,10 @@ main(int argc, char *argv[])
      * support the -u and -i flags being used independently by tacking the
      * instance onto the end of the username.
      */
-    if (inst != NULL) {
-        size_t len;
-        char *p;
-
-        len = strlen(principal) + 1 + strlen(inst) + 1;
-        if (xasprintf(&p, "%s/%s", principal, inst) < 0)
+    if (inst != NULL)
+        if (xasprintf(&principal, "%s/%s", principal, inst) < 0)
             die("cannot format principal name");
-        principal = p;
-    }
-    code = krb5_parse_name(ctx, principal, &options.kprinc);
+    code = krb5_parse_name(ctx, principal, &private.kprinc);
     if (code != 0)
         die_krb5(ctx, code, "error parsing %s", principal);
 
@@ -573,14 +616,14 @@ main(int argc, char *argv[])
      *
      * We intentionally don't use notice() here to avoid prepending k5start.
      */
-    if (!options.quiet) {
+    if (!private.quiet) {
         char *p;
 
-        code = krb5_unparse_name(ctx, options.kprinc, &p);
+        code = krb5_unparse_name(ctx, private.kprinc, &p);
         if (code != 0)
             die_krb5(ctx, code, "error unparsing name %s", principal);
         printf("Kerberos initialization for %s", p);
-        free(p);
+        krb5_free_unparsed_name(ctx, p);
         if (sname != NULL) {
             printf(" for service %s", sname);
             if (sinst != NULL)
@@ -593,176 +636,34 @@ main(int argc, char *argv[])
 
     /* Flesh out the name of the service ticket that we're obtaining. */
     if (srealm == NULL)
-        srealm = get_realm(ctx, options.kprinc);
+        srealm = krb5_principal_get_realm(ctx, private.kprinc);
+    if (srealm == NULL)
+        die_krb5(ctx, code, "cannot get service ticket realm");
     if (sname == NULL)
         sname = "krbtgt";
     if (sinst == NULL)
         sinst = srealm;
-    if (xasprintf(&options.service, "%s/%s@%s", sname, sinst, srealm) < 0)
+    if (xasprintf(&private.service, "%s/%s@%s", sname, sinst, srealm) < 0)
         die("cannot format service principal name");
-    code = krb5_build_principal(ctx, &options.ksprinc, strlen(srealm),
+    code = krb5_build_principal(ctx, &private.ksprinc, strlen(srealm),
                                 srealm, sname, sinst, (const char *) NULL);
     if (code != 0)
         die_krb5(ctx, code, "error creating service principal name");
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
-#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
-    code = krb5_get_init_creds_opt_alloc(ctx, &options.kopts);
+    code = krb5_get_init_creds_opt_alloc(ctx, &private.kopts);
     if (code != 0)
         die_krb5(ctx, code, "error allocating credential options");
-#else
-    options.kopts = xcalloc(1, sizeof(krb5_get_init_creds_opt));
-    krb5_get_init_creds_opt_init(options.kopts);
-#endif
-#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
-                                              options.kprinc->realm,
-                                              options.kopts);
-#endif
-    krb5_get_init_creds_opt_set_tkt_life(options.kopts, life_secs);
+                                              private.kprinc->realm,
+                                              private.kopts);
+    krb5_get_init_creds_opt_set_tkt_life(private.kopts, life_secs);
     if (nonforwardable)
-        krb5_get_init_creds_opt_set_forwardable(options.kopts, 0);
+        krb5_get_init_creds_opt_set_forwardable(private.kopts, 0);
     if (nonproxiable)
-        krb5_get_init_creds_opt_set_proxiable(options.kopts, 0);
+        krb5_get_init_creds_opt_set_proxiable(private.kopts, 0);
 
-    /*
-     * If we're just checking the service ticket, do that and exit if okay.
-     * Still re-run aklog if requested, though, since the token may have
-     * expired or we may be initializing a new PAG from an existing ticket
-     * cache.
-     */
-    if (options.happy_ticket > 0 && command == NULL)
-        if (!ticket_expired(ctx, &options)) {
-            if (options.run_aklog)
-                command_run(options.aklog, options.verbose);
-            exit(0);
-        }
-
-    /*
-     * If built with setpag support and we're running a command, create the
-     * new PAG now before the first authentication.
-     */
-    if (command != NULL && options.run_aklog) {
-        if (k_hasafs()) {
-            if (k_setpag() < 0)
-                sysdie("unable to create PAG");
-        } else {
-            die("cannot create PAG: AFS support is not available");
-        }
-    }
-
-    /*
-     * Now, the actual authentication part.  If -H wasn't set, always
-     * authenticate.  If -H was set, authenticate only if the ticket isn't
-     * expired.
-     */
-    if (options.happy_ticket == 0 || ticket_expired(ctx, &options))
-        authenticate(ctx, &options);
-
-    /* If requested, run the aklog program. */
-    if (options.run_aklog)
-        command_run(options.aklog, options.verbose);
-
-    /* If requested, set the owner, group, and mode of the resulting cache. */
-    if (owner != NULL || group != NULL || mode != NULL)
-        file_permissions(cache, owner, group, mode);
-
-    /*
-     * If told to background, set signal handlers and background ourselves.
-     * We do this late so that we can report initial errors.  We have to do
-     * this before spawning the command, though, since we want to background
-     * the command as well and since otherwise we wouldn't be able to wait for
-     * the child process.
-     */
-    if (background)
-        daemon(0, 0);
-
-    /*
-     * If we're backgrounded, check our ticket and possibly do the
-     * authentication again.  Normally this will never trigger, but on Mac OS
-     * X our ticket cache isn't going to survive the setsid that daemon does
-     * and we've now lost our credentials.
-     */
-    if (background && ticket_expired(ctx, &options))
-        authenticate(ctx, &options);
-
-    /*
-     * Write out the PID file.  Note that we can't report failures usefully,
-     * since this is generally used with -b.
-     */
-    if (pidfile != NULL) {
-        FILE *file;
-
-        file = fopen(pidfile, "w");
-        if (file != NULL) {
-            fprintf(file, "%lu\n", (unsigned long) getpid());
-            fclose(file);
-        }
-    }
-
-    /* Spawn the external command, if we were told to run one. */
-    if (command != NULL) {
-        child = command_start(command[0], command);
-        if (child < 0)
-            sysdie("unable to run command %s", command[0]);
-        if (options.keep_ticket == 0) {
-            options.keep_ticket = lifetime - EXPIRE_FUDGE / 60 - 1;
-            if (options.keep_ticket <= 0)
-                options.keep_ticket = 1;
-        }
-    }
-
-    /* Write out the child PID file.  Again, no useful error reporting. */
-    if (childfile != NULL) {
-        FILE *file;
-
-        file = fopen(childfile, "w");
-        if (file != NULL) {
-            fprintf(file, "%lu\n", (unsigned long) child);
-            fclose(file);
-        }
-    }
-
-    /* Loop if we're running as a daemon. */
-    if (options.keep_ticket > 0) {
-        struct timeval timeout;
-        struct sigaction sa;
-
-        memset(&sa, 0, sizeof(sa));
-        sa.sa_handler = alarm_handler;
-        if (sigaction(SIGALRM, &sa, NULL) < 0)
-            sysdie("cannot set SIGALRM handler");
-        while (1) {
-            if (command != NULL) {
-                result = command_finish(child, &status);
-                if (result < 0)
-                    sysdie("waitpid for %lu failed", (unsigned long) child);
-                if (result > 0)
-                    break;
-            }
-            timeout.tv_sec = options.keep_ticket * 60;
-            timeout.tv_usec = 0;
-            select(0, NULL, NULL, NULL, &timeout);
-            if (alarm_signaled || ticket_expired(ctx, &options)) {
-                authenticate(ctx, &options);
-                if (options.run_aklog)
-                    command_run(options.aklog, options.verbose);
-                if (owner != NULL || group != NULL || mode != NULL)
-                    file_permissions(cache, owner, group, mode);
-                alarm_signaled = 0;
-            }
-        }
-    }
-
-    /*
-     * Otherwise, or when we're done, exit.  clean_cache is only set if we
-     * used mkstemp to generate the ticket cache name.
-     */
-    if (clean_cache) {
-        code = krb5_cc_destroy(ctx, options.ccache);
-        if (code != 0)
-            die_krb5(ctx, code, "unable to destroy ticket cache %s", cache);
-    }
-    exit(status);
+    /* Do the actual work. */
+    run_framework(ctx, &config);
 }

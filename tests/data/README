@@ -1,18 +1,12 @@
 This directory contains data used by kstart's test suite.
 
 To enable tests that require Kerberos authentication and a working
-end-to-end Kerberos environment, create a K5 keytab in the local realm
-and put it in this directory as test.keytab.  Then, create a file named
-test.principal and in it put the principal name corresponding to the
-key in the keytab on a single line ending with a newline.  The presence
-of these two files will enable the tests that actually do Kerberos
+end-to-end Kerberos environment, create a Kerberos keytab in the local
+realm and put it in this directory as test.keytab.  Then, create a file
+named test.principal and in it put the principal name corresponding to the
+key in the keytab on a single line ending with a newline.  The presence of
+these two files will enable the tests that actually do Kerberos
 authentication.
-
-To enable k4start tests, also create a test.srvtab file containing a
-srvtab for the same principal (the one named in test.principal).  The K4
-principal name will be derived from the contents of test.principal with
-everything after the first period stripped and then all slashes changed to
-periods.
 
 In order to test AFS PAG and token handling (only applicable if built with
 --enable-setpag), be sure that you have an AFS token before you run the

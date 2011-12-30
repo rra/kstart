@@ -1,0 +1,58 @@
+#!/usr/bin/perl -w
+#
+# Tests for k5start support of keyrings.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2011
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $K5START = "$ENV{BUILD}/../k5start";
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = "$ENV{BUILD}/data";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# Decide whether we have the configuration to run the tests.
+my $principal;
+if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
+    plan skip_all => 'no keytab configuration';
+    exit 0;
+} else {
+    $principal = contents ("$DATA/test.principal");
+    $ENV{KRB5CCNAME} = 'KEYRING:test';
+    unless (kinit ("$DATA/test.keytab", $principal) && !-f 'KEYRING:test') {
+        plan skip_all => 'cannot use keyring caches';
+        exit 0;
+    }
+    plan tests => 14;
+}
+
+# Basic authentication test.
+my ($out, $err, $status) = command ($K5START, '-Uf', "$DATA/test.keytab");
+is ($status, 0, 'Basic k5start command succeeds');
+is ($err, '', ' with no errors');
+like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
+      ' and the right output');
+my ($default, $service) = klist ();
+like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
+like ($service, qr%^krbtgt/%, ' and the right service');
+system ('kdestroy');
+
+# We should get an error if we try to use a non-FILE keyring with -o, -g, or
+# -m.
+for my $flag (qw/-o -g -m/) {
+    ($out, $err, $status)
+        = command ($K5START, $flag, 640, '-Uf', "$DATA/test.keytab");
+    is ($status, 1, "k5start $flag with keyring fails");
+    is ($err, "k5start: cache type KEYRING not allowed with -o, -g, or -m\n",
+        ' with correct error');
+    is ($out, '', ' and no output');
+}
+system ('kdestroy');

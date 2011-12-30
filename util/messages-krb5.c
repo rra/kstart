@@ -1,99 +1,44 @@
 /*
- * Error handling for Kerberos v5.
+ * Error handling for Kerberos.
  *
  * Provides versions of die and warn that take a Kerberos context and a
  * Kerberos error code and append the Kerberos error message to the provided
  * formatted message.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009
- *     Board of Trustees, Leland Stanford Jr. University
+ * The canonical version of this file is maintained in the rra-c-util package,
+ * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * See LICENSE for licensing terms.
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Copyright 2006, 2007, 2008, 2009, 2010
+ *     The Board of Trustees of the Leland Stanford Junior University
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
-
-#include <krb5.h>
-#if !defined(HAVE_KRB5_GET_ERROR_MESSAGE) && !defined(HAVE_KRB5_GET_ERR_TEXT)
-# if !defined(HAVE_KRB5_GET_ERROR_STRING)
-#  if defined(HAVE_IBM_SVC_KRB5_SVC_H)
-#   include <ibm_svc/krb5_svc.h>
-#  elif defined(HAVE_ET_COM_ERR_H)
-#   include <et/com_err.h>
-#  else
-#   include <com_err.h>
-#  endif
-# endif
-#endif
 
 #include <util/macros.h>
 #include <util/messages.h>
 #include <util/messages-krb5.h>
 #include <util/xmalloc.h>
-
-/*
- * This string is returned for unknown error messages.  We use a static
- * variable so that we can be sure not to free it.
- */
-static const char error_unknown[] = "unknown error";
-
-
-/*
- * Given a Kerberos error code, return the corresponding error.  Prefer the
- * Kerberos interface if available since it will provide context-specific
- * error information, whereas the error_message() call will only provide a
- * fixed message.
- *
- * This function should be called immediately after the corresponding error,
- * without any intervening Kerberos calls.  Otherwise, the correct error
- * message may not be returned.
- */
-static const char *
-get_error(krb5_context ctx UNUSED, krb5_error_code code UNUSED)
-{
-    const char *msg = NULL;
-
-#if defined(HAVE_KRB5_GET_ERROR_MESSAGE)
-    msg = krb5_get_error_message(ctx, code);
-#elif defined(HAVE_KRB5_GET_ERROR_STRING)
-    msg = krb5_get_error_string(ctx);
-#elif defined(HAVE_KRB5_GET_ERR_TEXT)
-    msg = krb5_get_err_text(ctx, code);
-#elif defined(HAVE_KRB5_SVC_GET_MSG)
-    krb5_svc_get_msg(code, (char **) &msg);
-#else
-    msg = error_message(code);
-#endif
-    if (msg == NULL)
-        return error_unknown;
-    else
-        return msg;
-}
-
-
-/*
- * Free an error string if necessary.  If we returned a static string, make
- * sure we don't free it.
- *
- * This code assumes that the set of implementations that have
- * krb5_free_error_message is a subset of those with krb5_get_error_message.
- * If this assumption ever breaks, we may call the wrong free function.
- */
-static void
-free_error(krb5_context ctx UNUSED, const char *msg)
-{
-    if (msg == error_unknown)
-        return;
-#if defined(HAVE_KRB5_FREE_ERROR_MESSAGE)
-    krb5_free_error_message(ctx, msg);
-#elif defined(HAVE_KRB5_GET_ERROR_STRING)
-    krb5_free_error_string(ctx, (char *) msg);
-#elif defined(HAVE_KRB5_SVC_GET_MSG)
-    krb5_free_string(ctx, (char *) msg);
-#endif
-}
 
 
 /*
@@ -106,12 +51,16 @@ die_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     char *message;
     va_list args;
 
-    k5_msg = get_error(ctx, code);
+    if (ctx != NULL)
+        k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
     if (xvasprintf(&message, format, args) < 0)
         die("internal error: unable to format error message");
     va_end(args);
-    die("%s: %s", message, k5_msg);
+    if (k5_msg == NULL)
+        die("%s", message);
+    else
+        die("%s: %s", message, k5_msg);
 }
 
 
@@ -125,12 +74,17 @@ warn_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     char *message;
     va_list args;
 
-    k5_msg = get_error(ctx, code);
+    if (ctx != NULL)
+        k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
     if (xvasprintf(&message, format, args) < 0)
         die("internal error: unable to format error message");
     va_end(args);
-    warn("%s: %s", message, k5_msg);
+    if (k5_msg == NULL)
+        warn("%s", message);
+    else
+        warn("%s: %s", message, k5_msg);
     free(message);
-    free_error(ctx, k5_msg);
+    if (k5_msg != NULL)
+        krb5_free_error_message(ctx, k5_msg);
 }

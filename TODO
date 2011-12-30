@@ -2,15 +2,23 @@
 
 General:
 
- * k4start, k5start, and krenew have almost identical structure.  Redesign
-   them to use a standard driver frontend with callbacks for the things
-   that differ between the three programs, which will significantly reduce
-   code duplication.
+ * If we encounter an error renewing the ticket cache, don't don't wait
+   the normal period; instead, shorten the wakeup period and keep retrying
+   until the error resolves itself.
+
+ * Clean up the PID files and any temporary ticket cache on receipt of
+   SIGHUP or SIGTERM rather than just exiting.
 
 k5start:
 
- * Add support to k5start for obtaining K4 tickets in addition to K5
-   tickets, using the DES key in a keytab.
+ * Attempt to renew the ticket before prompting the user for a new
+   password when run with the -H flag with a ticket that will be expiring.
+
+ * Provide a flag like -H that checks the status of the ticket but
+   just exits with a zero or non-zero exit status instead of prompting.
+
+ * Add support to k5start for obtaining Kerberos v4 tickets using the DES
+   key in a keytab.
 
  * Add a flag saying to start a command in a PAG and with tokens and then
    keep running even if the command exits.  This would be useful to spawn
@@ -23,14 +31,6 @@ k5start:
    In this case, there's no reason for k5start to keep running once the
    command has been started, so it can simply exit after spawning the
    command.
-
- * Add a flag similar to krenew -i that continues running despite errors.
-
-krenew:
-
- * If we encounter an error renewing the ticket cache and the -i flag is
-   in use, don't wait the normal period; instead, shorten the wakeup
-   period and keep retrying until the error resolves itself.
 
 Documentation:
 
@@ -47,11 +47,11 @@ Test suite:
  * Test that -K and running a command wakes up periodically and renews
    tickets for both krenew and k5start.
 
- * Add tests for k4start and k5start password prompting, either from
-   standard input or from a TTY.
+ * Add tests for k5start password prompting, either from standard input or
+   from a TTY.
 
- * Add error tests for invalid combinations of command-line options or
-   invalid settings for those options in k4start, k5start, and krenew.
+ * Move tests/libtest.pl into rra-c-util and break it apart into
+   functionality groups.
 
- * Add tests of -o, -g, and -m.  Testing -o and -g will require using
-   fakeroot.
+ * Refactor all test cases to reduce copy-and-paste code and use more
+   helper functions.
