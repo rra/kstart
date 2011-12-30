@@ -67,18 +67,18 @@ REQUIREMENTS
   not given, the first of aklog or afslog that is found on your path at
   configure time will be used.
 
-  AFS PAG support on platforms other than Linux requires the kopenafs
-  library that comes with OpenAFS, the kafs library that comes with
-  Heimdal, AFS header files (on any other platform besides AIX or IRIX),
-  or AFS libraries (on AIX and IRIX).  AIX binaries with AFS PAG support
-  may not run on AIX systems that do not have an AFS client installed due
-  to how AIX handles system calls.  On Linux, kstart uses its own internal
-  implementation of the AFS system call interface and doesn't require any
-  external libraries.
+  To build the the kafs portability layer, one of Linux, Mac OS X, Solaris
+  11, the kafs library that comes with either Heimdal or KTH Kerberos, the
+  kopenafs library that comes with newer OpenAFS, AFS header files (on any
+  other platform besides AIX or IRIX), or AFS libraries (on AIX and IRIX)
+  is required.  AIX binaries with AFS PAG support may not run on AIX
+  systems that do not have an AFS client installed due to how AIX handles
+  system calls.
 
   To run the test suite, you must have the Perl 5.006 or later and the
   modules Test::More and Test::Pod installed.  Test::More comes with Perl
-  5.8 or later and Test::Pod is available from CPAN.
+  5.8 or later and Test::Pod is available from CPAN.  You will also need
+  the kinit and klist commands to be from MIT Kerberos, not Heimdal.
 
   To check spelling in the POD documentation, Pod::Spell (available from
   CPAN) and either aspell or ispell with the american dictionary are also
@@ -200,7 +200,7 @@ TESTING
   and follow the instructions in that file to enable the full test suite.
 
   The test suite also requires some additional software be installed that
-  isn't otherwise used by the wallet.  See REQUIREMENTS above for the full
+  isn't otherwise used by kstart.  See REQUIREMENTS above for the full
   list of requirements for the test suite.  The test driver attempts to
   selectively skip those tests for which the necessary configuration is
   not available, but this has not yet been fully tested in all of its
