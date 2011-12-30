@@ -32,6 +32,11 @@ k5start:
    command has been started, so it can simply exit after spawning the
    command.
 
+krenew:
+
+ * Add an option to send SIGHUP to the child process when krenew exits
+   because the ticket is no longer renewable.
+
 Documentation:
 
  * Document how to start Apache with tickets and AFS tokens, either using
