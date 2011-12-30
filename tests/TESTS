@@ -5,6 +5,7 @@ k5start/basic
 k5start/daemon
 k5start/errors
 k5start/flags
+k5start/keyring
 k5start/perms
 k5start/sigchld
 kafs/basic
@@ -13,6 +14,7 @@ krenew/afs
 krenew/basic
 krenew/daemon
 krenew/errors
+krenew/keyring
 portable/asprintf
 portable/daemon
 portable/mkstemp

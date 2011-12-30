@@ -308,9 +308,11 @@ main(int argc, char *argv[])
         config.cache = copy_cache(ctx, &ccache);
         config.clean_cache = true;
     }
-    if (config.cache == NULL)
-        config.cache = xstrdup(krb5_cc_get_name(ctx, ccache));
-    else {
+    if (config.cache == NULL) {
+        code = krb5_cc_get_full_name(ctx, ccache, (char **) &config.cache);
+        if (code != 0)
+            die_krb5(ctx, code, "error getting ticket cache name");
+    } else {
         if (setenv("KRB5CCNAME", config.cache, 1) != 0)
             die("cannot set KRB5CCNAME environment variable");
     }
