@@ -1,5 +1,5 @@
 /*
- * Error handling for Kerberos v5.
+ * Error handling for Kerberos.
  *
  * Provides versions of die and warn that take a Kerberos context and a
  * Kerberos error code and append the Kerberos error message to the provided
