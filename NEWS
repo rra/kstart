@@ -1,5 +1,12 @@
                        User-Visible kstart Changes
 
+kstart 4.1 (unreleased)
+
+    Fix a regression introduced in kstart 4.0 that caused k5start -H and
+    krenew -H to fail and attempt reauthentication with non-renewable
+    tickets even if the lifetime was long enough.  Thanks to pod for the
+    report.
+
 kstart 4.0 (2011-12-29)
 
     Remove k4start from the distribution.  I no longer have a Kerberos v4

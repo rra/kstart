@@ -20,7 +20,7 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -158,11 +158,15 @@ ticket_expired(krb5_context ctx, struct config *config)
          * is arbitrary.  It just needs to be different than the error code
          * that indicates we can renew the ticket and coordinated with the
          * check in krenew's authentication callback.
+         *
+         * If the ticket is not going to expire, we skip this check.
+         * Otherwise, krenew -H 1 would fail even if the ticket had plenty of
+         * remaining lifespan if it was not renewable.
          */
-        then = outcreds->times.renew_till;
-        if (then < now + offset) {
-            code = KRB5KDC_ERR_KEY_EXP;
-            goto done;
+        if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+            then = outcreds->times.renew_till;
+            if (then < now + offset)
+                code = KRB5KDC_ERR_KEY_EXP;
         }
     }
 

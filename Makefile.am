@@ -12,10 +12,11 @@ EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k5start.pod   \
 	tests/data/command tests/data/fake-aklog tests/docs/pod-spelling-t  \
 	tests/docs/pod-t tests/k5start/afs-t tests/k5start/basic-t	    \
 	tests/k5start/daemon-t tests/k5start/errors-t tests/k5start/flags-t \
-	tests/k5start/keyring-t tests/k5start/perms-t			    \
-	tests/k5start/sigchld-t tests/kafs/basic-t tests/krenew/afs-t	    \
-	tests/krenew/basic-t tests/krenew/daemon-t tests/krenew/errors-t    \
-	tests/krenew/keyring-t tests/libtest.pl tests/tap/libtap.sh	    \
+	tests/k5start/keyring-t tests/k5start/non-renewable-t		    \
+	tests/k5start/perms-t tests/k5start/sigchld-t tests/kafs/basic-t    \
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	    \
+	tests/krenew/errors-t tests/krenew/keyring-t			    \
+	tests/krenew/non-renewable-t tests/libtest.pl tests/tap/libtap.sh   \
 	tests/util/xmalloc-t
 
 # The following library order matters for annoying reasons.  Older
