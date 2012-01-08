@@ -7,7 +7,7 @@
  * interface to run_framework.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2011
+ * Copyright 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -45,6 +45,19 @@ struct config {
 
     const char *cache;          /* Ticket cache to maintain. */
 
+    /*
+     * Desired principal.  If set, checks ticket cache for that principal in
+     * particular and considers the ticket expired if it's not for that
+     * principal.
+     */
+    krb5_principal client;
+
+    /*
+     * The PID of the running child.  This is stored in the config struct so
+     * that the calling program can access it during the cleanup callback.
+     */
+    pid_t child;
+
     /* Private data for the two programs. */
     union {
         struct k5start_private *k5start;
@@ -53,6 +66,7 @@ struct config {
 
     /* Callbacks. */
     krb5_error_code (*auth)(krb5_context, struct config *, krb5_error_code);
+    void (*cleanup)(krb5_context, struct config *, krb5_error_code);
 };
 
 BEGIN_DECLS

@@ -1,6 +1,6 @@
 =for stopwords
--bhiLtvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew Ctrl-C
+-bhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense designator krenew Ctrl-C SIGHUP
 
 =head1 NAME
 
@@ -8,7 +8,7 @@ krenew - Renew a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhiLtvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-bhiLstvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-p> I<pid file>]
     [I<command> ...]
 
@@ -144,6 +144,11 @@ renews the ticket if needed.  If this option is not given but a command
 was given on the command line, the default interval is 60 minutes (1
 hour).
 
+If an error occurs in refreshing the ticket cache that doesn't cause
+B<krenew> to exit, the wake-up interval will be shortened to one minute
+and the operation retried at that interval for as long as the error
+persists.
+
 =item B<-k> I<ticket cache>
 
 Use I<ticket cache> as the ticket cache rather than the contents of the
@@ -174,6 +179,14 @@ Note that, when used with B<-b> the PID file is written out after
 B<krenew> is backgrounded and changes its working directory to F</>, so
 relative paths for the PID file will be relative to F</> (probably not
 what you want).
+
+=item B<-s>
+
+Normally, when B<krenew> exits abnormally while running a command (if, for
+example, the ticket's renewable lifetime has expired), it leaves the
+command running.  If B<-s> is given, it will send a SIGHUP signal to the
+command before exiting.  This can be useful if it's pointless for the
+command to keep running without Kerberos tickets.
 
 =item B<-t>
 

@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "KRENEW 1"
-.TH KRENEW 1 "2011-12-29" "4.0" "kstart"
+.TH KRENEW 1 "2012-01-07" "4.1" "kstart"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -133,7 +133,7 @@
 krenew \- Renew a Kerberos ticket
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBkrenew\fR [\fB\-bhiLtvx\fR] [\fB\-c\fR \fIchild pid file\fR] [\fB\-H\fR \fIminutes\fR]
+\&\fBkrenew\fR [\fB\-bhiLstvx\fR] [\fB\-c\fR \fIchild pid file\fR] [\fB\-H\fR \fIminutes\fR]
     [\fB\-K\fR \fIminutes\fR] [\fB\-k\fR \fIticket cache\fR] [\fB\-p\fR \fIpid file\fR]
     [\fIcommand\fR ...]
 .SH "DESCRIPTION"
@@ -261,6 +261,11 @@ before or less than two minutes before the next scheduled check, and
 renews the ticket if needed.  If this option is not given but a command
 was given on the command line, the default interval is 60 minutes (1
 hour).
+.Sp
+If an error occurs in refreshing the ticket cache that doesn't cause
+\&\fBkrenew\fR to exit, the wake-up interval will be shortened to one minute
+and the operation retried at that interval for as long as the error
+persists.
 .IP "\fB\-k\fR \fIticket cache\fR" 4
 .IX Item "-k ticket cache"
 Use \fIticket cache\fR as the ticket cache rather than the contents of the
@@ -289,6 +294,13 @@ Note that, when used with \fB\-b\fR the \s-1PID\s0 file is written out after
 \&\fBkrenew\fR is backgrounded and changes its working directory to \fI/\fR, so
 relative paths for the \s-1PID\s0 file will be relative to \fI/\fR (probably not
 what you want).
+.IP "\fB\-s\fR" 4
+.IX Item "-s"
+Normally, when \fBkrenew\fR exits abnormally while running a command (if, for
+example, the ticket's renewable lifetime has expired), it leaves the
+command running.  If \fB\-s\fR is given, it will send a \s-1SIGHUP\s0 signal to the
+command before exiting.  This can be useful if it's pointless for the
+command to keep running without Kerberos tickets.
 .IP "\fB\-t\fR" 4
 .IX Item "-t"
 Run an external program after getting a ticket.  The default use of this
