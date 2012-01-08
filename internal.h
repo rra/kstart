@@ -7,7 +7,7 @@
  * interface to run_framework.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2011
+ * Copyright 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -44,6 +44,13 @@ struct config {
     const char *pidfile;        /* Path to PID file to write out. */
 
     const char *cache;          /* Ticket cache to maintain. */
+
+    /*
+     * Desired principal.  If set, checks ticket cache for that principal in
+     * particular and considers the ticket expired if it's not for that
+     * principal.
+     */
+    krb5_principal client;
 
     /* Private data for the two programs. */
     union {

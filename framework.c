@@ -131,9 +131,13 @@ ticket_expired(krb5_context ctx, struct config *config)
     code = krb5_cc_resolve(ctx, config->cache, &ccache);
     if (code != 0)
         goto done;
-    code = krb5_cc_get_principal(ctx, ccache, &increds.client);
-    if (code != 0)
-        goto done;
+    if (config->client != NULL)
+        increds.client = config->client;
+    else {
+        code = krb5_cc_get_principal(ctx, ccache, &increds.client);
+        if (code != 0)
+            goto done;
+    }
     code = get_krbtgt_princ(ctx, increds.client, &increds.server);
     if (code != 0)
         goto done;
@@ -171,10 +175,18 @@ ticket_expired(krb5_context ctx, struct config *config)
     }
 
 done:
+    if (increds.client == config->client)
+        increds.client = NULL;
     if (ccache != NULL)
         krb5_cc_close(ctx, ccache);
     if (increds_valid)
         krb5_free_cred_contents(ctx, &increds);
+    else {
+        if (increds.client != NULL)
+            krb5_free_principal(ctx, increds.client);
+        if (increds.server != NULL)
+            krb5_free_principal(ctx, increds.server);
+    }
     if (outcreds != NULL)
         krb5_free_creds(ctx, outcreds);
     return code;
