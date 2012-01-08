@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 4.1 (unreleased)
+kstart 4.1 (2012-01-07)
 
     Fix a regression introduced in kstart 4.0 that caused k5start -H and
     krenew -H to fail and attempt reauthentication with non-renewable
