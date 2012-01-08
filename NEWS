@@ -16,6 +16,9 @@ kstart 4.1 (unreleased)
     renew the ticket.  This is useful when continuing to run the command
     without a valid ticket would be pointless.
 
+    After a SIGHUP or SIGTERM when not running a command, k5start and
+    krenew now clean up their PID files, if any, before exiting.
+
 kstart 4.0 (2011-12-29)
 
     Remove k4start from the distribution.  I no longer have a Kerberos v4

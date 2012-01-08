@@ -3,7 +3,7 @@
 # Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2008, 2009, 2011
+# Copyright 2008, 2009, 2011, 2012
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -30,7 +30,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 72;
+    plan tests => 76;
 } else {
     plan skip_all => "no keytab configuration";
     exit 0;
@@ -83,7 +83,7 @@ like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
 like ($service, qr%^krbtgt/%, ' and the right service');
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
 is (waitpid ($pid, 0), $pid, ' and k5start dies after SIGTERM');
-unlink "$TMP/pid";
+ok (!-f "$TMP/pid", ' and the PID file was removed');
 
 # Try again with the -b flag.
 unlink "$TMP/krb5cc_test";
@@ -105,7 +105,8 @@ like ($service, qr%^krbtgt/%, ' and the right service');
 $pid = contents ("$TMP/pid");
 ok (kill (0, $pid), ' and the PID file is correct');
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
-unlink "$TMP/pid";
+select (undef, undef, undef, 0.2);
+ok (!-f "$TMP/pid", ' and the PID file was removed');
 
 # Check that k5start keeps running if the ticket cache directory is not
 # writeable.
@@ -138,7 +139,8 @@ if (open (ERRORS, '<', "$TMP/k5start-errors")) {
 }
 unlink "$TMP/k5start-errors";
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
-unlink "$TMP/pid";
+is (waitpid ($pid, 0), $pid, ' and k5start dies after SIGTERM');
+ok (!-f "$TMP/pid", ' and the PID file was removed');
 
 # If we do that again with -x, k5start should exit.
 ($out, $err, $status)

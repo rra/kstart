@@ -58,6 +58,13 @@
  */
 static volatile sig_atomic_t alarm_signaled = 0;
 
+/*
+ * Set when the program receives SIGHUP or SIGTERM to do cleanup and exit.
+ * These signal handlers are only used when we're not running a command, since
+ * running a command provides its own signal handlers.
+ */
+static volatile sig_atomic_t exit_signaled = 0;
+
 
 /*
  * Convert from a string to a number, checking errors, and return -1 on any
@@ -85,6 +92,17 @@ static void
 alarm_handler(int s UNUSED)
 {
     alarm_signaled = 1;
+}
+
+
+/*
+ * Signal handler for SIGHUP and SIGTERM.  Just sets the global sentinel
+ * variable.
+ */
+static void
+exit_handler(int s UNUSED)
+{
+    exit_signaled = 1;
 }
 
 
@@ -215,6 +233,24 @@ write_pidfile(const char *path, pid_t pid)
 
 
 /*
+ * Add a signal handler, exiting if there was a failure.
+ */
+static void
+add_handler(krb5_context ctx, struct config *config, void (*handler)(int),
+            int sig, const char *name)
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handler;
+    if (sigaction(sig, &sa, NULL) < 0) {
+        syswarn("cannot set %s handler", name);
+        exit_cleanup(ctx, config, 1);
+    }
+}
+
+
+/*
  * The primary entry point of the framework.  Both k5start and krenew call
  * this function after setting up the options and configuration to do the real
  * work.  This function never returns.
@@ -307,14 +343,12 @@ run_framework(krb5_context ctx, struct config *config)
     /* Loop if we're running as a daemon. */
     if (config->keep_ticket > 0) {
         struct timeval timeout;
-        struct sigaction sa;
 
         code = 0;
-        memset(&sa, 0, sizeof(sa));
-        sa.sa_handler = alarm_handler;
-        if (sigaction(SIGALRM, &sa, NULL) < 0) {
-            syswarn("cannot set SIGALRM handler");
-            exit_cleanup(ctx, config, 1);
+        add_handler(ctx, config, alarm_handler, SIGALRM, "SIGALRM");
+        if (config->command == NULL) {
+            add_handler(ctx, config, exit_handler, SIGHUP, "SIGHUP");
+            add_handler(ctx, config, exit_handler, SIGTERM, "SIGTERM");
         }
         while (1) {
             if (config->command != NULL) {
@@ -331,6 +365,8 @@ run_framework(krb5_context ctx, struct config *config)
             timeout.tv_sec = config->keep_ticket * 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
+            if (exit_signaled)
+                exit_cleanup(ctx, config, 0);
             code = ticket_expired(ctx, config);
             if (alarm_signaled || code != 0) {
                 code = config->auth(ctx, config, code);

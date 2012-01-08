@@ -6,9 +6,6 @@ General:
    the normal period; instead, shorten the wakeup period and keep retrying
    until the error resolves itself.
 
- * Clean up the PID files and any temporary ticket cache on receipt of
-   SIGHUP or SIGTERM rather than just exiting.
-
 k5start:
 
  * Attempt to renew the ticket before prompting the user for a new
