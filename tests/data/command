@@ -16,5 +16,6 @@ $SIG{TERM} = sub { print OUT "got SIGTERM\n"; exit 0 };
 print "Starting\n";
 my $file = shift;
 open (OUT, '>', $file) or die "Cannot write to $file: $!\n";
+OUT->autoflush (1);
 print OUT "$$\n", getcwd, "\n", $ENV{KRB5CCNAME}, "\n";
 sleep 1000 while 1;

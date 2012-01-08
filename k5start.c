@@ -12,7 +12,7 @@
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <rra@stanford.edu>
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010, 2011
+ *     2008, 2009, 2010, 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -46,7 +46,6 @@
  * structures where appropriate.
  */
 struct k5start_private {
-    krb5_principal kprinc;      /* Client principal. */
     char *service;              /* Service for which to get credentials. */
     krb5_principal ksprinc;     /* Service principal. */
     const char *keytab;         /* Keytab to use to authenticate. */
@@ -197,7 +196,7 @@ authenticate(krb5_context ctx, struct config *config,
     if (config->verbose) {
         char *p;
 
-        code = krb5_unparse_name(ctx, private->kprinc, &p);
+        code = krb5_unparse_name(ctx, config->client, &p);
         if (code != 0)
             warn_krb5(ctx, code, "error unparsing name");
         else {
@@ -216,11 +215,11 @@ authenticate(krb5_context ctx, struct config *config,
                       private->keytab);
             return code;
         }
-        code = krb5_get_init_creds_keytab(ctx, &creds, private->kprinc,
+        code = krb5_get_init_creds_keytab(ctx, &creds, config->client,
                                           keytab, 0, private->service,
                                           private->kopts);
     } else if (!private->stdin_passwd) {
-        code = krb5_get_init_creds_password(ctx, &creds, private->kprinc,
+        code = krb5_get_init_creds_password(ctx, &creds, config->client,
                                             NULL, krb5_prompter_posix, NULL,
                                             0, private->service,
                                             private->kopts);
@@ -237,7 +236,7 @@ authenticate(krb5_context ctx, struct config *config,
             warn("password too long");
             return KRB5_LIBOS_CANTREADPWD;
         }
-        code = krb5_get_init_creds_password(ctx, &creds, private->kprinc,
+        code = krb5_get_init_creds_password(ctx, &creds, config->client,
                                             buffer, NULL, NULL, 0,
                                             private->service,
                                             private->kopts);
@@ -253,7 +252,7 @@ authenticate(krb5_context ctx, struct config *config,
         warn_krb5(ctx, code, "error creating ticket cache");
         goto done;
     }
-    code = krb5_cc_initialize(ctx, ccache, private->kprinc);
+    code = krb5_cc_initialize(ctx, ccache, config->client);
     if (code != 0) {
         warn_krb5(ctx, code, "error initializing ticket cache");
         goto done;
@@ -281,7 +280,7 @@ authenticate(krb5_context ctx, struct config *config,
 
 done:
     /* Make sure that we don't free princ; we use it later. */
-    if (creds.client == private->kprinc)
+    if (creds.client == config->client)
         creds.client = NULL;
     if (cache != config->cache)
         free((char *) cache);
@@ -604,7 +603,7 @@ main(int argc, char *argv[])
     if (inst != NULL)
         if (xasprintf(&principal, "%s/%s", principal, inst) < 0)
             die("cannot format principal name");
-    code = krb5_parse_name(ctx, principal, &private.kprinc);
+    code = krb5_parse_name(ctx, principal, &config.client);
     if (code != 0)
         die_krb5(ctx, code, "error parsing %s", principal);
 
@@ -619,7 +618,7 @@ main(int argc, char *argv[])
     if (!private.quiet) {
         char *p;
 
-        code = krb5_unparse_name(ctx, private.kprinc, &p);
+        code = krb5_unparse_name(ctx, config.client, &p);
         if (code != 0)
             die_krb5(ctx, code, "error unparsing name %s", principal);
         printf("Kerberos initialization for %s", p);
@@ -636,7 +635,7 @@ main(int argc, char *argv[])
 
     /* Flesh out the name of the service ticket that we're obtaining. */
     if (srealm == NULL)
-        srealm = krb5_principal_get_realm(ctx, private.kprinc);
+        srealm = krb5_principal_get_realm(ctx, config.client);
     if (srealm == NULL)
         die_krb5(ctx, code, "cannot get service ticket realm");
     if (sname == NULL)
@@ -656,7 +655,7 @@ main(int argc, char *argv[])
     if (code != 0)
         die_krb5(ctx, code, "error allocating credential options");
     krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
-                                              private.kprinc->realm,
+                                              config.client->realm,
                                               private.kopts);
     krb5_get_init_creds_opt_set_tkt_life(private.kopts, life_secs);
     if (nonforwardable)

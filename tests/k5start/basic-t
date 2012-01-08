@@ -21,7 +21,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 83;
+    plan tests => 89;
 } else {
     plan skip_all => 'no keytab configuration';
     exit 0;
@@ -143,11 +143,20 @@ is ($status, 0, ' and k5start -H 10 succeeds without reauthenticating');
 is ($err, '', ' with no errors');
 is ($out, '', ' and no output');
 
+# Attempt to authenticate as some other principal.  This should fail even
+# though we have a valid ticket, since we don't have a valid ticket for the
+# principal we want.
+($out, $err, $status) = command ($K5START, '-H', 10, '-f', '/nonexistent',
+                                 'bogus@EXAMPLE.COM');
+is ($status, 1, ' and k5start -H 10 bogus tries to reauthenticate');
+like ($err, qr/^k5start: error getting credentials: /, ' with correct error');
+is ($out, '', ' and no output');
+
 # Get a ticket for ourselves rather than a krbtgt and test verbose.  We
 # need an instance here or we get weird results due to the defaults if -I
 # isn't provided.
 SKIP: {
-    skip 'test principal has no instance', 5 unless $inst;
+    skip 'test principal has no instance', 8 unless $inst;
     unlink 'krb5cc_test';
     ($out, $err, $status) = command ($K5START, '-S', $name, '-I', $inst,
                                      '-vUf', "$DATA/test.keytab");
@@ -165,6 +174,15 @@ SKIP: {
     like ($default, qr/^\Q$principal\E(\@\S+)?\z/,
           ' for the right principal');
     like ($service, qr/^\Q$principal\E(\@\S+)?\z/, ' and the right service');
+
+    # We now don't have a krbtgt ticket, so a regular k5start -H will attempt
+    # to reauthenticate.
+    ($out, $err, $status) = command ($K5START, '-H', 10, '-f', '/nonexistent',
+                                     $principal);
+    is ($status, 1, ' and k5start -H 10 tries to reauthenticate');
+    like ($err, qr/^k5start: error getting credentials: /,
+          ' with correct error');
+    is ($out, '', ' and no output');
 }
 
 # Test running a command without the principal.  klist may fail if we have

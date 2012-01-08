@@ -8,7 +8,7 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -18,6 +18,7 @@
 #include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <signal.h>
 #include <sys/stat.h>
 #include <syslog.h>
 #include <time.h>
@@ -28,6 +29,11 @@
 #include <util/messages.h>
 #include <util/messages-krb5.h>
 #include <util/xmalloc.h>
+
+/* Holds the command-line options we need to pass to our callbacks. */
+struct krenew_private {
+    bool signal_child;          /* Kill child on abnormal exit. */
+};
 
 /* The usage message. */
 const char usage_message[] = "\
@@ -44,6 +50,7 @@ Usage: krenew [options] [command]\n\
    -k <cache>           Use <cache> as the ticket cache\n\
    -L                   Log messages via syslog as well as stderr\n\
    -p <file>            Write process ID (PID) to <file>\n\
+   -s                   Send SIGHUP to command when ticket cannot be renewed\n\
    -t                   Get AFS token via aklog or AKLOG\n\
    -v                   Verbose\n\
    -x                   Exit immediately on any error\n\
@@ -225,6 +232,20 @@ done:
 }
 
 
+/*
+ * The cleanup callback.  All that we do here is send SIGHUP to the child
+ * process if it's still running (config->child isn't 0) and we were
+ * configured to do so.
+ */
+static void
+cleanup(krb5_context ctx UNUSED, struct config *config,
+        krb5_error_code status UNUSED)
+{
+    if (config->child != 0 && config->private.krenew->signal_child)
+        kill(config->child, SIGHUP);
+}
+
+
 int
 main(int argc, char *argv[])
 {
@@ -232,6 +253,7 @@ main(int argc, char *argv[])
     krb5_context ctx;
     krb5_error_code code;
     struct config config;
+    struct krenew_private private;
     krb5_ccache ccache;
 
     /* Initialize logging. */
@@ -239,9 +261,11 @@ main(int argc, char *argv[])
 
     /* Set up configuration and parse command-line options. */
     memset(&config, 0, sizeof(config));
-    config.private.krenew = NULL;
+    memset(&private, 0, sizeof(private));
+    config.private.krenew = &private;
     config.auth = renew;
-    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qtvx")) != EOF)
+    config.cleanup = cleanup;
+    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qstvx")) != EOF)
         switch (option) {
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
@@ -249,6 +273,7 @@ main(int argc, char *argv[])
         case 'i': config.ignore_errors = true;  break;
         case 'k': config.cache = optarg;        break;
         case 'p': config.pidfile = optarg;      break;
+        case 's': private.signal_child = true;  break;
         case 't': config.do_aklog = true;       break;
         case 'v': config.verbose = true;        break;
         case 'x': config.exit_errors = true;    break;
@@ -293,6 +318,8 @@ main(int argc, char *argv[])
         die("-H option cannot be used with a command");
     if (config.childfile != NULL && config.command == NULL)
         die("-c option only makes sense with a command to run");
+    if (private.signal_child && config.command == NULL)
+        die("-s option only makes sense with a command to run");
 
     /* Establish a Kerberos context and set the ticket cache. */
     code = krb5_init_context(&ctx);

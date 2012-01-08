@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+#
+# Ensure that non-renewable tickets don't cause spurious failure.
+#
+# k5start 4.0 had a bug where if tickets weren't renewable, k5start -H 1 would
+# attempt to reauthenticate.  Ensure that bug doesn't recur.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2012
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use Test::More;
+
+# The full path to the newly-built k5start client.
+our $K5START = "$ENV{BUILD}/../k5start";
+
+# The path to our data directory, which contains the keytab to use to test.
+our $DATA = "$ENV{BUILD}/data";
+
+# Load our test utility programs.
+require "$ENV{SOURCE}/libtest.pl";
+
+# We have to generate a local krb5.conf that disables any attempt to get
+# renewable tickets.  Try to locate the local krb5.conf that we're supposed to
+# use and skip if we can't find one.
+my $krb5conf = $ENV{KRB5_CONFIG};
+unless ($krb5conf) {
+    for my $path ('/etc', '/usr/local/etc', "$ENV{BUILD}/data") {
+        if (-r "$path/krb5.conf") {
+            $krb5conf = "$path/krb5.conf";
+            last;
+        }
+    }
+}
+if ($krb5conf) {
+    open (CONF, '<', $krb5conf) or BAIL_OUT ("cannot open $krb5conf: $!");
+    open (NEWCONF, '>', './krb5.conf')
+        or BAIL_OUT ("cannot create krb5.conf: $!");
+    while (<CONF>) {
+        next if /^\s*renew_lifetime\b/;
+        print NEWCONF $_;
+    }
+    close CONF;
+    close NEWCONF;
+    $ENV{KRB5_CONFIG} = './krb5.conf';
+} else {
+    plan skip_all => "no krb5.conf found, set KRB5_CONFIG";
+    exit 0;
+}
+
+# Decide whether we have the configuration to run the tests.
+my $principal;
+if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
+    unlink 'krb5.conf';
+    plan skip_all => "no keytab configuration";
+    exit 0;
+} else {
+    $principal = contents ("$DATA/test.principal");
+    $ENV{KRB5CCNAME} = 'krb5cc_test';
+    unlink 'krb5cc_test';
+    unless (kinit ("$DATA/test.keytab", $principal, '-l', '1h')) {
+        unlink 'krb5.conf';
+        plan skip_all => 'cannot get non-renewable tickets';
+        exit 0;
+    }
+    plan tests => 3;
+}
+
+# Now, k5start should start without reauthenticating.
+my ($out, $err, $status)
+    = command ($K5START, '-H', '20', '-f', '/nonexistent', $principal);
+is ($status, 0, 'k5start -H 20 succeeds without reauthenticating');
+is ($err, '', ' with no errors');
+is ($out, '', ' and no output');
+
+# Clean up.
+unlink 'krb5cc_test', 'krb5.conf';

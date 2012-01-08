@@ -20,7 +20,7 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -58,6 +58,13 @@
  */
 static volatile sig_atomic_t alarm_signaled = 0;
 
+/*
+ * Set when the program receives SIGHUP or SIGTERM to do cleanup and exit.
+ * These signal handlers are only used when we're not running a command, since
+ * running a command provides its own signal handlers.
+ */
+static volatile sig_atomic_t exit_signaled = 0;
+
 
 /*
  * Convert from a string to a number, checking errors, and return -1 on any
@@ -85,6 +92,17 @@ static void
 alarm_handler(int s UNUSED)
 {
     alarm_signaled = 1;
+}
+
+
+/*
+ * Signal handler for SIGHUP and SIGTERM.  Just sets the global sentinel
+ * variable.
+ */
+static void
+exit_handler(int s UNUSED)
+{
+    exit_signaled = 1;
 }
 
 
@@ -131,9 +149,13 @@ ticket_expired(krb5_context ctx, struct config *config)
     code = krb5_cc_resolve(ctx, config->cache, &ccache);
     if (code != 0)
         goto done;
-    code = krb5_cc_get_principal(ctx, ccache, &increds.client);
-    if (code != 0)
-        goto done;
+    if (config->client != NULL)
+        increds.client = config->client;
+    else {
+        code = krb5_cc_get_principal(ctx, ccache, &increds.client);
+        if (code != 0)
+            goto done;
+    }
     code = get_krbtgt_princ(ctx, increds.client, &increds.server);
     if (code != 0)
         goto done;
@@ -158,19 +180,31 @@ ticket_expired(krb5_context ctx, struct config *config)
          * is arbitrary.  It just needs to be different than the error code
          * that indicates we can renew the ticket and coordinated with the
          * check in krenew's authentication callback.
+         *
+         * If the ticket is not going to expire, we skip this check.
+         * Otherwise, krenew -H 1 would fail even if the ticket had plenty of
+         * remaining lifespan if it was not renewable.
          */
-        then = outcreds->times.renew_till;
-        if (then < now + offset) {
-            code = KRB5KDC_ERR_KEY_EXP;
-            goto done;
+        if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+            then = outcreds->times.renew_till;
+            if (then < now + offset)
+                code = KRB5KDC_ERR_KEY_EXP;
         }
     }
 
 done:
+    if (increds.client == config->client)
+        increds.client = NULL;
     if (ccache != NULL)
         krb5_cc_close(ctx, ccache);
     if (increds_valid)
         krb5_free_cred_contents(ctx, &increds);
+    else {
+        if (increds.client != NULL)
+            krb5_free_principal(ctx, increds.client);
+        if (increds.server != NULL)
+            krb5_free_principal(ctx, increds.server);
+    }
     if (outcreds != NULL)
         krb5_free_creds(ctx, outcreds);
     return code;
@@ -195,6 +229,24 @@ write_pidfile(const char *path, pid_t pid)
         syswarn("cannot write to PID file %s", path);
     if (fclose(file) == EOF)
         syswarn("cannot flush PID file %s", path);
+}
+
+
+/*
+ * Add a signal handler, exiting if there was a failure.
+ */
+static void
+add_handler(krb5_context ctx, struct config *config, void (*handler)(int),
+            int sig, const char *name)
+{
+    struct sigaction sa;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handler;
+    if (sigaction(sig, &sa, NULL) < 0) {
+        syswarn("cannot set %s handler", name);
+        exit_cleanup(ctx, config, 1);
+    }
 }
 
 
@@ -285,19 +337,18 @@ run_framework(krb5_context ctx, struct config *config)
             config->keep_ticket = 60;
         if (config->childfile != NULL)
             write_pidfile(config->childfile, child);
+        config->child = child;
     }
 
     /* Loop if we're running as a daemon. */
     if (config->keep_ticket > 0) {
         struct timeval timeout;
-        struct sigaction sa;
 
         code = 0;
-        memset(&sa, 0, sizeof(sa));
-        sa.sa_handler = alarm_handler;
-        if (sigaction(SIGALRM, &sa, NULL) < 0) {
-            syswarn("cannot set SIGALRM handler");
-            exit_cleanup(ctx, config, 1);
+        add_handler(ctx, config, alarm_handler, SIGALRM, "SIGALRM");
+        if (config->command == NULL) {
+            add_handler(ctx, config, exit_handler, SIGHUP, "SIGHUP");
+            add_handler(ctx, config, exit_handler, SIGTERM, "SIGTERM");
         }
         while (1) {
             if (config->command != NULL) {
@@ -306,12 +357,16 @@ run_framework(krb5_context ctx, struct config *config)
                     syswarn("waitpid for %lu failed", (unsigned long) child);
                     exit_cleanup(ctx, config, 1);
                 }
-                if (result > 0)
+                if (result > 0) {
+                    config->child = 0;
                     break;
+                }
             }
-            timeout.tv_sec = config->keep_ticket * 60;
+            timeout.tv_sec = (code == 0) ? config->keep_ticket * 60 : 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
+            if (exit_signaled)
+                exit_cleanup(ctx, config, 0);
             code = ticket_expired(ctx, config);
             if (alarm_signaled || code != 0) {
                 code = config->auth(ctx, config, code);
@@ -340,6 +395,8 @@ exit_cleanup(krb5_context ctx, struct config *config, int status)
     krb5_error_code code;
     krb5_ccache ccache;
 
+    if (config->cleanup != NULL)
+        config->cleanup(ctx, config, status);
     if (config->clean_cache) {
         code = krb5_cc_resolve(ctx, config->cache, &ccache);
         if (code == 0)

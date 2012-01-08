@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "K5START 1"
-.TH K5START 1 "2011-12-29" "4.0" "kstart"
+.TH K5START 1 "2012-01-07" "4.1" "kstart"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -282,6 +282,10 @@ before or less than two minutes after the next scheduled check, and gets a
 new ticket if needed.  If this option is not given but a command was given
 on the command line, an interval appropriate for the ticket lifetime will
 be used.
+.Sp
+If an error occurs in refreshing the ticket cache, the wake-up interval
+will be shortened to one minute and the operation retried at that interval
+for as long as the error persists.
 .IP "\fB\-k\fR \fIticket cache\fR" 4
 .IX Item "-k ticket cache"
 Use \fIticket cache\fR as the ticket cache rather than the contents of the
