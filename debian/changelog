@@ -1,3 +1,15 @@
+kstart (4.1-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fix k5start -H and krenew -H with non-renewable tickets.
+    - Fix k5start -H with a ticket cache for the wrong principal.
+    - Shorten the wake-up interval when running as a daemon if refreshing
+      the ticket cache fails.
+    - Add krenew -s to send SIGHUP to child on krenew exit.
+    - Clean up PID files on exit via SIGHUP or SIGTERM.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 07 Jan 2012 20:10:53 -0800
+
 kstart (4.0-1) unstable; urgency=low
 
   * New upstream release.
