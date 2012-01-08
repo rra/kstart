@@ -25,7 +25,8 @@ our @OPTIONS = (
     [ [ qw/-H -1/   ], '-H limit argument -1 invalid' ],
     [ [ qw/-H 4foo/ ], '-H limit argument 4foo invalid' ],
     [ [ qw/-K 4foo/ ], '-K interval argument 4foo invalid' ],
-    [ [ qw/-H4  a/  ], '-H option cannot be used with a command' ]
+    [ [ qw/-H4  a/  ], '-H option cannot be used with a command' ],
+    [ [ qw/-s/      ], '-s option only makes sense with a command to run' ]
 );
 
 # Test plan.

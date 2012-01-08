@@ -301,6 +301,7 @@ run_framework(krb5_context ctx, struct config *config)
             config->keep_ticket = 60;
         if (config->childfile != NULL)
             write_pidfile(config->childfile, child);
+        config->child = child;
     }
 
     /* Loop if we're running as a daemon. */
@@ -322,8 +323,10 @@ run_framework(krb5_context ctx, struct config *config)
                     syswarn("waitpid for %lu failed", (unsigned long) child);
                     exit_cleanup(ctx, config, 1);
                 }
-                if (result > 0)
+                if (result > 0) {
+                    config->child = 0;
                     break;
+                }
             }
             timeout.tv_sec = config->keep_ticket * 60;
             timeout.tv_usec = 0;
@@ -356,6 +359,8 @@ exit_cleanup(krb5_context ctx, struct config *config, int status)
     krb5_error_code code;
     krb5_ccache ccache;
 
+    if (config->cleanup != NULL)
+        config->cleanup(ctx, config, status);
     if (config->clean_cache) {
         code = krb5_cc_resolve(ctx, config->cache, &ccache);
         if (code == 0)

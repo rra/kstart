@@ -11,6 +11,11 @@ kstart 4.1 (unreleased)
     happy with an unexpired ticket for a different principal than the
     desired client principal.
 
+    Add a new -s option to krenew that, if given, tells krenew to send
+    SIGHUP to the command it's running when it exits because it can't
+    renew the ticket.  This is useful when continuing to run the command
+    without a valid ticket would be pointless.
+
 kstart 4.0 (2011-12-29)
 
     Remove k4start from the distribution.  I no longer have a Kerberos v4

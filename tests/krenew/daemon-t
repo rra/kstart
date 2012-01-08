@@ -41,7 +41,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 75;
+    plan tests => 90;
 }
 
 # Start a krenew daemon and be sure it gets tickets and stays running.
@@ -309,7 +309,52 @@ ok (!kill (0, $child), 'The child process is no longer running');
 is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
 ok (eof OUT, 'No more child output written');
 close OUT;
-ok (! -f $cache, 'New child cache removed');
+ok (!-f "$TMP/pid", ' and the PID file was removed');
+ok (!-f "$TMP/child-pid", ' and the child PID file was removed');
+unlink "$TMP/child-out";
+
+# If run with -s, krenew should instead kill the child process with HUP on
+# failure to renew the ticket.
+($out, $err, $status)
+    = command ($KRENEW, '-bsK', 30, '-p', "$TMP/pid", '-c', "$TMP/child-pid",
+               '--', "$ENV{SOURCE}/data/command", "$TMP/child-out");
+is ($status, 0, 'Backgrounding krenew -s works');
+is ($err, '', ' with no error output');
+is ($out, '', ' and output was redirected properly');
+$tries = 0;
+while (not -f "$TMP/child-pid" and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+$pid = contents ("$TMP/pid");
+ok (kill (0, $pid), 'krenew is running');
+$child = contents ("$TMP/child-pid");
+ok (kill (0, $child), 'The child process is running');
+$tries = 0;
+while (not -S "$TMP/child-out" and $tries < 10) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
+select (undef, undef, undef, 0.2);
+open (OUT, '<', "$TMP/child-out")
+    or BAIL_OUT ("cannot open $TMP/child-out: $!");
+is (scalar (<OUT>), "$child\n", 'Child PID is correct');
+is (scalar (<OUT>), "/\n", 'Child working directory is /');
+$cache = scalar <OUT>;
+chomp $cache;
+like ($cache, qr%^/tmp/krb5cc_%, 'Child cache is correct');
+unlink $cache;
+kill (14, $pid) or warn "Can't kill $pid: $!\n";
+select (undef, undef, undef, 0.2);
+ok (!kill (0, $pid), 'krenew dies after failure to renew');
+ok (kill (0, $child), ' and the child process is still running');
+kill (15, $child) or warn "Can't kill child $child: $!\n";
+select (undef, undef, undef, 0.2);
+ok (!kill (0, $child), 'The child process is no longer running');
+is (scalar (<OUT>), "got SIGHUP\n", 'SIGHUP was recorded');
+is (scalar (<OUT>), "got SIGTERM\n", 'SIGTERM was recorded');
+ok (eof OUT, 'No more child output written');
+close OUT;
 ok (!-f "$TMP/pid", ' and the PID file was removed');
 ok (!-f "$TMP/child-pid", ' and the child PID file was removed');
 unlink "$TMP/child-out";
