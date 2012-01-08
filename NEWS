@@ -112,7 +112,7 @@ kstart 4.0 (2011-12-29)
     * Improve test summary at the end of a C test case.
     * Flush stderr before printing TAP output.
     * Improve portability of output functions in the shell libtap.sh.
-    * Add notices to all files copied from  C TAP Harness.
+    * Add notices to all files copied from C TAP Harness.
 
 kstart 3.16 (2010-01-19)
 
