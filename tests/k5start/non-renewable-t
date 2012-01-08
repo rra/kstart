@@ -53,6 +53,7 @@ if ($krb5conf) {
 # Decide whether we have the configuration to run the tests.
 my $principal;
 if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
+    unlink 'krb5.conf';
     plan skip_all => "no keytab configuration";
     exit 0;
 } else {
@@ -60,6 +61,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
     $ENV{KRB5CCNAME} = 'krb5cc_test';
     unlink 'krb5cc_test';
     unless (kinit ("$DATA/test.keytab", $principal, '-l', '1h')) {
+        unlink 'krb5.conf';
         plan skip_all => 'cannot get non-renewable tickets';
         exit 0;
     }
