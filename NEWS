@@ -12,7 +12,7 @@ kstart 4.1 (2012-01-07)
     desired client principal.
 
     When k5start or krenew are running as a daemon and obtaining new
-    tickets fails, both now shorten the wakeup interval to one minute and
+    tickets fails, both now shorten the wake-up interval to one minute and
     keep trying at that interval until the error resolves itself, and then
     go back to the normal wakeup interval.
 

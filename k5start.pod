@@ -172,7 +172,7 @@ new ticket if needed.  If this option is not given but a command was given
 on the command line, an interval appropriate for the ticket lifetime will
 be used.
 
-If an error occurs in refreshing the ticket cache, the wakeup interval
+If an error occurs in refreshing the ticket cache, the wake-up interval
 will be shortened to one minute and the operation retried at that interval
 for as long as the error persists.
 
