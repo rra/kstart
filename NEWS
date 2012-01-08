@@ -11,6 +11,11 @@ kstart 4.1 (unreleased)
     happy with an unexpired ticket for a different principal than the
     desired client principal.
 
+    When k5start or krenew are running as a daemon and obtaining new
+    tickets fails, both now shorten the wakeup interval to one minute and
+    keep trying at that interval until the error resolves itself, and then
+    go back to the normal wakeup interval.
+
     Add a new -s option to krenew that, if given, tells krenew to send
     SIGHUP to the command it's running when it exits because it can't
     renew the ticket.  This is useful when continuing to run the command

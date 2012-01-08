@@ -362,7 +362,7 @@ run_framework(krb5_context ctx, struct config *config)
                     break;
                 }
             }
-            timeout.tv_sec = config->keep_ticket * 60;
+            timeout.tv_sec = (code == 0) ? config->keep_ticket * 60 : 60;
             timeout.tv_usec = 0;
             select(0, NULL, NULL, NULL, &timeout);
             if (exit_signaled)

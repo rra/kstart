@@ -144,6 +144,10 @@ renews the ticket if needed.  If this option is not given but a command
 was given on the command line, the default interval is 60 minutes (1
 hour).
 
+If an error occurs in refreshing the ticket cache that doesn't cause
+B<krenew> to exit, the wakeup interval will be shortened to one minute and
+the operation retried at that interval for as long as the error persists.
+
 =item B<-k> I<ticket cache>
 
 Use I<ticket cache> as the ticket cache rather than the contents of the
