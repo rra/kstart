@@ -42,6 +42,12 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Mon Jan 9 2012 Robbert Eggermont <R.Eggermont@tudelft.nl> 4.1-1
+- New version for 4.1 release.
+- Require krb5 instead of krb5-libs for SLED compatibility.
+- Fix %defattr lines to not cause directory permission issues.
+- Tested on RHEL5/6 and SLED10/11.
+
 * Tue Dec 27 2011 Russ Allbery <rra@stanford.edu> 3.16-2
 - Remove references to k4start from description.
 
