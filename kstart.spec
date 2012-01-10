@@ -1,6 +1,6 @@
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 3.16
+Version: 4.1
 Release: 1%{?dist}
 License: MIT
 Group: System Environment/Base
@@ -8,7 +8,7 @@ URL: http://www.eyrie.org/~eagle/software/kstart/
 Source: http://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
-Requires: krb5-libs
+Requires: krb5
 Vendor: Stanford University
 
 %description
@@ -30,16 +30,14 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{__make}
 
 %install
-%{__rm} -rf %{buildroot}
 %makeinstall
 
 %clean
 %{__rm} -rf %{buildroot}
 
 %files
-%defattr(-, root, root, 0755)
+%defattr(-, root, root)
 %{_bindir}/*
-%defattr(-, root, root, 0644)
 %doc LICENSE NEWS README TODO
 %{_mandir}/*/*
 
