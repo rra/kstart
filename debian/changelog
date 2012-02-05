@@ -1,3 +1,10 @@
+kstart (4.1-2) UNRELEASED; urgency=low
+
+  * Update to debhelper compatibility level V9.
+    - Enable compiler hardening flags, including bindnow and PIE.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 04 Feb 2012 17:40:20 -0800
+
 kstart (4.1-1) unstable; urgency=low
 
   * New upstream release.

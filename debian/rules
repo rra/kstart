@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+# Enable compiler hardening flags.
+export DEB_BUILD_MAINT_OPTIONS = hardening=+bindnow,+pie
+
 DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 ifeq ($(DEB_HOST_ARCH_OS),linux)
     SETPAG = --enable-setpag
