@@ -2,6 +2,9 @@ kstart (4.1-2) UNRELEASED; urgency=low
 
   * Update to debhelper compatibility level V9.
     - Enable compiler hardening flags, including bindnow and PIE.
+  * Move single-debian-patch to local-options and patch-header to
+    local-patch-header so that they only apply to the packages I build and
+    NMUs get regular version-numbered patches.
 
  -- Russ Allbery <rra@debian.org>  Sat, 04 Feb 2012 17:40:20 -0800
 
