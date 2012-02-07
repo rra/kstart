@@ -1,3 +1,9 @@
+kstart (4.1-3) UNRELEASED; urgency=low
+
+  * Regenerate the Autotools build system with dh-autoreconf.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 06 Feb 2012 18:33:08 -0800
+
 kstart (4.1-2) unstable; urgency=low
 
   * Update to debhelper compatibility level V9.
