@@ -344,7 +344,6 @@ run_framework(krb5_context ctx, struct config *config)
     if (config->keep_ticket > 0) {
         struct timeval timeout;
 
-        code = 0;
         add_handler(ctx, config, alarm_handler, SIGALRM, "SIGALRM");
         if (config->command == NULL) {
             add_handler(ctx, config, exit_handler, SIGHUP, "SIGHUP");
