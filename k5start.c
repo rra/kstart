@@ -439,7 +439,7 @@ main(int argc, char *argv[])
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
                 die("-K interval argument %s invalid", optarg);
-            config.ignore_errors = 1;
+            config.ignore_errors = true;
             break;
         case 'L':
             openlog(message_program_name, LOG_PID, LOG_DAEMON);
@@ -499,6 +499,10 @@ main(int argc, char *argv[])
     }
     if (argc >= 1)  
         config.command = argv;
+
+    /* If -x was given, we still want to exit on initial auth failure. */
+    if (config.exit_errors)
+        config.ignore_errors = false;
 
     /*
      * If an owner was provided but no group, and the owner was given as a
