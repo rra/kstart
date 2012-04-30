@@ -213,7 +213,7 @@ authenticate(krb5_context ctx, struct config *config,
         if (code != 0) {
             warn_krb5(ctx, code, "error resolving keytab %s",
                       private->keytab);
-            return code;
+            goto done;
         }
         code = krb5_get_init_creds_keytab(ctx, &creds, config->client,
                                           keytab, 0, private->service,
@@ -234,7 +234,8 @@ authenticate(krb5_context ctx, struct config *config,
             *p = '\0';
         else {
             warn("password too long");
-            return KRB5_LIBOS_CANTREADPWD;
+            code = KRB5_LIBOS_CANTREADPWD;
+            goto done;
         }
         code = krb5_get_init_creds_password(ctx, &creds, config->client,
                                             buffer, NULL, NULL, 0,
@@ -274,11 +275,17 @@ authenticate(krb5_context ctx, struct config *config,
         code = set_permissions(cache, private);
         if (code != 0)
             goto done;
-        if (rename(cache, config->cache) < 0)
+        if (rename(cache, config->cache) < 0) {
             code = errno;
+            goto done;
+        }
     }
 
 done:
+    /* If we failed and were generating a separate cache, unlink it. */
+    if (private->set_perms)
+        unlink(cache);
+
     /* Make sure that we don't free princ; we use it later. */
     if (creds.client == config->client)
         creds.client = NULL;
