@@ -2,6 +2,12 @@
 
 kstart 4.2 (unreleased)
 
+    k5start, when run with the -K option to run as a daemon, no longer
+    exits if the initial authentication fails (unless -x was given).
+    Instead, it reports the error to standard error and then continues to
+    run, attempting authentication every minute as if authentication had
+    failed after it had started.  Patch from Rasmus Borup Hansen.
+
     If -i is given to krenew and the initial ticket renewal failed, start
     with the shorter wake-up interval of one minute just as if a
     subsequent renewal failed.  Patch from Rasmus Borup Hansen.
