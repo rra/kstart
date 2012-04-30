@@ -439,6 +439,7 @@ main(int argc, char *argv[])
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
                 die("-K interval argument %s invalid", optarg);
+            config.ignore_errors = 1;
             break;
         case 'L':
             openlog(message_program_name, LOG_PID, LOG_DAEMON);

@@ -80,7 +80,7 @@ After starting, detach from the controlling terminal and run in the
 background.  This option only makes sense in combination with B<-K> or a
 command that B<k5start> will be running and can only be used if a keytab
 is specified with F<-f>.  B<k5start> will not background itself until
-after it does the initial authentication, so that any initial errors will
+after it has tried authenticating once, so that any initial errors will
 be reported, but it will then redirect output to F</dev/null> and no
 subsequent errors will be reported.
 
@@ -172,9 +172,10 @@ new ticket if needed.  If this option is not given but a command was given
 on the command line, an interval appropriate for the ticket lifetime will
 be used.
 
-If an error occurs in refreshing the ticket cache, the wake-up interval
-will be shortened to one minute and the operation retried at that interval
-for as long as the error persists.
+If an error occurs in the initial authentication or in refreshing the
+ticket cache, the wake-up interval will be shortened to one minute and
+the operation retried at that interval for as long as the error
+persists.
 
 =item B<-k> I<ticket cache>
 
