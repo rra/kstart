@@ -23,6 +23,9 @@ k5start:
    command has been started, so it can simply exit after spawning the
    command.
 
+ * Add a flag to keep reprompting for the password until authentication
+   succeeds.
+
 krenew:
 
  * Add an option to send SIGHUP to the child process when krenew exits
