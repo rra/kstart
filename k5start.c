@@ -529,8 +529,6 @@ main(int argc, char *argv[])
         die("-U option requires a keytab be specified with -f");
     if (search_keytab && (principal != NULL || inst != NULL))
         die("-U option cannot be used with -u or -i options");
-    if (config.happy_ticket > 0 && config.keep_ticket > 0)
-        die("-H and -K options cannot be used at the same time");
     if (config.happy_ticket > 0 && config.command != NULL)
         die("-H option cannot be used with a command");
     if (config.childfile != NULL && config.command == NULL)

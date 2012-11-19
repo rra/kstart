@@ -168,10 +168,15 @@ ticket_expired(krb5_context ctx, struct config *config)
     if (code == 0) {
         now = time(NULL);
         then = outcreds->times.endtime;
-        if (config->happy_ticket > 0)
-            offset = 60 * config->happy_ticket;
-        else
-            offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
+        if (config->keep_ticket > 0) {
+            if (config->happy_ticket > 0)
+                offset = 60 * (config->happy_ticket + config->keep_ticket);
+            else
+                offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
+        } else {
+            if (config->happy_ticket > 0)
+                offset = 60 * config->happy_ticket;
+        }
         if (then < now + offset)
             code = KRB5KRB_AP_ERR_TKT_EXPIRED;
 

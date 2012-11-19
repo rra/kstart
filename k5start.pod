@@ -139,10 +139,13 @@ Check for a happy ticket, defined as one that has a remaining lifetime of
 at least I<minutes> minutes.  If such a ticket is found, do not attempt
 authentication.  Instead, just run the command (if one was specified) or
 exit immediately with status 0 (if none was).  Otherwise, try to obtain a
-new ticket and then run the command, if any.  Cannot be used with B<-K>.
+new ticket and then run the command, if any.
 
 If B<-H> is used with B<-t>, the external program will always be run even
 if a ticket with a sufficient remaining lifetime was found.
+
+If B<-H> is used with B<-K>, the specified remaining lifetime will replace
+the default value of two minutes.
 
 =item B<-h>
 
@@ -176,6 +179,9 @@ If an error occurs in the initial authentication or in refreshing the
 ticket cache, the wake-up interval will be shortened to one minute and
 the operation retried at that interval for as long as the error
 persists.
+
+If B<-K> is used with B<-H>, the specified remaining lifetime will be
+ensured instead of the default of two minutes.
 
 =item B<-k> I<ticket cache>
 
