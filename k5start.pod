@@ -144,8 +144,9 @@ new ticket and then run the command, if any.
 If B<-H> is used with B<-t>, the external program will always be run even
 if a ticket with a sufficient remaining lifetime was found.
 
-If B<-H> is used with B<-K>, the specified remaining lifetime will replace
-the default value of two minutes.
+If B<-H> is used with B<-K>, B<k5start> will not exit immediately.
+Instead, the specified remaining lifetime will replace the default value
+of two minutes.
 
 =item B<-h>
 
@@ -171,17 +172,18 @@ option.
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before or less than two minutes after the next scheduled check, and gets a
-new ticket if needed.  If this option is not given but a command was given
-on the command line, an interval appropriate for the ticket lifetime will
-be used.
+new ticket if needed.  (In other words, it ensures that the ticket will
+always have a remaining lifetime of at least two minutes.)  If the B<-H>
+flag is also given, the lifetime specified by it replaces the two minute
+default.
+
+If this option is not given but a command was given on the command line,
+an interval appropriate for the ticket lifetime will be used.
 
 If an error occurs in the initial authentication or in refreshing the
 ticket cache, the wake-up interval will be shortened to one minute and
 the operation retried at that interval for as long as the error
 persists.
-
-If B<-K> is used with B<-H>, the specified remaining lifetime will be
-ensured instead of the default of two minutes.
 
 =item B<-k> I<ticket cache>
 

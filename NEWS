@@ -15,6 +15,13 @@ kstart 4.2 (unreleased)
     Clean up the temporary ticket cache on k5start failure if -o, -g, or
     -m were given.  Based on a patch by Rasmus Borup Hansen.
 
+    The -H flag to k5start or krenew may now be used in conjunction with
+    -K and controls whether the ticket is renewed when the command wakes
+    up.  Normally, the ticket will be renewed if it will expire sooner
+    than two minutes after the next time the command will wake up.  If -H
+    is specified, its value replaces the default value of two minutes.
+    Patch from Michael Lass.
+
 kstart 4.1 (2012-01-07)
 
     Fix a regression introduced in kstart 4.0 that caused k5start -H and

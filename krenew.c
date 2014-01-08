@@ -8,7 +8,7 @@
  * any longer.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -312,8 +312,6 @@ main(int argc, char *argv[])
     /* Check the arguments for consistency. */
     if (config.background && config.keep_ticket == 0 && config.command == NULL)
         die("-b only makes sense with -K or a command to run");
-    if (config.happy_ticket > 0 && config.keep_ticket > 0)
-        die("-H and -K options cannot be used at the same time");
     if (config.happy_ticket > 0 && config.command != NULL)
         die("-H option cannot be used with a command");
     if (config.childfile != NULL && config.command == NULL)

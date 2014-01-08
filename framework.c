@@ -20,7 +20,7 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -168,15 +168,10 @@ ticket_expired(krb5_context ctx, struct config *config)
     if (code == 0) {
         now = time(NULL);
         then = outcreds->times.endtime;
-        if (config->keep_ticket > 0) {
-            if (config->happy_ticket > 0)
-                offset = 60 * (config->happy_ticket + config->keep_ticket);
-            else
-                offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
-        } else {
-            if (config->happy_ticket > 0)
-                offset = 60 * config->happy_ticket;
-        }
+        if (config->happy_ticket > 0)
+            offset = 60 * (config->keep_ticket + config->happy_ticket);
+        else
+            offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
         if (then < now + offset)
             code = KRB5KRB_AP_ERR_TKT_EXPIRED;
 

@@ -111,7 +111,11 @@ remaining lifetime or renewal was successful, run the command (if one was
 specified) or exit immediately with status 0 (if none was).  Otherwise,
 try to renew the ticket so that it will have a remaining lifetime of at
 least I<minutes>, exit with an error if unsuccessful, and then run the
-command, if any.  Cannot be used with B<-K>.
+command, if any.
+
+If B<-H> is used with B<-K>, B<krenew> will not exit immediately.
+Instead, the specified remaining lifetime will replace the default value
+of two minutes.
 
 =item B<-h>
 
@@ -140,9 +144,13 @@ This flag is only useful in daemon mode or when a command was given.
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before or less than two minutes before the next scheduled check, and
-renews the ticket if needed.  If this option is not given but a command
-was given on the command line, the default interval is 60 minutes (1
-hour).
+renews the ticket if needed.  (In other words, it ensures that the ticket
+will always have a remaining lifetime of at least two minutes.)  If the
+B<-H> flag is also given, the lifetime specified by it replaces the two
+minute default.
+
+If this option is not given but a command was given on the command line,
+the default interval is 60 minutes (1 hour).
 
 If an error occurs in refreshing the ticket cache that doesn't cause
 B<krenew> to exit, the wake-up interval will be shortened to one minute
