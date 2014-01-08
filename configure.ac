@@ -2,7 +2,8 @@ dnl Autoconf configuration for kstart.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-dnl     2011 The Board of Trustees of the Leland Stanford Junior University
+dnl     2011, 2014
+dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy
 dnl and/or distribute it, with or without modifications, as long as this
@@ -20,6 +21,7 @@ AM_MAINTAINER_MODE
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_CC_C_O
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
