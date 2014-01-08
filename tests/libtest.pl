@@ -86,7 +86,7 @@ sub klist {
     unless ($flags) {
         ($flags) = ($output =~ / Flags\s+Principal\n(?:\S+\s+){6}(\S+)/);
     }
-    return ($default, $service, $flags);
+    return wantarray ? ($default, $service, $flags) : $default;
 }
 
 # Run tokens and return true if we have an AFS token, false otherwise.
