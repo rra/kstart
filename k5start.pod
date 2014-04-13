@@ -417,7 +417,7 @@ will have the current version of B<k5start> and B<krenew>.
 
 B<k5start> was based on the k4start code written by Robert Morgan.  It was
 ported to Kerberos v5 by Booker C. Bense.  Additional cleanup and current
-maintenance are done by Russ Allbery <rra@stanford.edu>.
+maintenance are done by Russ Allbery <eagle@eyrie.org>.
 
 Implementations of B<-b> and B<-p> and the example for a Debian init
 script are based on code contributed by Navid Golpayegani.

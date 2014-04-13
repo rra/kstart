@@ -2,7 +2,7 @@
                (kinit daemon that uses srvtabs or keytabs)
 
          Originally written by Robert Morgan and Booker C. Bense
-         Currently maintained by Russ Allbery <rra@stanford.edu>
+          Currently maintained by Russ Allbery <eagle@eyrie.org>
 
   Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
   2007, 2008, 2009, 2010, 2011, 2012 The Board of Trustees of the Leland

@@ -10,7 +10,7 @@
  * the Kerberos v5 initialization functions instead.
  *
  * Originally written by Robert Morgan and Booker C. Bense.
- * Substantial updates by Russ Allbery <rra@stanford.edu>
+ * Substantial updates by Russ Allbery <eagle@eyrie.org>
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
  *     2008, 2009, 2010, 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University

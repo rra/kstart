@@ -296,7 +296,7 @@ will have the current version of B<krenew>.
 
 =head1 AUTHORS
 
-B<krenew> was written by Russ Allbery <rra@stanford.edu>.  It was based
+B<krenew> was written by Russ Allbery <eagle@eyrie.org>.  It was based
 heavily on B<k5start> by Booker C. Bense, which in turn was based on the
 k4start code written by Robert Morgan.
 

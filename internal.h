@@ -6,7 +6,7 @@
  * binaries.  Also defines the config struct that's used as a configuration
  * interface to run_framework.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  * Copyright 2011, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *

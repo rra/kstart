@@ -5,7 +5,7 @@
 # k5start 4.0 had a bug where if tickets weren't renewable, k5start -H 1 would
 # attempt to reauthenticate.  Ensure that bug doesn't recur.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Copyright 2012
 #     The Board of Trustees of the Leland Stanford Junior University
 #

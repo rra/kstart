@@ -1,6 +1,6 @@
 # Automake makefile for kstart.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #    2011 The Board of Trustees of the Leland Stanford Junior University
 #
