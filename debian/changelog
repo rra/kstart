@@ -4,6 +4,9 @@ kstart (4.1-3) UNRELEASED; urgency=low
     build.  (Closes: #727915, #744443)
   * Enable parallel builds.
   * Remove now-ignored --disable-k4start flag from configure invocation.
+  * Update standards version to 3.9.5.
+    - Convert debian/copyright to copyright-format 1.0.
+    - Specify the Debian packaging branch in the Vcs-Git control field.
 
  -- Russ Allbery <rra@debian.org>  Mon, 06 Feb 2012 18:33:08 -0800
 

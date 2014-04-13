@@ -4,9 +4,9 @@ Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 9), dh-autoreconf, libkrb5-dev,
  libtest-pod-perl, perl
-Standards-Version: 3.9.2
+Standards-Version: 3.9.5
 Homepage: http://www.eyrie.org/~eagle/software/kstart/
-Vcs-Git: git://git.eyrie.org/kerberos/kstart.git
+Vcs-Git: git://git.eyrie.org/kerberos/kstart.git -b debian
 Vcs-Browser: http://git.eyrie.org/?p=kerberos/kstart.git
 
 Package: kstart
