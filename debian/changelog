@@ -6,6 +6,7 @@ kstart (4.1-3) UNRELEASED; urgency=low
     recent Automake versions.
   * Enable parallel builds.
   * Remove now-ignored --disable-k4start flag from configure invocation.
+  * Add the upstream release signing key and verify it in debian/watch.
   * Update standards version to 3.9.5.
     - Convert debian/copyright to copyright-format 1.0.
     - Specify the Debian packaging branch in the Vcs-Git control field.
