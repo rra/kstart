@@ -1,4 +1,4 @@
-kstart (4.1-3) unstable; urgency=low
+kstart (4.1-3) unstable; urgency=medium
 
   * Regenerate the Autotools build system with dh_autoreconf during the
     build.  (Closes: #727915, #744443)
