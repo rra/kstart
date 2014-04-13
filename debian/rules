@@ -11,10 +11,10 @@ else
 endif
 
 %:
-	dh $@ --with autoreconf
+	dh $@ --parallel --with autoreconf
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-reduced-depends $(SETPAG) \
+	dh_auto_configure --parallel -- --enable-reduced-depends $(SETPAG) \
 	    --disable-k4start --without-libkafs --with-aklog=/usr/bin/aklog
 
 override_dh_installchangelogs:
