@@ -68,6 +68,7 @@ Usage: k5start [options] [name [command]]\n\
    -I <service instance>        (default: realm name)\n\
    -r <service realm>           (default: local realm)\n\
 \n\
+   -a                   Renew on each wakeup when running as a daemon\n\
    -b                   Fork and run in the background\n\
    -c <file>            Write child process ID (PID) to <file>\n\
    -F                   Force non-forwardable tickets\n\
@@ -77,7 +78,7 @@ Usage: k5start [options] [name [command]]\n\
                         less than <limit> minutes, and exit 0 if it's okay,\n\
                         otherwise obtain a ticket\n\
    -h                   Display this usage message and exit\n\
-   -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
+   -K <interval>        Run as daemon, check ticket every <interval> minutes\n\
                         (implies -q unless -v is given)\n\
    -k <file>            Use <file> as the ticket cache\n\
    -L                   Log messages via syslog as well as stderr\n\
@@ -385,9 +386,10 @@ main(int argc, char *argv[])
     struct group *gr;
     krb5_context ctx;
     krb5_deltat life_secs;
+    bool run_as_daemon;
     bool search_keytab = false;
     static const char optstring[]
-        = "bc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
+        = "abc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -401,6 +403,7 @@ main(int argc, char *argv[])
     private.group = (gid_t) -1;
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
+        case 'a': config.always_renew = true;   break;
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
         case 'F': nonforwardable = true;        break;
@@ -515,9 +518,12 @@ main(int argc, char *argv[])
         private.group = pw->pw_gid;
 
     /* Check the arguments for consistency. */
+    run_as_daemon = (config.keep_ticket != 0 || config.command != NULL);
+    if (config.always_renew && run_as_daemon)
+        die("-a only makes sense with -K or a command to run");
     if (config.background && private.keytab == NULL)
         die("-b option requires a keytab be specified with -f");
-    if (config.background && config.keep_ticket == 0 && config.command == NULL)
+    if (config.background && run_as_daemon)
         die("-b only makes sense with -K or a command to run");
     if (config.keep_ticket > 0 && private.keytab == NULL)
         die("-K option requires a keytab be specified with -f");

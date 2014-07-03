@@ -367,7 +367,7 @@ run_framework(krb5_context ctx, struct config *config)
             if (exit_signaled)
                 exit_cleanup(ctx, config, 0);
             code = ticket_expired(ctx, config);
-            if (alarm_signaled || code != 0) {
+            if (alarm_signaled || config->always_renew || code != 0) {
                 code = config->auth(ctx, config, code);
                 if (code != 0 && config->exit_errors)
                     exit_cleanup(ctx, config, 1);

@@ -38,6 +38,7 @@ struct krenew_private {
 /* The usage message. */
 const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
+   -a                   Renew on each wakeup when running as a daemon\n\
    -b                   Fork and run in the background\n\
    -c <file>            Write child process ID (PID) to <file>\n\
    -H <limit>           Check for a happy ticket, one that doesn't expire in\n\
@@ -46,7 +47,7 @@ Usage: krenew [options] [command]\n\
    -h                   Display this usage message and exit\n\
    -i                   Keep running even if the ticket cache goes away or\n\
                         the ticket can no longer be renewed\n\
-   -K <interval>        Run as daemon, renew ticket every <interval> minutes\n\
+   -K <interval>        Run as daemon, check ticket every <interval> minutes\n\
    -k <cache>           Use <cache> as the ticket cache\n\
    -L                   Log messages via syslog as well as stderr\n\
    -p <file>            Write process ID (PID) to <file>\n\
@@ -255,6 +256,7 @@ main(int argc, char *argv[])
     struct config config;
     struct krenew_private private;
     krb5_ccache ccache;
+    bool run_as_daemon;
 
     /* Initialize logging. */
     message_program_name = "krenew";
@@ -265,8 +267,9 @@ main(int argc, char *argv[])
     config.private.krenew = &private;
     config.auth = renew;
     config.cleanup = cleanup;
-    while ((option = getopt(argc, argv, "bc:H:hiK:k:Lp:qstvx")) != EOF)
+    while ((option = getopt(argc, argv, "abc:H:hiK:k:Lp:qstvx")) != EOF)
         switch (option) {
+        case 'a': config.always_renew = true;   break;
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
         case 'h': usage(0);                     break;
@@ -310,7 +313,10 @@ main(int argc, char *argv[])
         config.command = argv;
 
     /* Check the arguments for consistency. */
-    if (config.background && config.keep_ticket == 0 && config.command == NULL)
+    run_as_daemon = (config.keep_ticket != 0 || config.command != NULL);
+    if (config.always_renew && run_as_daemon)
+        die("-a only makes sense with -K or a command to run");
+    if (config.background && run_as_daemon)
         die("-b only makes sense with -K or a command to run");
     if (config.happy_ticket > 0 && config.command != NULL)
         die("-H option cannot be used with a command");
