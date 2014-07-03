@@ -12,7 +12,7 @@
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <eagle@eyrie.org>
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010, 2011, 2012
+ *     2008, 2009, 2010, 2011, 2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -167,6 +167,7 @@ authenticate(krb5_context ctx, struct config *config,
     krb5_creds creds;
     const char *cache = config->cache;
     krb5_ccache ccache = NULL;
+    int oerrno;
 
     /*
      * If we have owner, group, or mode information, we have to create a
@@ -186,7 +187,9 @@ authenticate(krb5_context ctx, struct config *config,
         }
         if (fchmod(fd, 0600) < 0) {
             syswarn("cannot chmod temporary ticket cache file");
-            return errno;
+            oerrno = errno;
+            unlink(tmp);
+            return oerrno;
         }
         close(fd);
         cache = tmp;
