@@ -1,5 +1,5 @@
                             kstart release 4.1
-               (kinit daemon that uses srvtabs or keytabs)
+           (kinit daemon with keytab, renewal, and AFS support)
 
          Originally written by Robert Morgan and Booker C. Bense
           Currently maintained by Russ Allbery <eagle@eyrie.org>
