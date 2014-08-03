@@ -8,9 +8,6 @@ k5start:
  * Provide a flag like -H that checks the status of the ticket but
    just exits with a zero or non-zero exit status instead of prompting.
 
- * Add support to k5start for obtaining Kerberos v4 tickets using the DES
-   key in a keytab.
-
  * Add a flag saying to start a command in a PAG and with tokens and then
    keep running even if the command exits.  This would be useful to spawn
    a long-running daemon inside a PAG and then maintain its tokens, even
@@ -26,6 +23,18 @@ k5start:
  * Add a flag to keep reprompting for the password until authentication
    succeeds.
 
+ * Use krb5_get_init_creds_opt_set_out_ccache to store the ticket cache
+   instead of writing the credentials ourselves, since this will store MIT
+   Kerberos configuration information in the cache.
+
+ * Support obtaining new credentials in a DIR cache or another cache type
+   that supports multiple principals without destroying the existing
+   cache.
+
+ * Add a kinstance command to run a command with a particular default
+   principal instead of the default for the cache collection (assuming
+   this is even possible).
+
 krenew:
 
  * Add an option to send SIGHUP to the child process when krenew exits
@@ -38,10 +47,13 @@ Documentation:
    Probably take some information from the Stanford web page documenting
    using tokens with servers.
 
+ * Document when various flags and features were added.
+
 Test suite:
 
  * Test more of krenew's basic functionality, preferrably by parsing klist
-   output more thoroughly and seeing if tickets really were renewed.
+   output more thoroughly (or using a Perl module that can parse the
+   ticket cache directly) and seeing if tickets really were renewed.
 
  * Test that -K and running a command wakes up periodically and renews
    tickets for both krenew and k5start.
