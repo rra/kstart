@@ -35,6 +35,10 @@ k5start:
    principal instead of the default for the cache collection (assuming
    this is even possible).
 
+ * Determine the actual ticket lifetime from the Kerberos ticket cache and
+   use that to set the wakeup time if -K was not provided, rather than
+   always using a default of one hour.
+
 krenew:
 
  * Add an option to send SIGHUP to the child process when krenew exits
