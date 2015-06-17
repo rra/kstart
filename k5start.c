@@ -519,11 +519,11 @@ main(int argc, char *argv[])
 
     /* Check the arguments for consistency. */
     run_as_daemon = (config.keep_ticket != 0 || config.command != NULL);
-    if (config.always_renew && run_as_daemon)
+    if (config.always_renew && !run_as_daemon)
         die("-a only makes sense with -K or a command to run");
     if (config.background && private.keytab == NULL)
         die("-b option requires a keytab be specified with -f");
-    if (config.background && run_as_daemon)
+    if (config.background && !run_as_daemon)
         die("-b only makes sense with -K or a command to run");
     if (config.keep_ticket > 0 && private.keytab == NULL)
         die("-K option requires a keytab be specified with -f");
