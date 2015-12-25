@@ -20,6 +20,7 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2015 Russ Allbery <eagle@eyrie.org>
  * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
@@ -212,6 +213,33 @@ done:
 
 
 /*
+ * Retry the initial authentication when the program is first starting.  Retry
+ * the authentication immediately, then after one second, and keep trying with
+ * exponential backoff, maxing out at one minute and continuing until
+ * authentication succeeds or we exit due to signal.
+ */
+static krb5_error_code
+retry_auth(krb5_context ctx, struct config *config)
+{
+    krb5_error_code code;
+    struct timeval timeout;
+    unsigned int delay = 1;
+
+    code = config->auth(ctx, config, 0);
+    while (code != 0) {
+        timeout.tv_sec = delay;
+        timeout.tv_usec = 0;
+        delay = (delay < 30) ? delay * 2 : delay;
+        select(0, NULL, NULL, NULL, &timeout);
+        if (exit_signaled)
+            exit_cleanup(ctx, config, 1);
+        code = config->auth(ctx, config, 0);
+    }
+    return code;
+}
+
+
+/*
  * Write out a PID file given the path to the file and the PID to write.
  * Errors are reported but otherwise ignored.
  */
@@ -298,7 +326,7 @@ run_framework(krb5_context ctx, struct config *config)
      * isn't expired.
      */
     if (config->happy_ticket == 0)
-        code = config->auth(ctx, config, code);
+        code = config->auth(ctx, config, 0);
     else {
         code = ticket_expired(ctx, config);
         if (code != 0)
@@ -310,7 +338,7 @@ run_framework(krb5_context ctx, struct config *config)
         exit_cleanup(ctx, config, status);
 
     /* If requested, run the aklog program. */
-    if (config->do_aklog)
+    if (code == 0 && config->do_aklog)
         command_run(aklog, config->verbose);
 
     /*
@@ -325,6 +353,26 @@ run_framework(krb5_context ctx, struct config *config)
     /* Write out the PID file. */
     if (config->pidfile != NULL)
         write_pidfile(config->pidfile, getpid());
+
+    /*
+     * Now, if the initial authentication failed and we're ignoring initial
+     * failures, retry authentication until it succeeds so that we never start
+     * the command without authentication.  We don't set up signal handlers
+     * here, which means SIGHUP may terminate the program during this period
+     * but not after the command is started.  Any approach here is potentially
+     * inconsistent; that seems the simplest.
+     *
+     * Set up some signal handlers so that we remove the PID file if we exit
+     * via signal.  These will be overwritten by the command signal handlers
+     * if we start a command later.
+     */
+    if (code != 0 && config->ignore_errors) {
+        add_handler(ctx, config, exit_handler, SIGHUP, "SIGHUP");
+        add_handler(ctx, config, exit_handler, SIGTERM, "SIGTERM");
+        code = retry_auth(ctx, config);
+        if (code == 0 && config->do_aklog)
+            command_run(aklog, config->verbose);
+    }
 
     /* Spawn the external command, if we were told to run one. */
     if (config->command != NULL) {

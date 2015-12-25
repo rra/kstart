@@ -70,6 +70,13 @@ commands that should receive Ctrl-C.
 If a running B<k5start> receives an ALRM signal, it immediately refreshes
 the ticket cache regardless of whether it is in danger of expiring.
 
+If B<k5start> is run with a command or the B<-K> flag and the B<-x> flag
+is not given, it will keep trying even if the initial authentication
+fails.  It will retry the initial authentication immediately and then with
+exponential backoff to once per minute, and keep trying until
+authentication succeeds or it is killed.  The command, if any, will not be
+started until authentication succeeds.
+
 =head1 OPTIONS
 
 =over 4
@@ -209,10 +216,9 @@ default.
 If this option is not given but a command was given on the command line,
 the default interval is 60 minutes (1 hour).
 
-If an error occurs in the initial authentication or in refreshing the
-ticket cache, the wake-up interval will be shortened to one minute and
-the operation retried at that interval for as long as the error
-persists.
+If an error occurs in refreshing the ticket cache, the wake-up interval
+will be shortened to one minute and the operation retried at that interval
+for as long as the error persists.
 
 =item B<-k> I<ticket cache>
 
@@ -370,8 +376,12 @@ every 10 minutes to check if the ticket is about to expire.
         host/example.com
 
 Do the same, but using the default ticket cache and run the command
-/usr/local/bin/auth-backup.  B<k5start> will continue running until the
-command finishes.
+F</usr/local/bin/auth-backup>.  B<k5start> will continue running until the
+command finishes.  If the initial authentication fails, keep trying, and
+don't start the command until it succeeds.  This could be used during
+system startup for a command that must have valid tickets before starting,
+and tolerates having B<k5start> start before the network is completely set
+up.
 
     k5start -f /etc/krb5.keytab -K 10 -l 10h host/example.com \
         /usr/local/bin/auth-backup

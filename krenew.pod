@@ -161,10 +161,10 @@ continue running, waking up to try again after the next check interval
 ticket cache and B<krenew> should stay around and act on that recreated
 ticket cache once it's present.
 
-Setup errors opening the Kerberos ticket cache or running the command will
-still cause B<krenew> to exit, even if this flag is given.  Only Kerberos
-errors and errors after B<krenew> is running and any command has been
-started will be ignored.
+If the initial ticket cache renew fails, B<krenew> will retry the renewal
+immediately and then with exponential backoff to once per minute, and keep
+trying until authentication succeeds or it is killed.  The command, if
+any, will not be started until cache renewal succeeds.
 
 This flag is only useful in daemon mode or when a command was given.
 

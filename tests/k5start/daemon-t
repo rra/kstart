@@ -3,12 +3,14 @@
 # Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
 # Copyright 2008, 2009, 2011, 2012, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
 use Cwd;
+use File::Copy qw(copy);
 
 use Test::More;
 
@@ -30,7 +32,7 @@ require "$ENV{SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 84;
+    plan tests => 86;
 } else {
     plan skip_all => "no keytab configuration";
     exit 0;
@@ -122,7 +124,7 @@ is ($out, '', ' and -q was added implicitly');
 $pid = contents ("$TMP/pid");
 ok (kill (0, $pid), ' and the PID file is correct');
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
-select (undef, undef, undef, 0.2);
+select (undef, undef, undef, 2.0);
 ok (!-f "$TMP/pid", ' and the PID file was removed');
 unlink "$TMP/pid";
 
@@ -294,23 +296,29 @@ close OUT;
 ok (!-f "$TMP/pid", 'PID file cleaned up');
 ok (!-f "$TMP/child-pid", 'Child PID file cleaned up');
 
-# One more time to test SIGQUIT.
+# Finally, start a child program with an invalid keytab path.  This should
+# start and keep trying to authenticate but never start the actual child
+# process until the ticket cache does exist.  We also test SIGQUIT handling.
 unlink "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
-               "$DATA/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
+               "$TMP/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
                $principal, '--', "$ENV{SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
-is ($err, '', ' with no error output');
+like ($err, qr/^k5start: error getting credentials: /, ' with error output');
 is ($out, '', ' and output was redirected properly');
+$pid = contents ("$TMP/pid");
+ok (kill (0, $pid), 'k5start is running');
+select (undef, undef, undef, 1);
+ok (!-f "$TMP/child-pid", ' child did not start');
+ok (!-f "$TMP/child-out", ' and has no output');
+copy ("$DATA/test.keytab", "$TMP/test.keytab");
 $tries = 0;
 while (not -f "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
-$pid = contents ("$TMP/pid");
-ok (kill (0, $pid), 'k5start is running');
 $child = contents ("$TMP/child-pid");
 ok (kill (0, $child), 'The child process is running');
 $tries = 0;
@@ -333,5 +341,5 @@ ok (!-f "$TMP/pid", 'PID file cleaned up');
 ok (!-f "$TMP/child-pid", 'Child PID file cleaned up');
 
 # Clean up.
-unlink "$TMP/krb5cc_child", "$TMP/child-out";
+unlink "$TMP/krb5cc_child", "$TMP/child-out", "$TMP/test.keytab";
 rmdir $TMP;
