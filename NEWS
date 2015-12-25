@@ -22,6 +22,16 @@ kstart 4.2 (unreleased)
     is specified, its value replaces the default value of two minutes.
     Patch from Michael Lass.
 
+    Add a new -a option to both k5start and krenew that, when used with
+    -K, tells those programs to refresh tickets every time they wake up.
+    This is useful with -t to ensure that the AFS token renewal program is
+    always run, even if something else renews the ticket cache before
+    k5start or krenew wake up.  It also provides more predictable ticket
+    refresh behavior.  This probably should have been the default with -K
+    from the beginning, but the default wasn't changed to keep backward
+    compatibility.  Consider always using -a with -K.  Based on a patch by
+    Andrew Deason.
+
 kstart 4.1 (2012-01-07)
 
     Fix a regression introduced in kstart 4.0 that caused k5start -H and

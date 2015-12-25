@@ -86,18 +86,8 @@ This behavior probably should have been the default behavior of B<-K>.
 The default was not changed to avoid changes for existing users, but for
 new applications, consider always using B<-a> with B<-K>.
 
-This option can be useful to ensure that a ticket will always have a valid
-lifetime over a certain value.  Without this option, the tickets in the
-ticket cache may have a remaining lifetime as short as about 2 minutes
-before B<k5start> renews them.  If a Kerberos-using program uses the
-ticket lifetime to calculate the lifetime of a per-session context or
-connection, this means that, without this option, that context may only be
-valid for as little as 2 minutes.  With this option, the remaining
-lifetime of the ticket at any given point will be at least as large as the
-argument to B<-K>.
-
-This option can also be useful if another program is manipulating the
-ticket cache that B<k5start> is using.  For example, if another program is
+This option is important if another program is manipulating the ticket
+cache that B<k5start> is using.  For example, if another program is
 automatically renewing a ticket more frequently than B<k5start>, then
 B<k5start> will never see a ticket that is close to expiring and will
 therefore, by default, never try to renew the ticket.  This means that
@@ -182,7 +172,10 @@ if a ticket with a sufficient remaining lifetime was found.
 
 If B<-H> is used with B<-K>, B<k5start> will not exit immediately.
 Instead, the specified remaining lifetime will replace the default value
-of two minutes.
+of two minutes, meaning that B<k5start> will ensure, each time it wakes
+up, that the ticket has a remaining lifetime of the I<minutes> argument.
+This is an alternative to B<-a> to ensure that tickets always have a
+certain minimal amount of lifetime remaining.
 
 =item B<-h>
 
