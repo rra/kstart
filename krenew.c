@@ -314,9 +314,9 @@ main(int argc, char *argv[])
 
     /* Check the arguments for consistency. */
     run_as_daemon = (config.keep_ticket != 0 || config.command != NULL);
-    if (config.always_renew && run_as_daemon)
+    if (config.always_renew && !run_as_daemon)
         die("-a only makes sense with -K or a command to run");
-    if (config.background && run_as_daemon)
+    if (config.background && !run_as_daemon)
         die("-b only makes sense with -K or a command to run");
     if (config.happy_ticket > 0 && config.command != NULL)
         die("-H option cannot be used with a command");
