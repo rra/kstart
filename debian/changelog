@@ -1,3 +1,20 @@
+kstart (4.2-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    - k5start when run with -K or as a daemon no longer exits if the
+      initial authentication fails (unless -x was given).
+    - k5start and krenew retry the initial authentication with exponential
+      backoff until it succeeds, before running any command.
+    - k5start cleans up temporary ticket caches in failures.
+    - The -H flag can now be used in combination with -K.
+    - Add new -a flag to both k5start and krenew to attempt authentication
+      or ticket renewal each time the daemon wakes up.
+    - Fix k5start and krenew to not reject the -b flag with -K or a
+      command.
+  * Drop all patches, merged upstream.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 25 Dec 2015 17:06:17 -0800
+
 kstart (4.1-3) unstable; urgency=medium
 
   * Regenerate the Autotools build system with dh_autoreconf during the
