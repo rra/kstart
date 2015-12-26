@@ -4,7 +4,7 @@
  * Written by Russ Allbery <eagle@eyrie.org>
  * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007,
  *     2008, 2009, 2010
- *     THe Board of Trustees of the Leland Stanford Junior University
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */

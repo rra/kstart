@@ -2,8 +2,8 @@ dnl Autoconf configuration for kstart.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
 dnl Copyright 2015 Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-dnl     2011, 2014
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+dnl     2010, 2011, 2014
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy

@@ -1,3 +1,12 @@
+# RPM spec file for kstart.
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
+# Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
 Version: 4.1

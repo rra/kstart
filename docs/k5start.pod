@@ -445,13 +445,6 @@ If a command is specified and B<-k> was not given, B<k5start> will create
 a temporary ticket cache file of the form C</tmp/krb5cc_%d_%s> where %d is
 the UID B<k5start> is running as and %s is a random string.
 
-=head1 SEE ALSO
-
-kinit(1), krenew(1)
-
-The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<k5start> and B<krenew>.
-
 =head1 AUTHORS
 
 B<k5start> was based on the k4start code written by Robert Morgan.  It was
@@ -460,5 +453,24 @@ maintenance are done by Russ Allbery <eagle@eyrie.org>.
 
 Implementations of B<-b> and B<-p> and the example for a Debian init
 script are based on code contributed by Navid Golpayegani.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2015 Russ Allbery <eagle@eyrie.org>
+
+Copyright 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+The Board of Trustees of the Leland Stanford Junior University
+
+Copying and distribution of this file, with or without modification, are
+permitted in any medium without royalty provided the copyright notice and
+this notice are preserved.  This file is offered as-is, without any
+warranty.
+
+=head1 SEE ALSO
+
+kinit(1), krenew(1)
+
+The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
+will have the current version of B<k5start> and B<krenew>.
 
 =cut
