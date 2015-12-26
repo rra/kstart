@@ -1,5 +1,87 @@
                        User-Visible kstart Changes
 
+kstart 4.2 (2015-12-25)
+
+    k5start, when run with the -K option to run as a daemon, no longer
+    exits if the initial authentication fails (unless -x was given).
+    Instead, it reports the error to standard error and then continues to
+    run, attempting authentication every minute as if authentication had
+    failed after it had started.  Patch from Rasmus Borup Hansen.
+
+    For both k5start with a command or -K and no -x flag, and krenew with
+    the -i flag, repeatedly retry the initial authentication.  The first
+    retry will be immediate, and then the commands will keep trying with
+    exponential backoff to one minute intervals, and then continuously at
+    one minute intervals until the command is killed or authentication
+    succeeds.  k5start and krenew will no longer start any other command
+    until the initial authentication succeeds, fixing startup behavior
+    when running a command that must have valid Kerberos tickets
+    immediately on start.  Based on a patch by Lars Hanke.
+
+    Clean up the temporary ticket cache on k5start failure if -o, -g, or
+    -m were given.  Based on a patch by Rasmus Borup Hansen.
+
+    The -H flag to k5start or krenew may now be used in conjunction with
+    -K and controls whether the ticket is renewed when the command wakes
+    up.  Normally, the ticket will be renewed if it will expire sooner
+    than two minutes after the next time the command will wake up.  If -H
+    is specified, its value replaces the default value of two minutes.
+    Patch from Michael Lass.
+
+    Add a new -a option to both k5start and krenew that, when used with
+    -K, tells those programs to refresh tickets every time they wake up.
+    This is useful with -t to ensure that the AFS token renewal program is
+    always run, even if something else renews the ticket cache before
+    k5start or krenew wake up.  It also provides more predictable ticket
+    refresh behavior.  This probably should have been the default with -K
+    from the beginning, but the default wasn't changed to keep backward
+    compatibility.  Consider always using -a with -K.  Based on a patch by
+    Andrew Deason.
+
+    Fix k5start and krenew to not incorrectly reject the -b flag in
+    conjunction with -K or a command.  Patch from Lars Hanke.
+
+    Update to rra-c-util 5.9:
+
+    * Add missing va_end to xasprintf implementation.
+    * Improve portability to Kerberos included in Solaris 10.
+    * Use appropriate warning flags with Clang (currently not warning clean).
+    * Use Lancaster Consensus environment variables to control tests.
+    * Use calloc or reallocarray for protection against integer overflows.
+    * Suppress warnings from Kerberos headers in non-system paths.
+    * Assume calloc initializes pointers to NULL.
+    * Assume free(NULL) is properly ignored.
+    * Improve error handling in xasprintf and xvasprintf.
+    * Check the return status of snprintf and vsnprintf properly.
+    * Preserve errno if snprintf fails in vasprintf replacement.
+    * Fix probing for Heimdal's libroken to work with older versions.
+    * Improve POD tests.
+    * Fix kafs compilation failure on Solaris 11 or later.
+    * Drop concat from the util library in favor of asprintf.
+    * Fail on any error in [bx]asprintf and [bx]vasprintf.
+    * Pass --deps to krb5-config in the non-reduced-dependencies case.
+    * Silence __attribute__ warnings on more compilers.
+
+    Update to C TAP Harness 3.4:
+
+    * Fix segfault in runtests with an empty test list.
+    * Display verbose test results with -v or C_TAP_VERBOSE.
+    * Support comments and blank lines in test lists.
+    * Check for integer overflow on memory allocations.
+    * Reopen standard input to /dev/null when running a test list.
+    * Don't leak extraneous file descriptors to tests.
+    * Suppress lazy plans and test summaries if the test failed with bail.
+    * runtests now treats the command line as a list of tests by default.
+    * The full test executable path can now be passed to runtests -o.
+    * Improved harness output for tests with lazy plans.
+    * Improved harness output to a terminal for some abort cases.
+    * Flush harness output after each test even when not on a terminal.
+    * Only use feature-test macros when requested or built with gcc -ansi.
+    * Drop is_double from the C TAP library to avoid requiring -lm.
+    * Avoid using local in the shell libtap.sh library.
+    * Silence __attribute__ warnings on more compilers.
+    * runtests now frees all allocated resources on exit.
+
 kstart 4.1 (2012-01-07)
 
     Fix a regression introduced in kstart 4.0 that caused k5start -H and
@@ -112,7 +194,7 @@ kstart 4.0 (2011-12-29)
     * Improve test summary at the end of a C test case.
     * Flush stderr before printing TAP output.
     * Improve portability of output functions in the shell libtap.sh.
-    * Add notices to all files copied from  C TAP Harness.
+    * Add notices to all files copied from C TAP Harness.
 
 kstart 3.16 (2010-01-19)
 

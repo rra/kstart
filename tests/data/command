@@ -5,6 +5,13 @@
 # that file, it puts its PID, its current working directory, and its ticket
 # cache.  When it gets a HUP or INT signal, it writes into that file.  When it
 # gets a TERM signal, it writes into that file and exits.
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008, 2009, 2011, 2012
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
 
 use Cwd;
 
@@ -17,5 +24,17 @@ print "Starting\n";
 my $file = shift;
 open (OUT, '>', $file) or die "Cannot write to $file: $!\n";
 OUT->autoflush (1);
-print OUT "$$\n", getcwd, "\n", $ENV{KRB5CCNAME}, "\n";
+
+# Make sure that the ticket cache exists and is non-zero.  If so, report its
+# value to standard output; otherwise, report the empty string.  Either way,
+# report the current working directory.
+my $cache = '';
+if ($ENV{KRB5CCNAME}) {
+    $path = $ENV{KRB5CCNAME};
+    $path =~ s/^FILE://;
+    if (-s $path) {
+        $cache = $ENV{KRB5CCNAME};
+    }
+}
+print OUT "$$\n", getcwd, "\n", $cache, "\n";
 sleep 1000 while 1;

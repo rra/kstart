@@ -7,14 +7,14 @@
  * k_setpag, then tokens, then aklog, then tokens, and then k_unlog, sending
  * the output to standard output and errors to standard error.  If either
  * k_setpag or k_unlog return failure, it reports an error to standard error
- * and exits with status 1.  If aklog fails, it exits with status 3.  If the
- * commands all finish, it exits 0.
+ * and exits with status 1.  If aklog or tokens fails, it exits with status 3.
+ * If the commands all finish, it exits 0.
  *
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2009, 2010
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2009, 2010, 2012
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -67,19 +67,22 @@ main(void)
     }
     printf("=== tokens (setpag) ===\n");
     fflush(stdout);
-    system("tokens");
+    if (system("tokens") != 0)
+        exit(3);
     if (system(PATH_AKLOG) != 0)
         exit(3);
     printf("=== tokens (aklog) ===\n");
     fflush(stdout);
-    system("tokens");
+    if (system("tokens") != 0)
+        exit(3);
     if (k_unlog() != 0) {
         fprintf(stderr, "k_unlog failed: %s", strerror(errno));
         exit(1);
     }
     printf("=== tokens (unlog) ===\n");
     fflush(stdout);
-    system("tokens");
+    if (system("tokens") != 0)
+        exit(3);
 
     return 0;
 }

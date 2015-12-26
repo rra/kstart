@@ -2,8 +2,8 @@
 #
 # Tests for krenew support of keyrings.
 #
-# Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2011
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2011, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -31,7 +31,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets in keyring';
         exit 0;
     }
-    unless (!-f 'KEYRING:test') {
+    unless (!-f 'KEYRING:test' && klist ()) {
         plan skip_all => 'cannot use keyring caches';
         exit 0;
     }

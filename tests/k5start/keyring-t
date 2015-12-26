@@ -2,8 +2,8 @@
 #
 # Tests for k5start support of keyrings.
 #
-# Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2011
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2011, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -27,7 +27,8 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
 } else {
     $principal = contents ("$DATA/test.principal");
     $ENV{KRB5CCNAME} = 'KEYRING:test';
-    unless (kinit ("$DATA/test.keytab", $principal) && !-f 'KEYRING:test') {
+    unless (kinit ("$DATA/test.keytab", $principal) && !-f 'KEYRING:test'
+            && klist ()) {
         plan skip_all => 'cannot use keyring caches';
         exit 0;
     }

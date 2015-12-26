@@ -2,12 +2,14 @@
 #
 # Tests for basic krenew functionality.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
 # Copyright 2008, 2009, 2011
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
 
+use IPC::Open3 qw(open3);
 use Test::More;
 
 # The full path to the newly-built krenew client.
@@ -108,12 +110,31 @@ is ($status, 1, 'krenew -H fails with no ticket cache');
 is ($out, '', ' with no output');
 like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
 
-# We should still exit with the same error if -i was given.
-($out, $err, $status) = command ($KRENEW, '-vi');
+# If -i was given, we keep running and keep trying and have to be explicitly
+# killed.
+my $pid = open3 ('<&0', \*OUT, \*ERR, $KRENEW, '-vi')
+    or BAIL_OUT ("can't run $KRENEW: $!");
+select (undef, undef, undef, 1.0);
+kill (15, $pid);
+$out = <OUT>;
+$err = <ERR>;
+close OUT;
+close ERR;
+waitpid ($pid, 0);
+$status = ($? >> 8);
 is ($status, 1, 'krenew -i fails with no ticket cache');
-is ($out, '', ' with no output');
+is ($out, undef, ' with no output');
 like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
-($out, $err, $status) = command ($KRENEW, '-viH', 5);
+$pid = open3 ('<&0', \*OUT, \*ERR, $KRENEW, '-viH', 5)
+    or BAIL_OUT ("can't run $KRENEW: $!");
+select (undef, undef, undef, 1.0);
+kill (15, $pid);
+$out = <OUT>;
+$err = <ERR>;
+close OUT;
+close ERR;
+waitpid ($pid, 0);
+$status = ($? >> 8);
 is ($status, 1, 'krenew -iH fails with no ticket cache');
-is ($out, '', ' with no output');
+is ($out, undef, ' with no output');
 like ($err, qr/^krenew: error reading ticket cache: /, ' and the right error');
