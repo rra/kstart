@@ -9,7 +9,7 @@
 
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 4.1
+Version: 4.2
 Release: 1%{?dist}
 License: MIT
 Group: System Environment/Base
@@ -51,6 +51,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Fri Dec 25 2015 Russ Allbery <eagle@eyrie.org> 4.2-1
+- New version for 4.2 release.
+
 * Mon Jan 9 2012 Robbert Eggermont <R.Eggermont@tudelft.nl> 4.1-1
 - New version for 4.1 release.
 - Require krb5 instead of krb5-libs for SLED compatibility.
