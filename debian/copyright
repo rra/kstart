@@ -1,33 +1,35 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Contact: Russ Allbery <eagle@eyrie.org>
 Source: http://www.eyrie.org/~eagle/software/kstart/
-Copyright: 2004-2011, 2014
+Copyright: 1995-1997, 1999-2014
     The Board of Trustees of the Leland Stanford Junior University
+  2015 Russ Allbery <eagle@eyrie.org>
 License: Expat
 
 Files: *
-Copyright: 1995-1997, 1999-2002, 2004-2005, 2007-2009
-    The Board of Trustees of the Leland Stanford Junior
-  1995-1997, 1999-2002, 2004-2005, 2007-2010
-    THe Board of Trustees of the Leland Stanford Junior University
-  1995-1997, 1999-2012
+Copyright: 1995-1997, 1999-2014
     The Board of Trustees of the Leland Stanford Junior University
-  2000-2002, 2004-2011 Russ Allbery <rra@stanford.edu>
+  2000-2002, 2004-2015 Russ Allbery <eagle@eyrie.org>
 License: Expat
 
 Files: Makefile.in
-Copyright: 1994-2009 Free Software Foundation, Inc.
+Copyright: 1994-2014 Free Software Foundation, Inc.
   2000-2011 The Board of Trustees of the Leland Stanford Junior University
+  2015 Russ Allbery <eagle@eyrie.org>
 License: FSF-unlimited and Expat
 
 Files: aclocal.m4
-Copyright: 1996-2010 Free Software Foundation, Inc.
+Copyright: 1996-2015 Free Software Foundation, Inc.
 License: FSF-unlimited
 
-Files: build-aux/compile build-aux/config.guess build-aux/config.sub
- build-aux/depcomp build-aux/missing
-Copyright: 1992-2011 Free Software Foundation, Inc.
+Files: build-aux/ar-lib build-aux/compile build-aux/depcomp
+ build-aux/missing
+Copyright: 1996-2014 Free Software Foundation, Inc.
 License: GPL-2+ with Autoconf exception or Expat
+
+Files: build-aux/config.guess build-aux/config.sub
+Copyright: 1992-2015 Free Software Foundation, Inc.
+License: GPL-3+ with Autoconf exception or Expat
 
 Files: build-aux/install-sh
 Copyright: 1994 X Consortium
@@ -57,30 +59,39 @@ License: X11
  Consortium.
 
 Files: configure
-Copyright: 1992-1996, 1998-2010 Free Software Foundation, Inc.
+Copyright: 1992-1996, 1998-2012 Free Software Foundation, Inc.
 License: FSF-configure
  This script is free software; the Free Software Foundation gives unlimited
  permission to copy, distribute and modify it.
 
-Files: configure.ac m4/kafs.m4 m4/krb5.m4 m4/lib-depends.m4
- m4/lib-pathname.m4 m4/snprintf.m4 m4/vamacros.m4
-Copyright: 2000-2010
-    2011 The Board of Trustees of the Leland Stanford Junior University
-  2005-2011 The Board of Trustees of the Leland Stanford Junior University
+Files: configure.ac m4/clang.m4 m4/kafs.m4 m4/krb5-config.m4 m4/krb5.m4
+ m4/lib-depends.m4 m4/lib-pathname.m4 m4/snprintf.m4 m4/vamacros.m4
+Copyright: 2000-2014
+    The Board of Trustees of the Leland Stanford Junior University
+  2015 Russ Allbery <eagle@eyrie.org>
 License: unlimited
  This file is free software; the authors give unlimited permission to copy
  and/or distribute it, with or without modifications, as long as this
  notice is preserved.
 
+Files: docs/k5start.1 docs/k5start.pod docs/krenew.1 docs/krenew.pod
+ tests/README
+Copyright: 2002, 2004-2012, 2014
+    The Board of Trustees of the Leland Stanford Junior University
+  2010, 2015 Russ Allbery <eagle@eyrie.org>
+License: all-permissive
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice and
+ this notice are preserved.  This file is offered as-is, without any
+ warranty.
+
 Files: kafs/sys-syscall.c portable/asprintf.c portable/daemon.c
  portable/dummy.c portable/k_haspag.c portable/krb5-extra.c portable/krb5.h
- portable/macros.h portable/mkstemp.c portable/setenv.c portable/stdbool.h
- portable/strlcat.c portable/strlcpy.c portable/strndup.c portable/system.h
+ portable/macros.h portable/mkstemp.c portable/reallocarray.c
+ portable/setenv.c portable/stdbool.h portable/system.h
  tests/portable/asprintf-t.c tests/portable/daemon-t.c
- tests/portable/mkstemp-t.c tests/portable/setenv-t.c
- tests/portable/strlcat-t.c tests/portable/strlcpy-t.c
- tests/portable/strndup-t.c tests/util/concat-t.c util/concat.c
- util/concat.h util/macros.h
+ tests/portable/mkstemp-t.c tests/portable/reallocarray-t.c
+ tests/portable/setenv-t.c util/macros.h
 Copyright: no copyright notice, see License
 License: rra-public-domain
  The authors hereby relinquish any claim to any copyright that they may
@@ -93,7 +104,7 @@ License: rra-public-domain
 
 Files: portable/snprintf.c tests/portable/snprintf-t.c
 Copyright: 1995 Patrick Powell
-  2000-2006 Russ Allbery <rra@stanford.edu>
+  2000-2006 Russ Allbery <eagle@eyrie.org>
   2001 Hrvoje Niksic
   2009-2010 The Board of Trustees of the Leland Stanford Junior University
 License: Powell-snprintf
@@ -101,18 +112,12 @@ License: Powell-snprintf
  It may be used for any purpose as long as this notice remains intact
  on all source code distributions
 
-Files: tests/README
-Copyright: 2010 Russ Allbery <rra@stanford.edu>
-License: all-permissive
- Copying and distribution of this file, with or without modification, are
- permitted in any medium without royalty provided the copyright notice and
- this notice are preserved.  This file is offered as-is, without any
- warranty.
-
 Files: util/messages.c util/messages.h util/xmalloc.c util/xmalloc.h
 Copyright: 1991, 1994-2003 The Internet Software Consortium and Rich Salz
   2004-2006 Internet Systems Consortium, Inc.
-  2008-2010 The Board of Trustees of the Leland Stanford Junior University
+  2008-2010, 2012-2014
+    The Board of Trustees of the Leland Stanford Junior University
+  2015 Russ Allbery <eagle@eyrie.org>
 License: ISC
  Permission to use, copy, modify, and distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
@@ -177,4 +182,29 @@ Comment: The option described in the license has been accepted and these
  files are distributed under the same terms as the package as a whole, as
  described at the top of this file.  You can find the GPL version 2 in
  /usr/share/common-licenses/GPL-2 on Debian systems.
+
+License: GPL-3+ with Autoconf exception
+ This file is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 3 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+ Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, see <http://www.gnu.org/licenses/>.
+ .
+ As a special exception to the GNU General Public License, if you
+ distribute this file as part of a program that contains a configuration
+ script generated by Autoconf, you may include it under the same
+ distribution terms that you use for the rest of that program.  This
+ Exception is an additional permission under section 7 of the GNU General
+ Public License, version 3 ("GPLv3").
+Comment: The option described in the license has been accepted and these
+ files are distributed under the same terms as the package as a whole, as
+ described at the top of this file.  You can find the GPL version 3 in
+ /usr/share/common-licenses/GPL-3 on Debian systems.
 
