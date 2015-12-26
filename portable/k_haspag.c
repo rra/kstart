@@ -63,7 +63,7 @@ k_haspag(void)
      * system call.  Fall back on analyzing the groups.
      */
     ngroups = getgroups(0, NULL);
-    groups = malloc(sizeof(*groups) * ngroups);
+    groups = calloc(ngroups, sizeof(*groups));
     if (groups == NULL)
         return 0;
     ngroups = getgroups(ngroups, groups);

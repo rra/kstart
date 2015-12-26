@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <portable/krb5.h>
+#include <portable/macros.h>
 #include <portable/system.h>
 
 #include <errno.h>
@@ -33,6 +34,8 @@
 #   include <ibm_svc/krb5_svc.h>
 #  elif defined(HAVE_ET_COM_ERR_H)
 #   include <et/com_err.h>
+#  elif defined(HAVE_KERBEROSV5_COM_ERR_H)
+#   include <kerberosv5/com_err.h>
 #  else
 #   include <com_err.h>
 #  endif
@@ -52,7 +55,9 @@ static const char error_unknown[] = "unknown error";
 #ifndef HAVE_KRB5_CC_GET_FULL_NAME
 /*
  * Given a Kerberos ticket cache, return the full name (TYPE:name) in
- * newly-allocated memory.  Returns an error code.
+ * newly-allocated memory.  Returns an error code.  Avoid asprintf and
+ * snprintf here in case someone wants to use this code without the rest of
+ * the portability layer.
  */
 krb5_error_code
 krb5_cc_get_full_name(krb5_context ctx, krb5_ccache ccache, char **out)

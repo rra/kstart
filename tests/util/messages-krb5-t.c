@@ -5,7 +5,7 @@
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2010, 2011
+ * Copyright 2010, 2011, 2013, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,16 +28,30 @@
  */
 
 #include <config.h>
-#include <portable/krb5.h>
+#ifdef HAVE_KRB5
+# include <portable/krb5.h>
+#endif
 #include <portable/system.h>
 
 #include <tests/tap/basic.h>
 #include <tests/tap/process.h>
 #include <util/macros.h>
-#include <util/messages-krb5.h>
+#ifdef HAVE_KRB5
+# include <util/messages-krb5.h>
+#endif
 #include <util/messages.h>
 #include <util/xmalloc.h>
 
+
+/* Skip the whole test if not built with Kerberos support. */
+#ifndef HAVE_KRB5
+int
+main(void)
+{
+    skip_all("not built with Kerberos support");
+    return 0;
+}
+#else
 
 /*
  * Test functions.
@@ -116,5 +130,9 @@ main(void)
     message_handlers_die(0);
     is_function_output(test_die, NULL, 1, "", "warn_krb5 with no handlers");
 
+    krb5_free_error_message(ctx, message);
+    krb5_free_context(ctx);
     return 0;
 }
+
+#endif /* HAVE_KRB5 */

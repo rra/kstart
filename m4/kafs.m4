@@ -170,7 +170,7 @@ AC_DEFUN([RRA_LIB_KAFS],
  AC_CHECK_HEADERS([sys/ioccom.h])
  AS_IF([test x"$rra_libkafs" != xfalse],
     [_RRA_LIB_KAFS_PATHS
-     AS_IF([test x"$rra_use_kerberos" = xtrue],
+     AS_IF([test x"$rra_use_KRB5" = xtrue],
          [RRA_LIB_KRB5_SWITCH])
      RRA_LIB_KAFS_SWITCH
      AC_CHECK_LIB([kafs], [k_hasafs],
@@ -185,7 +185,7 @@ AC_DEFUN([RRA_LIB_KAFS],
      AC_CHECK_FUNCS([k_pioctl])
      AC_REPLACE_FUNCS([k_haspag])
      RRA_LIB_KAFS_RESTORE
-     AS_IF([test x"$rra_use_kerberos" = xtrue],
+     AS_IF([test x"$rra_use_KRB5" = xtrue],
          [RRA_LIB_KRB5_RESTORE])])
 
  dnl If we found a libkafs, we have k_hasafs.  Set the appropriate

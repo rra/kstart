@@ -77,17 +77,6 @@ k_syscall(long call, long param1, long param2, long param3, long param4,
     int fd, code, oerrno, callnum;
 
 #ifdef _ILP32
-    struct afssysargs32 syscall_data;
-
-    syscall_data.syscall = call;
-    syscall_data.param1 = param1;
-    syscall_data.param2 = param2;
-    syscall_data.param3 = param3;
-    syscall_data.param4 = param4;
-    syscall_data.param5 = 0;
-    syscall_data.param6 = 0;
-    callnum = _IOW('C', 2, struct afssysargs32);
-#else
     struct afssysargs syscall_data;
 
     syscall_data.syscall = call;
@@ -97,7 +86,18 @@ k_syscall(long call, long param1, long param2, long param3, long param4,
     syscall_data.param4 = param4;
     syscall_data.param5 = 0;
     syscall_data.param6 = 0;
-    callnum = _IOW('C', 1, struct afssysargs);
+    callnum = _IOW('C', 2, struct afssysargs);
+#else
+    struct afssysargs64 syscall_data;
+
+    syscall_data.syscall = call;
+    syscall_data.param1 = param1;
+    syscall_data.param2 = param2;
+    syscall_data.param3 = param3;
+    syscall_data.param4 = param4;
+    syscall_data.param5 = 0;
+    syscall_data.param6 = 0;
+    callnum = _IOW('C', 1, struct afssysargs64);
 #endif
 
     fd = open("/dev/afs", O_RDWR);

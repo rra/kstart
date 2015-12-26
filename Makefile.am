@@ -1,6 +1,7 @@
 # Automake makefile for kstart.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
 # Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 #    2011 The Board of Trustees of the Leland Stanford Junior University
 #
@@ -17,7 +18,11 @@ EXTRA_DIST = .gitignore LICENSE autogen examples/krenew-agent k5start.pod   \
 	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	    \
 	tests/krenew/errors-t tests/krenew/keyring-t			    \
 	tests/krenew/non-renewable-t tests/libtest.pl tests/tap/libtap.sh   \
-	tests/util/xmalloc-t
+	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	    \
+	tests/tap/perl/Test/RRA/Config.pm tests/util/xmalloc-t
+
+# Enable AFS support when running distcheck.
+DISTCHECK_CONFIGURE_FLAGS = --enable-setpag
 
 # The following library order matters for annoying reasons.  Older
 # libafsauthent contains its own com_err implementation, which we do not
@@ -44,10 +49,9 @@ portable_libportable_a_SOURCES = portable/dummy.c portable/kafs.h	\
 	portable/krb5.h portable/macros.h portable/stdbool.h		\
 	portable/system.h
 portable_libportable_a_LIBADD = $(LIBOBJS)
-util_libutil_a_SOURCES = util/command.c util/command.h util/concat.c	    \
-	util/concat.h util/macros.h util/messages-krb5.c		    \
-	util/messages-krb5.h util/messages.c util/messages.h util/xmalloc.c \
-	util/xmalloc.h
+util_libutil_a_SOURCES = util/command.c util/command.h util/macros.h	\
+	util/messages-krb5.c util/messages-krb5.h util/messages.c	\
+	util/messages.h util/xmalloc.c util/xmalloc.h
 
 # Conditionally build the replacement kafs library and add it to the
 # libraries used by the other programs.
@@ -71,44 +75,59 @@ krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
 dist_man_MANS = k5start.1 krenew.1
 
-DISTCLEANFILES = tests/data/.placeholder
-MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile \
-	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
-	build-aux/install-sh build-aux/missing config.h.in config.h.in~ \
-	configure k5start.1 krenew.1
+DISTCLEANFILES = config.h.in~ tests/data/.placeholder
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		\
+	build-aux/config.guess build-aux/config.sub build-aux/depcomp	\
+	build-aux/install-sh build-aux/missing config.h.in configure	\
+	k5start.1 krenew.1
 
-# A set of flags for warnings.	Add -O because gcc won't find some warnings
+# Remove the Autoconf cache directory on make distclean.
+distclean-local:
+	rm -rf autom4te.cache
+
+# A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on.  Desirable warnings that can't be turned
 # on due to other problems:
 #
-#     -Wconversion	http://bugs.debian.org/488884 (htons warnings)
+#     -Wconversion      http://bugs.debian.org/488884 (htons warnings)
 #
-# Last checked against gcc 4.6.1 (2011-05-04).
-WARNINGS = -g -O -Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self	 \
-	-Wswitch-enum -Wdeclaration-after-statement -Wshadow		 \
-	-Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings \
-	-Wjump-misses-init -Wlogical-op -Wstrict-prototypes		 \
-	-Wmissing-prototypes -Wredundant-decls -Wnested-externs -Werror
+# Last checked against gcc 4.8.2 (2014-04-12).  -D_FORTIFY_SOURCE=2 enables
+# warn_unused_result attribute markings on glibc functions on Linux, which
+# catches a few more issues.
+if WARNINGS_GCC
+    WARNINGS = -g -O -fstrict-overflow -fstrict-aliasing -D_FORTIFY_SOURCE=2 \
+	-Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self -Wswitch-enum    \
+	-Wstrict-overflow=5 -Wmissing-format-attribute -Wfloat-equal	     \
+	-Wdeclaration-after-statement -Wshadow -Wpointer-arith		     \
+	-Wbad-function-cast -Wcast-align -Wwrite-strings -Wjump-misses-init  \
+	-Wlogical-op -Wstrict-prototypes -Wold-style-definition		     \
+	-Wmissing-prototypes -Wnormalized=nfc -Wpacked -Wredundant-decls     \
+	-Wnested-externs -Winline -Wvla -Werror
+endif
+if WARNINGS_CLANG
+    WARNINGS = -Weverything -Wno-padded
+endif
 
 warnings:
-	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
-	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
+	$(MAKE) V=0 CFLAGS='$(WARNINGS)' KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_GCC)'
+	$(MAKE) V=0 CFLAGS='$(WARNINGS)' \
+	    KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_GCC)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
 check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	\
 	tests/portable/asprintf-t tests/portable/daemon-t		\
-	tests/portable/mkstemp-t tests/portable/setenv-t		\
-	tests/portable/snprintf-t tests/portable/strlcat-t		\
-	tests/portable/strlcpy-t tests/portable/strndup-t		\
-	tests/util/concat-t tests/util/messages-krb5-t			\
+	tests/portable/mkstemp-t tests/portable/reallocarray-t		\
+	tests/portable/setenv-t tests/portable/snprintf-t		\
+	tests/portable/strlcat-t tests/portable/strlcpy-t		\
+	tests/portable/strndup-t tests/util/messages-krb5-t		\
 	tests/util/messages-t tests/util/xmalloc
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 check_LIBRARIES = tests/tap/libtap.a
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
-	tests/tap/process.c tests/tap/process.h tests/tap/string.c	\
-	tests/tap/string.h
+	tests/tap/macros.h tests/tap/process.c tests/tap/process.h	\
+	tests/tap/string.c tests/tap/string.h
 
 # kafs tests are buit differently depending on whether we use our local
 # libkafs replacement.
@@ -137,6 +156,10 @@ tests_portable_daemon_t_LDADD = tests/tap/libtap.a portable/libportable.a
 tests_portable_mkstemp_t_SOURCES = tests/portable/mkstemp-t.c \
 	tests/portable/mkstemp.c
 tests_portable_mkstemp_t_LDADD = tests/tap/libtap.a portable/libportable.a
+tests_portable_reallocarray_t_SOURCES = tests/portable/reallocarray-t.c \
+	tests/portable/reallocarray.c
+tests_portable_reallocarray_t_LDADD = tests/tap/libtap.a \
+	portable/libportable.a
 tests_portable_setenv_t_SOURCES = tests/portable/setenv-t.c \
 	tests/portable/setenv.c
 tests_portable_setenv_t_LDADD = tests/tap/libtap.a portable/libportable.a
@@ -162,4 +185,4 @@ tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.a \
 tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
 check-local: $(check_PROGRAMS)
-	cd tests && ./runtests $(abs_top_srcdir)/tests/TESTS
+	cd tests && ./runtests -l $(abs_top_srcdir)/tests/TESTS

@@ -31,7 +31,6 @@
 #include <time.h>
 
 #include <internal.h>
-#include <util/concat.h>
 #include <util/macros.h>
 #include <util/messages.h>
 #include <util/messages-krb5.h>
@@ -179,8 +178,7 @@ authenticate(krb5_context ctx, struct config *config,
         int fd;
         char *tmp;
 
-        if (xasprintf(&tmp, "%s_XXXXXX", config->cache) < 0)
-            die("cannot format ticket cache name");
+        xasprintf(&tmp, "%s_XXXXXX", config->cache);
         fd = mkstemp(tmp);
         if (fd < 0) {
             syswarn("cannot create temporary ticket cache file");
@@ -232,7 +230,11 @@ authenticate(krb5_context ctx, struct config *config,
 
         if (!private->quiet)
             printf("Password: ");
-        fgets(buffer, sizeof(buffer), stdin);
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            syswarn("cannot read password");
+            code = KRB5_LIBOS_CANTREADPWD;
+            goto done;
+        }
         p = strchr(buffer, '\n');
         if (p != NULL)
             *p = '\0';
@@ -503,7 +505,7 @@ main(int argc, char *argv[])
         argc--;
         argv++;
     }
-    if (argc >= 1)  
+    if (argv[0] != NULL)
         config.command = argv;
 
     /* If -x was given, we still want to exit on initial auth failure. */
@@ -574,15 +576,13 @@ main(int argc, char *argv[])
         int fd;
         char *tmp, *cache;
 
-        if (xasprintf(&tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
-            die("cannot format ticket cache name");
+        xasprintf(&tmp, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
         fd = mkstemp(tmp);
         if (fd < 0)
             sysdie("cannot create ticket cache file");
         if (fchmod(fd, 0600) < 0)
             sysdie("cannot chmod ticket cache file");
-        if (xasprintf(&cache, "FILE:%s", tmp) < 0)
-            die("cannot format ticket cache name");
+        xasprintf(&cache, "FILE:%s", tmp);
         free(tmp);
         config.cache = cache;
         config.clean_cache = true;
@@ -620,8 +620,7 @@ main(int argc, char *argv[])
      * instance onto the end of the username.
      */
     if (inst != NULL)
-        if (xasprintf(&principal, "%s/%s", principal, inst) < 0)
-            die("cannot format principal name");
+        xasprintf(&principal, "%s/%s", principal, inst);
     code = krb5_parse_name(ctx, principal, &config.client);
     if (code != 0)
         die_krb5(ctx, code, "error parsing %s", principal);
@@ -661,8 +660,7 @@ main(int argc, char *argv[])
         sname = "krbtgt";
     if (sinst == NULL)
         sinst = srealm;
-    if (xasprintf(&private.service, "%s/%s@%s", sname, sinst, srealm) < 0)
-        die("cannot format service principal name");
+    xasprintf(&private.service, "%s/%s@%s", sname, sinst, srealm);
     code = krb5_build_principal(ctx, &private.ksprinc, strlen(srealm),
                                 srealm, sname, sinst, (const char *) NULL);
     if (code != 0)

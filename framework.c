@@ -348,7 +348,10 @@ run_framework(krb5_context ctx, struct config *config)
      * since otherwise we wouldn't be able to wait for the child process.
      */
     if (config->background)
-        daemon(0, 0);
+        if (daemon(0, 0) < 0) {
+            syswarn("cannot background");
+            exit_cleanup(ctx, config, 1);
+        }
 
     /* Write out the PID file. */
     if (config->pidfile != NULL)

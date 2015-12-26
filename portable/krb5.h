@@ -42,8 +42,10 @@
 #endif
 #include <portable/macros.h>
 
-#ifdef HAVE_KRB5_H
+#if defined(HAVE_KRB5_H)
 # include <krb5.h>
+#elif defined(HAVE_KERBEROSV5_KRB5_H)
+# include <kerberosv5/krb5.h>
 #else
 # include <krb5/krb5.h>
 #endif
@@ -137,5 +139,7 @@ const char *krb5_principal_get_realm(krb5_context, krb5_const_principal);
 
 /* Undo default visibility change. */
 #pragma GCC visibility pop
+
+END_DECLS
 
 #endif /* !PORTABLE_KRB5_H */

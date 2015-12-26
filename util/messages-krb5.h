@@ -5,7 +5,7 @@
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2008, 2009, 2010
+ * Copyright 2006, 2007, 2008, 2009, 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,10 +31,8 @@
 #define UTIL_MESSAGES_KRB5_H 1
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/macros.h>
-
-#include <krb5.h>
-#include <sys/types.h>
 
 BEGIN_DECLS
 

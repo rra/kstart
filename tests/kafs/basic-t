@@ -63,9 +63,9 @@ else
     fi
 fi
 
-# If aklog failed, we can't run the rest of the tests.
+# If aklog or tokens failed, we can't run the rest of the tests.
 if [ "$status" -eq 3 ] ; then
-    skip_block 3 'aklog failed'
+    skip_block 3 'aklog or tokens failed'
 else
     if sed -n '/^=== tokens .aklog./,/^===/p' basic-output \
             | grep -i 'tokens for ' > /dev/null ; then

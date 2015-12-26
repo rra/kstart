@@ -24,8 +24,11 @@
 # include <sys/select.h>
 #endif
 #include <sys/stat.h>
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
 #include <sys/wait.h>
+#include <time.h>
 
 #include <tests/tap/basic.h>
 
@@ -91,7 +94,7 @@ main(void)
     if (child < 0)
         sysbail("cannot fork");
     else if (child == 0) {
-        is_int(0, daemon(1, 1), "daemon(1, 1)");
+        is_int(0, test_daemon(1, 1), "daemon(1, 1)");
         fd = open("/dev/tty", O_RDONLY);
         ok(fd < 0, "...no tty");
         is_string(start, getcwd(dir, sizeof(dir)), "...in same directory");
@@ -110,7 +113,7 @@ main(void)
     if (child < 0)
         sysbail("cannot fork");
     else if (child == 0) {
-        is_int(0, daemon(0, 1), "daemon(0, 1)");
+        is_int(0, test_daemon(0, 1), "daemon(0, 1)");
         is_string("/", getcwd(dir, sizeof(dir)), "...now in /");
         if (chdir(start) != 0)
             sysbail("cannot chdir to %s", start);
@@ -128,7 +131,8 @@ main(void)
     if (child < 0)
         sysbail("cannot fork");
     else if (child == 0) {
-        daemon(0, 0);
+        if (test_daemon(0, 0) != 0)
+            sysbail("daemon failed");
         if (chdir(start) != 0)
             sysbail("cannot chdir to %s", start);
         ok(0, "output from child that should be hidden");

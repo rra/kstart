@@ -24,7 +24,6 @@
 #include <time.h>
 
 #include <internal.h>
-#include <util/concat.h>
 #include <util/macros.h>
 #include <util/messages.h>
 #include <util/messages-krb5.h>
@@ -100,8 +99,7 @@ copy_cache(krb5_context ctx, krb5_ccache *ccache)
     char *name;
     int fd;
 
-    if (xasprintf(&name, "/tmp/krb5cc_%d_XXXXXX", (int) getuid()) < 0)
-        die("cannot format ticket cache name");
+    xasprintf(&name, "/tmp/krb5cc_%d_XXXXXX", (int) getuid());
     fd = mkstemp(name);
     if (fd < 0)
         sysdie("cannot create ticket cache file");
