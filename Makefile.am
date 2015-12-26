@@ -114,13 +114,11 @@ warnings:
 	    KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_GCC)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	\
-	tests/portable/asprintf-t tests/portable/daemon-t		\
-	tests/portable/mkstemp-t tests/portable/reallocarray-t		\
-	tests/portable/setenv-t tests/portable/snprintf-t		\
-	tests/portable/strlcat-t tests/portable/strlcpy-t		\
-	tests/portable/strndup-t tests/util/messages-krb5-t		\
-	tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	    \
+	tests/portable/asprintf-t tests/portable/daemon-t		    \
+	tests/portable/mkstemp-t tests/portable/reallocarray-t		    \
+	tests/portable/setenv-t tests/portable/snprintf-t		    \
+	tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 check_LIBRARIES = tests/tap/libtap.a
@@ -166,17 +164,6 @@ tests_portable_setenv_t_LDADD = tests/tap/libtap.a portable/libportable.a
 tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
 	tests/portable/snprintf.c
 tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.a
-tests_portable_strlcat_t_SOURCES = tests/portable/strlcat-t.c \
-	tests/portable/strlcat.c
-tests_portable_strlcat_t_LDADD = tests/tap/libtap.a portable/libportable.a
-tests_portable_strlcpy_t_SOURCES = tests/portable/strlcpy-t.c \
-	tests/portable/strlcpy.c
-tests_portable_strlcpy_t_LDADD = tests/tap/libtap.a portable/libportable.a
-tests_portable_strndup_t_SOURCES = tests/portable/strndup-t.c \
-	tests/portable/strndup.c
-tests_portable_strndup_t_LDADD = tests/tap/libtap.a portable/libportable.a
-tests_util_concat_t_LDADD = tests/tap/libtap.a util/libutil.a \
-	portable/libportable.a
 tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
 tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a $(KRB5_LIBS)

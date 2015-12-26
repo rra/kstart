@@ -84,8 +84,7 @@ AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit setsid])
-AC_REPLACE_FUNCS([asprintf daemon mkstemp reallocarray setenv strlcat strlcpy])
-AC_REPLACE_FUNCS([strndup])
+AC_REPLACE_FUNCS([asprintf daemon mkstemp reallocarray setenv])
 
 dnl Enable appropriate warnings.
 AM_CONDITIONAL([WARNINGS_GCC], [test x"$GCC" = xyes && test x"$CLANG" != xyes])

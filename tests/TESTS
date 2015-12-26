@@ -23,9 +23,6 @@ portable/mkstemp
 portable/reallocarray
 portable/setenv
 portable/snprintf
-portable/strlcat
-portable/strlcpy
-portable/strndup
 util/messages
 util/messages-krb5
 util/xmalloc
