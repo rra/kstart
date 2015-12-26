@@ -1,6 +1,6 @@
 =for stopwords
--bhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew Ctrl-C SIGHUP
+-abhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense designator krenew Ctrl-C SIGHUP backoff
 
 =head1 NAME
 

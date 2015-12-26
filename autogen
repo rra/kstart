@@ -1,6 +1,13 @@
 #!/bin/sh
 #
 # Run this shell script to bootstrap as necessary after a fresh checkout.
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
+# Copyright 2005, 2007, 2008, 2011
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
 
 set -e
 
@@ -9,5 +16,7 @@ autoreconf -i --force
 
 # Generate manual pages.
 version=`grep '^kstart' NEWS | head -1 | cut -d' ' -f2`
-pod2man --release="$version" --center="kstart" k5start.pod > k5start.1
-pod2man --release="$version" --center="kstart" krenew.pod > krenew.1
+pod2man --release="$version" --center="kstart" docs/k5start.pod \
+    >docs/k5start.1
+pod2man --release="$version" --center="kstart" docs/krenew.pod \
+    >docs/krenew.1

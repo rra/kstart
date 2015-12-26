@@ -1,7 +1,7 @@
 =for stopwords
--bFhLnPqstvx keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
+-abFhLnPqstvx keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
 init AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
-forwardable proxiable designator Ctrl-C
+forwardable proxiable designator Ctrl-C backoff
 
 =head1 NAME
 

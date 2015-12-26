@@ -73,13 +73,13 @@ krenew_SOURCES = framework.c internal.h krenew.c
 krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
 krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
-dist_man_MANS = k5start.1 krenew.1
+dist_man_MANS = docs/k5start.1 docs/krenew.1
 
 DISTCLEANFILES = config.h.in~ tests/data/.placeholder
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		\
 	build-aux/config.guess build-aux/config.sub build-aux/depcomp	\
 	build-aux/install-sh build-aux/missing config.h.in configure	\
-	k5start.1 krenew.1
+	docs/k5start.1 docs/krenew.1
 
 # Remove the Autoconf cache directory on make distclean.
 distclean-local:
