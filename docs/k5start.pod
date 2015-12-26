@@ -1,7 +1,7 @@
 =for stopwords
--bFhLnPqstvx keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
+-abFhLnPqstvx keytab username kinit LDAP aklog HUP ALRM KRB5CCNAME AFS PAG
 init AKLOG kstart krenew afslog Bense Allbery Navid Golpayegani
-forwardable proxiable designator Ctrl-C
+forwardable proxiable designator Ctrl-C backoff
 
 =head1 NAME
 
@@ -9,14 +9,14 @@ k5start - Obtain and optionally keep active a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<k5start> [B<-bFhLnPqstvx>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
+B<k5start> [B<-abFhLnPqstvx>] [B<-c> I<child pid file>] [B<-f> I<keytab>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-i> I<client instance>] [B<-K> I<minutes>] [B<-k> I<ticket cache>]
     [B<-l> I<time string>] [B<-m> I<mode>] [B<-o> I<owner>]
     [B<-p> I<pid file>] [B<-r> I<service realm>] [B<-S> I<service name>]
-    [B<-u> I<client principal>] [I<username> [I<command> ...]]
+    [B<-u> I<client principal>] [I<principal> [I<command> ...]]
 
-B<k5start> B<-U> B<-f> I<keytab> [B<-bFhLnPqstvx>] [B<-c> I<child pid file>]
+B<k5start> B<-U> B<-f> I<keytab> [B<-abFhLnPqstvx>] [B<-c> I<child pid file>]
     [B<-g> I<group>] [B<-H> I<minutes>] [B<-I> I<service instance>]
     [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-l> I<time string>]
     [B<-m> I<mode>] [B<-o> I<owner>] [B<-p> I<pid file>]
@@ -31,11 +31,11 @@ keytab to obtain Kerberos credentials, such as a web server that needs to
 authenticate to another service such as an LDAP server.
 
 Normally, the principal for which to give tickets should be specified as
-the first argument.  I<username> may be either just a principal name
+the first argument.  I<principal> may be either just a principal name
 (including the optional instance) or a full principal and realm string.
 The B<-u> and B<-i> options can be used as an alternative mechanism for
 specifying the principal, but generally aren't as convenient.  If no
-username is given as either the first argument or the argument to the
+principal is given as either the first argument or the argument to the
 B<-u> option, the client principal defaults to the Unix username of the
 user running B<k5start> in the default local realm.
 
@@ -70,9 +70,42 @@ commands that should receive Ctrl-C.
 If a running B<k5start> receives an ALRM signal, it immediately refreshes
 the ticket cache regardless of whether it is in danger of expiring.
 
+If B<k5start> is run with a command or the B<-K> flag and the B<-x> flag
+is not given, it will keep trying even if the initial authentication
+fails.  It will retry the initial authentication immediately and then with
+exponential backoff to once per minute, and keep trying until
+authentication succeeds or it is killed.  The command, if any, will not be
+started until authentication succeeds.
+
 =head1 OPTIONS
 
 =over 4
+
+=item B<-a>
+
+When run with either the B<-K> flag or a command, always renew tickets
+each time B<k5start> wakes up.  Without this option, B<k5start> will only
+try to renew a ticket as often as necessary to prevent the ticket from
+expiring.  With this option, B<k5start> will renew tickets according to
+the interval specified with the B<-K> flag.
+
+This behavior probably should have been the default behavior of B<-K>.
+The default was not changed to avoid changes for existing users, but for
+new applications, consider always using B<-a> with B<-K>.
+
+This option is important if another program is manipulating the ticket
+cache that B<k5start> is using.  For example, if another program is
+automatically renewing a ticket more frequently than B<k5start>, then
+B<k5start> will never see a ticket that is close to expiring and will
+therefore, by default, never try to renew the ticket.  This means that
+B<k5start> will also never renew AFS tokens, even if the B<-t> option was
+given, since B<k5start> only renews AFS tokens after it successfully
+renews a ticket.  If this option is specified in such a situation,
+B<k5start> will renew its ticket every time it checks the ticket, so AFS
+tokens will be renewed.
+
+This argument is only valid in combination with either B<-K> or a command
+to run.
 
 =item B<-b>
 
@@ -80,7 +113,7 @@ After starting, detach from the controlling terminal and run in the
 background.  This option only makes sense in combination with B<-K> or a
 command that B<k5start> will be running and can only be used if a keytab
 is specified with F<-f>.  B<k5start> will not background itself until
-after it does the initial authentication, so that any initial errors will
+after it has tried authenticating once, so that any initial errors will
 be reported, but it will then redirect output to F</dev/null> and no
 subsequent errors will be reported.
 
@@ -139,10 +172,17 @@ Check for a happy ticket, defined as one that has a remaining lifetime of
 at least I<minutes> minutes.  If such a ticket is found, do not attempt
 authentication.  Instead, just run the command (if one was specified) or
 exit immediately with status 0 (if none was).  Otherwise, try to obtain a
-new ticket and then run the command, if any.  Cannot be used with B<-K>.
+new ticket and then run the command, if any.
 
 If B<-H> is used with B<-t>, the external program will always be run even
 if a ticket with a sufficient remaining lifetime was found.
+
+If B<-H> is used with B<-K>, B<k5start> will not exit immediately.
+Instead, the specified remaining lifetime will replace the default value
+of two minutes, meaning that B<k5start> will ensure, each time it wakes
+up, that the ticket has a remaining lifetime of the I<minutes> argument.
+This is an alternative to B<-a> to ensure that tickets always have a
+certain minimal amount of lifetime remaining.
 
 =item B<-h>
 
@@ -168,9 +208,13 @@ option.
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before or less than two minutes after the next scheduled check, and gets a
-new ticket if needed.  If this option is not given but a command was given
-on the command line, an interval appropriate for the ticket lifetime will
-be used.
+new ticket if needed.  (In other words, it ensures that the ticket will
+always have a remaining lifetime of at least two minutes.)  If the B<-H>
+flag is also given, the lifetime specified by it replaces the two minute
+default.
+
+If this option is not given but a command was given on the command line,
+the default interval is 60 minutes (1 hour).
 
 If an error occurs in refreshing the ticket cache, the wake-up interval
 will be shortened to one minute and the operation retried at that interval
@@ -332,8 +376,12 @@ every 10 minutes to check if the ticket is about to expire.
         host/example.com
 
 Do the same, but using the default ticket cache and run the command
-/usr/local/bin/auth-backup.  B<k5start> will continue running until the
-command finishes.
+F</usr/local/bin/auth-backup>.  B<k5start> will continue running until the
+command finishes.  If the initial authentication fails, keep trying, and
+don't start the command until it succeeds.  This could be used during
+system startup for a command that must have valid tickets before starting,
+and tolerates having B<k5start> start before the network is completely set
+up.
 
     k5start -f /etc/krb5.keytab -K 10 -l 10h host/example.com \
         /usr/local/bin/auth-backup
@@ -397,20 +445,32 @@ If a command is specified and B<-k> was not given, B<k5start> will create
 a temporary ticket cache file of the form C</tmp/krb5cc_%d_%s> where %d is
 the UID B<k5start> is running as and %s is a random string.
 
+=head1 AUTHORS
+
+B<k5start> was based on the k4start code written by Robert Morgan.  It was
+ported to Kerberos v5 by Booker C. Bense.  Additional cleanup and current
+maintenance are done by Russ Allbery <eagle@eyrie.org>.
+
+Implementations of B<-b> and B<-p> and the example for a Debian init
+script are based on code contributed by Navid Golpayegani.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2015 Russ Allbery <eagle@eyrie.org>
+
+Copyright 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+The Board of Trustees of the Leland Stanford Junior University
+
+Copying and distribution of this file, with or without modification, are
+permitted in any medium without royalty provided the copyright notice and
+this notice are preserved.  This file is offered as-is, without any
+warranty.
+
 =head1 SEE ALSO
 
 kinit(1), krenew(1)
 
 The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
 will have the current version of B<k5start> and B<krenew>.
-
-=head1 AUTHORS
-
-B<k5start> was based on the k4start code written by Robert Morgan.  It was
-ported to Kerberos v5 by Booker C. Bense.  Additional cleanup and current
-maintenance are done by Russ Allbery <rra@stanford.edu>.
-
-Implementations of B<-b> and B<-p> and the example for a Debian init
-script are based on code contributed by Navid Golpayegani.
 
 =cut

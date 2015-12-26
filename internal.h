@@ -6,8 +6,8 @@
  * binaries.  Also defines the config struct that's used as a configuration
  * interface to run_framework.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2011, 2012
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2011, 2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -27,6 +27,7 @@ struct krenew_private;
 
 /* The struct used to pass configuration details to run_framework. */
 struct config {
+    bool always_renew;          /* Whether to renew on every wakeup. */
     bool background;            /* Whether to run in the background. */
     bool clean_cache;           /* Whether to destroy ticket cache at exit. */
     bool do_aklog;              /* Whether to run aklog. */

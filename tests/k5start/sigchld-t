@@ -2,8 +2,8 @@
 #
 # Test for proper SIGCHLD handling in k5start.
 #
-# Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2010
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2010, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -36,7 +36,6 @@ $ENV{KRB5CCNAME} = 'krb5cc_test';
 
 # We're going to test multiple receipt of SIGCHLD and see if k5start loses
 # track of the signal handler and then keeps running until its timeout period.
-my $start = time;
 my $pid = fork;
 if (not defined $pid) {
     BAIL_OUT ("cannot fork: $!\n");
@@ -44,9 +43,14 @@ if (not defined $pid) {
     exec ($K5START, '-qUf', "$DATA/test.keytab", '-K60', '-c', 'child-pid',
           '--', 'sleep', '100');
 } else {
-    sleep 1;
-    kill (SIGCHLD, $pid) or BAIL_OUT ("cannot send SIGCHLD to child $pid\n");
+    my $tries = 0;
+    while (not -f 'child-pid' and $tries < 100) {
+        select (undef, undef, undef, 0.1);
+        $tries++;
+    }
 }
+kill (SIGCHLD, $pid) or BAIL_OUT ("cannot send SIGCHLD to child $pid\n");
+my $start = time;
 open (CHILD, '<', 'child-pid') or BAIL_OUT ("cannot open child-pid: $!\n");
 my $child = <CHILD>;
 close CHILD;

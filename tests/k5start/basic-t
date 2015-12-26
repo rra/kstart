@@ -2,7 +2,7 @@
 #
 # Tests for basic k5start functionality.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Copyright 2008, 2009
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -163,7 +163,7 @@ SKIP: {
     is ($status, 0, 'k5start -S -I succeeds');
     is ($err, '', ' with no errors');
     my $short = $principal;
-    $short =~ s/\@stanford\.edu$//;
+    $short =~ s/\@\S+$//;
     like ($out, qr/^Kerberos\ initialization\ for\ \Q$principal\E(\@\S+)?
                    \ for\ service\ \Q$short\E(\@\S+)?\n
                    k5start:\ authenticating\ as\ \Q$principal\E(\@\S+)?\n

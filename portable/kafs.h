@@ -15,8 +15,8 @@
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2008, 2010
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006, 2007, 2008, 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -42,7 +42,7 @@
 #define PORTABLE_KAFS_H 1
 
 #include <config.h>
-#ifdef HAVE_KERBEROS
+#ifdef HAVE_KRB5
 # include <portable/krb5.h>
 #endif
 #include <portable/macros.h>
@@ -64,8 +64,22 @@ BEGIN_DECLS
 #  include <kafs.h>
 # elif HAVE_KOPENAFS_H
 #  include <kopenafs.h>
+# else
+struct ViceIoctl {
+    void *in, *out;
+    short in_size;
+    short out_size;
+};
+int k_hasafs(void);
+int k_pioctl(char *, struct ViceIoctl *, void *, int);
+int k_setpag(void);
+int k_unlog(void);
 # endif
-# ifndef HAVE_K_HASPAG
+# ifdef HAVE_K_HASPAG
+#  if !defined(HAVE_KAFS_H) && !defined(HAVE_KOPENAFS_H)
+int k_haspag(void);
+#  endif
+# else
 int k_haspag(void) __attribute__((__visibility__("hidden")));
 # endif
 
@@ -75,10 +89,12 @@ int k_haspag(void) __attribute__((__visibility__("hidden")));
 #  include <afs/afssyscalls.h>
 # else
 int lsetpag(void);
+int lpioctl(char *, int, void *, int);
 # endif
-# define k_hasafs() (1)
-# define k_setpag() lsetpag()
-# define k_unlog()  (errno = ENOSYS, -1)
+# define k_hasafs()           (1)
+# define k_pioctl(p, c, a, f) lpioctl((p), (c), (a), (f))
+# define k_setpag()           lsetpag()
+# define k_unlog()            (errno = ENOSYS, -1)
 
 int k_haspag(void) __attribute__((__visibility__("hidden")));
 
@@ -107,10 +123,11 @@ int k_unlog(void);
 /* We have no kafs implementation available. */
 #else
 # undef HAVE_KAFS
-# define k_hasafs() (0)
-# define k_haspag() (0)
-# define k_setpag() (errno = ENOSYS, -1)
-# define k_unlog()  (errno = ENOSYS, -1)
+# define k_hasafs()           (0)
+# define k_haspag()           (0)
+# define k_pioctl(p, c, a, f) (errno = ENOSYS, -1)
+# define k_setpag()           (errno = ENOSYS, -1)
+# define k_unlog()            (errno = ENOSYS, -1)
 #endif
 
 END_DECLS

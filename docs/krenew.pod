@@ -1,6 +1,6 @@
 =for stopwords
--bhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew Ctrl-C SIGHUP
+-abhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
+Allbery Bense designator krenew Ctrl-C SIGHUP backoff
 
 =head1 NAME
 
@@ -8,7 +8,7 @@ krenew - Renew a Kerberos ticket
 
 =head1 SYNOPSIS
 
-B<krenew> [B<-bhiLstvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
+B<krenew> [B<-abhiLstvx>] [B<-c> I<child pid file>] [B<-H> I<minutes>]
     [B<-K> I<minutes>] [B<-k> I<ticket cache>] [B<-p> I<pid file>]
     [I<command> ...]
 
@@ -57,6 +57,32 @@ the ticket cache regardless of whether it is in danger of expiring.
 =head1 OPTIONS
 
 =over 4
+
+=item B<-a>
+
+When run with either the B<-K> flag or a command, always renew tickets
+each time B<krenew> wakes up.  Without this option, B<krenew> will only
+try to renew a ticket as often as necessary to prevent the ticket from
+expiring.  With this option, B<krenew> will renew tickets according to
+the interval specified with the B<-K> flag.
+
+This behavior probably should have been the default behavior of B<-K>.
+The default was not changed to avoid changes for existing users, but for
+new applications, consider always using B<-a> with B<-K>.
+
+This option is important if another program is manipulating the ticket
+cache that B<krenew> is using.  For example, if another program is
+automatically renewing a ticket more frequently than B<krenew>, then
+B<krenew> will never see a ticket that is close to expiring and will
+therefore, by default, never try to renew the ticket.  This means that
+B<krenew> will also never renew AFS tokens, even if the B<-t> option was
+given, since B<krenew> only renews AFS tokens after it successfully renews
+a ticket.  If this option is specified in such a situation, B<krenew> will
+renew its ticket every time it checks the ticket, so AFS tokens will be
+renewed.
+
+This argument is only valid in combination with either B<-K> or a command
+to run.
 
 =item B<-b>
 
@@ -111,7 +137,14 @@ remaining lifetime or renewal was successful, run the command (if one was
 specified) or exit immediately with status 0 (if none was).  Otherwise,
 try to renew the ticket so that it will have a remaining lifetime of at
 least I<minutes>, exit with an error if unsuccessful, and then run the
-command, if any.  Cannot be used with B<-K>.
+command, if any.
+
+If B<-H> is used with B<-K>, B<krenew> will not exit immediately.
+Instead, the specified remaining lifetime will replace the default value
+of two minutes, meaning that B<krenew> will ensure, each time it wakes up,
+that the ticket has a remaining lifetime of the I<minutes> argument.  This
+is an alternative to B<-a> to ensure that tickets always have a certain
+minimal amount of lifetime remaining.
 
 =item B<-h>
 
@@ -128,10 +161,10 @@ continue running, waking up to try again after the next check interval
 ticket cache and B<krenew> should stay around and act on that recreated
 ticket cache once it's present.
 
-Setup errors opening the Kerberos ticket cache or running the command will
-still cause B<krenew> to exit, even if this flag is given.  Only Kerberos
-errors and errors after B<krenew> is running and any command has been
-started will be ignored.
+If the initial ticket cache renew fails, B<krenew> will retry the renewal
+immediately and then with exponential backoff to once per minute, and keep
+trying until authentication succeeds or it is killed.  The command, if
+any, will not be started until cache renewal succeeds.
 
 This flag is only useful in daemon mode or when a command was given.
 
@@ -140,9 +173,13 @@ This flag is only useful in daemon mode or when a command was given.
 Run in daemon mode to keep a ticket alive indefinitely.  The program
 reawakens after I<minutes> minutes, checks if the ticket will expire
 before or less than two minutes before the next scheduled check, and
-renews the ticket if needed.  If this option is not given but a command
-was given on the command line, the default interval is 60 minutes (1
-hour).
+renews the ticket if needed.  (In other words, it ensures that the ticket
+will always have a remaining lifetime of at least two minutes.)  If the
+B<-H> flag is also given, the lifetime specified by it replaces the two
+minute default.
+
+If this option is not given but a command was given on the command line,
+the default interval is 60 minutes (1 hour).
 
 If an error occurs in refreshing the ticket cache that doesn't cause
 B<krenew> to exit, the wake-up interval will be shortened to one minute
@@ -279,17 +316,29 @@ libraries.  The default path for aklog is determined at build time, and
 will normally be whichever of B<aklog> or B<afslog> is found in the user's
 path.
 
+=head1 AUTHORS
+
+B<krenew> was written by Russ Allbery <eagle@eyrie.org>.  It was based
+heavily on B<k5start> by Booker C. Bense, which in turn was based on the
+k4start code written by Robert Morgan.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2015 Russ Allbery <eagle@eyrie.org>
+
+Copyright 2006, 2008, 2009, 2010, 2011, 2012, 2014 The Board of Trustees
+of the Leland Stanford Junior University
+
+Copying and distribution of this file, with or without modification, are
+permitted in any medium without royalty provided the copyright notice and
+this notice are preserved.  This file is offered as-is, without any
+warranty.
+
 =head1 SEE ALSO
 
 k5start(1), kinit(1)
 
 The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
 will have the current version of B<krenew>.
-
-=head1 AUTHORS
-
-B<krenew> was written by Russ Allbery <rra@stanford.edu>.  It was based
-heavily on B<k5start> by Booker C. Bense, which in turn was based on the
-k4start code written by Robert Morgan.
 
 =cut
