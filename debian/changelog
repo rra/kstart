@@ -1,10 +1,10 @@
 kstart (4.2-1) UNRELEASED; urgency=medium
 
   * New upstream release.
-    - k5start when run with -K or as a daemon no longer exits if the
-      initial authentication fails (unless -x was given).
+    - k5start with -K or a command no longer exits if the initial
+      authentication fails (unless -x was given).  (Closes: #705063)
     - k5start and krenew retry the initial authentication with exponential
-      backoff until it succeeds, before running any command.
+      backoff, before running any command.  (Closes: #725175)
     - k5start cleans up temporary ticket caches in failures.
     - The -H flag can now be used in combination with -K.
     - Add new -a flag to both k5start and krenew to attempt authentication
