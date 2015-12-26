@@ -12,6 +12,8 @@ kstart (4.2-1) UNRELEASED; urgency=medium
     - Fix k5start and krenew to not reject the -b flag with -K or a
       command.
   * Drop all patches, merged upstream.
+  * Add debian/gbp.conf reflecting the branch layout of the default
+    packaging repository.
   * Update standards version to 3.9.6 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Fri, 25 Dec 2015 17:06:17 -0800
