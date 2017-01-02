@@ -39,6 +39,8 @@ k5start:
    use that to set the wakeup time if -K was not provided, rather than
    always using a default of one hour.
 
+ * Add anonymous authentication support.
+
 krenew:
 
  * Add an option to send SIGHUP to the child process when krenew exits
