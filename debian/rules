@@ -3,6 +3,9 @@
 # Enable compiler hardening flags.
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+# Enable verbose testing.
+export C_TAP_VERBOSE = 1
+
 DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 ifeq ($(DEB_HOST_ARCH_OS),linux)
     SETPAG = --enable-setpag
@@ -16,6 +19,3 @@ endif
 override_dh_auto_configure:
 	dh_auto_configure --parallel -- --enable-reduced-depends $(SETPAG) \
 	    --without-libkafs --with-aklog=/usr/bin/aklog
-
-override_dh_installchangelogs:
-	dh_installchangelogs NEWS

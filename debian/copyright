@@ -1,6 +1,6 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Contact: Russ Allbery <eagle@eyrie.org>
-Source: http://www.eyrie.org/~eagle/software/kstart/
+Source: https://www.eyrie.org/~eagle/software/kstart/
 Copyright: 1995-1997, 1999-2014
     The Board of Trustees of the Leland Stanford Junior University
   2015 Russ Allbery <eagle@eyrie.org>
@@ -172,7 +172,7 @@ License: GPL-2+ with Autoconf exception
  Public License for more details.
  .
  You should have received a copy of the GNU General Public License along
- with this program.  If not, see <http://www.gnu.org/licenses/>.
+ with this program.  If not, see <https://www.gnu.org/licenses/>.
  .
  As a special exception to the GNU General Public License, if you
  distribute this file as part of a program that contains a configuration
@@ -195,7 +195,7 @@ License: GPL-3+ with Autoconf exception
  Public License for more details.
  .
  You should have received a copy of the GNU General Public License along
- with this program; if not, see <http://www.gnu.org/licenses/>.
+ with this program; if not, see <https://www.gnu.org/licenses/>.
  .
  As a special exception to the GNU General Public License, if you
  distribute this file as part of a program that contains a configuration
