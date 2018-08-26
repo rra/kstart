@@ -14,8 +14,8 @@ else
 endif
 
 %:
-	dh $@ --parallel --with autoreconf
+	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure --parallel -- --enable-reduced-depends $(SETPAG) \
+	dh_auto_configure -- --enable-reduced-depends $(SETPAG) \
 	    --without-libkafs --with-aklog=/usr/bin/aklog
