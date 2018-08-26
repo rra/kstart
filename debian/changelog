@@ -11,6 +11,7 @@ kstart (4.2-2) UNRELEASED; urgency=medium
   * Switch to the DEP-14 branch layout and update debian/gbp.conf and
     Vcs-Git accordingly.
   * Refresh upstream signing key.
+  * Run wrap-and-sort -ast.
 
  -- Russ Allbery <rra@debian.org>  Sun, 26 Aug 2018 12:56:58 -0700
 

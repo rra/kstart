@@ -2,8 +2,11 @@ Source: kstart
 Section: net
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 11), libkrb5-dev,
- libtest-pod-perl, perl
+Build-Depends:
+ debhelper (>= 11),
+ libkrb5-dev,
+ libtest-pod-perl,
+ perl,
 Rules-Requires-Root: no
 Standards-Version: 4.2.1
 Homepage: https://www.eyrie.org/~eagle/software/kstart/
@@ -12,7 +15,9 @@ Vcs-Browser: https://git.eyrie.org/?p=kerberos/kstart.git
 
 Package: kstart
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
 Description: Kerberos kinit supporting AFS and ticket refreshing
  k5start can be used instead of kinit to obtain Kerberos tickets.  krenew
  can be used instead of kinit -R to renew renewable tickets.  They are
