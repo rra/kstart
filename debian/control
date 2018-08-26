@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9), dh-autoreconf, libkrb5-dev,
  libtest-pod-perl, perl
 Standards-Version: 3.9.6
 Homepage: http://www.eyrie.org/~eagle/software/kstart/
-Vcs-Git: git://git.eyrie.org/kerberos/kstart.git -b debian
+Vcs-Git: git://git.eyrie.org/kerberos/kstart.git -b debian/master
 Vcs-Browser: http://git.eyrie.org/?p=kerberos/kstart.git
 
 Package: kstart
