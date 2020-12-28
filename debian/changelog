@@ -1,4 +1,4 @@
-kstart (4.2-3) UNRELEASED; urgency=medium
+kstart (4.2-3) unstable; urgency=medium
 
   * Add debian/upstream/metadata file.
   * Change the Debian packaging branch to debian/unstable.
@@ -10,7 +10,7 @@ kstart (4.2-3) UNRELEASED; urgency=medium
     since they just repeat the Files: * stanza.
   * Refresh upstream signing key.
 
- -- Russ Allbery <rra@debian.org>  Sun, 27 Dec 2020 22:25:53 -0800
+ -- Russ Allbery <rra@debian.org>  Sun, 27 Dec 2020 22:40:44 -0800
 
 kstart (4.2-2) unstable; urgency=medium
 
