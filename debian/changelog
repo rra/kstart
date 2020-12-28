@@ -2,6 +2,7 @@ kstart (4.2-3) UNRELEASED; urgency=medium
 
   * Add debian/upstream/metadata file.
   * Change the Debian packaging branch to debian/unstable.
+  * Change the canonical packaging repository to Salsa.
   * Update to debhelper compatibility level v13.
     - Depend on debhelper-compat instead of using debian/compat.
   * Update standards version to 4.5.1 (no changes required).
