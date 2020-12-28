@@ -1,0 +1,8 @@
+Name: kstart
+Contact: Russ Allbery <eagle@eyrie.org>
+Documentation: https://www.eyrie.org/~eagle/software/kstart/
+Bug-Database: https://github.com/rra/kstart/issues
+Bug-Submit: https://github.com/rra/kstart/issues/new
+Changelog: https://www.eyrie.org/~eagle/software/kstart/news.html
+Repository: https://git.eyrie.org/git/kerberos/kstart.git
+Repository-Browse: https://git.eyrie.org/?p=kerberos/kstart.git
