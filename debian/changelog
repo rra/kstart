@@ -6,6 +6,8 @@ kstart (4.2-3) UNRELEASED; urgency=medium
   * Update to debhelper compatibility level v13.
     - Depend on debhelper-compat instead of using debian/compat.
   * Update standards version to 4.5.1 (no changes required).
+  * Remove package copyright and license stanzas from debian/copyright,
+    since they just repeat the Files: * stanza.
   * Refresh upstream signing key.
 
  -- Russ Allbery <rra@debian.org>  Sun, 27 Dec 2020 22:25:53 -0800
