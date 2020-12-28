@@ -1,5 +1,6 @@
 kstart (4.2-3) UNRELEASED; urgency=medium
 
+  * Change the Debian packaging branch to debian/unstable.
   * Update to debhelper compatibility level v13.
     - Depend on debhelper-compat instead of using debian/compat.
 
