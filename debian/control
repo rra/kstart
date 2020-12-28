@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends:
- debhelper (>= 11),
+ debhelper-compat (= 13),
  libkrb5-dev,
  libtest-pod-perl,
  perl,
