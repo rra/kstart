@@ -1,0 +1,203 @@
+# Package metadata for kstart.
+#
+# This file contains configuration for DocKnot used to generate
+# documentation files (like README.md) and web pages.  Other documentation
+# in this package is generated automatically from these files as part of
+# the release process.  For more information, see DocKnot's documentation.
+#
+# DocKnot is available from <https://www.eyrie.org/~eagle/software/docknot/>.
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Coypright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2002, 2004-2011, 2014
+#    The Board of Trustees of the Leland Stanford Junior University
+#
+# SPDX-License-Identifier: MIT
+
+format: v1
+
+name: kstart
+maintainer: Russ Allbery <eagle@eyrie.org>
+version: '4.3'
+synopsis: kinit daemon with keytab, renewal, and AFS support
+
+license:
+  name: Expat
+copyrights:
+  - holder: Russ Allbery <eagle@eyrie.org>
+    years: 2015, 2021
+  - holder: The Board of Trustees of the Leland Stanford Junior University
+    years: 1995-1997, 1999-2002, 2004-2012, 2014
+
+build:
+  autoconf: '2.64'
+  automake: '1.11'
+  autotools: true
+  kerberos: true
+  manpages: true
+  middle: |
+    If you are using aklog, afslog, or some other program to obtain AFS
+    tokens, give its path to configure with the `--with-aklog` option, as in:
+
+    ```
+        ./configure --with-aklog=/usr/local/bin/aklog
+    ```
+
+    This program will be run when the `-t` option is given to k5start or
+    krenew.
+
+    To enable support for AFS PAGs, pass the `--enable-setpag` flag to
+    configure.  It is not enabled by default.  On platforms other than Linux
+    and without the kafs library, you will need to add the `--with-afs` flag
+    specifying the location of your AFS includes and libraries unless they're
+    on your standard search path.  For example:
+
+    ```
+        ./configure --enable-setpag --with-afs=/usr/afsws
+    ```
+
+    When enabled, k5start and krenew will always create a new PAG before
+    authentication when running a specific command and when aklog is being
+    run.
+  reduced_depends: true
+  type: Autoconf
+distribution:
+  packaging:
+    debian:
+      package: kstart
+      summary: |
+        A Debian package (named kstart) is available from Debian as of Debian
+        4.0 (etch).  It includes k5start, and krenew built with setpag support
+        and `/usr/bin/aklog` as the aklog path.
+  section: kerberos
+  tarname: kstart
+  version: kstart
+support:
+  email: eagle@eyrie.org
+  github: rra/kstart
+  web: https://www.eyrie.org/~eagle/software/kstart/
+vcs:
+  browse: https://git.eyrie.org/?p=kerberos/kstart.git
+  github: rra/kstart
+  openhub: kstart
+  type: Git
+  url: https://git.eyrie.org/git/kerberos/kstart.git
+
+docs:
+  user:
+    - name: k5start
+      title: k5start manual page
+    - name: krenew
+      title: krenew manual page
+
+blurb: |
+  k5start and krenew are modified versions of kinit which add support for
+  running as a daemon to maintain a ticket cache, running a command with
+  credentials from a keytab and maintaining a ticket cache until that command
+  completes, obtaining AFS tokens (via an external aklog) after obtaining
+  tickets, and creating an AFS PAG for a command.  They are primarily useful
+  in conjunction with long-running jobs; for moving ticket handling code out
+  of servers, cron jobs, or daemons; and to obtain tickets and AFS tokens with
+  a single command.
+
+description: |
+  k5start is a modified version of kinit.  It can be used as a substitute for
+  kinit (with some additional helpful options), but it can also obtain
+  credentials automatically from a keytab.  It can run as a daemon, waking up
+  periodically to refresh credentials using that keytab, and can also check
+  for the validity of tickets and only refresh if they're no longer valid.
+
+  Some of these capabilities have been included in Kerberos's kinit, but the
+  ability to maintain tickets while running as a daemon has not and is useful
+  for servers that need to use Kerberos.  Using kstart allows the ticket
+  handling to be moved out of the server into a separate process dedicated
+  just to that purpose.
+
+  k5start can optionally run an external program whenever the ticket is
+  refreshed to obtain an AFS token, and therefore can be used in conjunction
+  with a program like aklog or afslog to maintain an AFS token.  When built
+  with support for AFS PAGs, it can also put the program in its own PAG so
+  that its authentication doesn't affect any other programs.
+
+  krenew is identical to k5start except that rather than obtaining new tickets
+  from a password or keytab, it renews an existing renewable ticket cache.  It
+  can be used to periodically renew tickets and optionally AFS tokens for
+  long-running processes in cases where using a keytab is inappropriate (such
+  as users running their own jobs with their own credentials).
+
+requirements: |
+  As Kerberos programs, k5start and krenew require Kerberos libraries to link
+  against.  They have only been thoroughly tested with the MIT Kerberos and
+  Heimdal libraries on Debian, but should work with the included Kerberos
+  libraries on many other platforms.
+
+  Other than that, all you should need is a suitable C compiler.  Neither
+  program has been tested on non-Unix systems.
+
+  If you want the `-t` option to work, you need a program to obtain AFS tokens
+  from Kerberos tickets.  You can specify the program to use on your system
+  with the `--with-aklog` option to configure; if that option is not given,
+  the first of aklog or afslog that is found on your path at configure time
+  will be used.
+
+  For AFS PAG support, one of Linux, Mac OS X, Solaris 11, the kafs library
+  that comes with either Heimdal or KTH Kerberos, the kopenafs library that
+  comes with newer OpenAFS, AFS header files (on any other platform besides
+  AIX or IRIX), or AFS libraries (on AIX and IRIX) is required.  AIX binaries
+  with AFS PAG support may not run on AIX systems that do not have an AFS
+  client installed due to how AIX handles system calls.
+
+test:
+  lancaster: true
+  prefix: |
+    In order to test the client in a meaningful way, you will need to do some
+    preparatory work before running the test suite.  Follow the instructions
+    in `tests/data/README` first.  Then, you can run the test suite with:
+  suffix: |
+    Perl 5.008 or later and the kinit and klist programs from MIT Kerberos,
+    not Heimdal, are required to run the test suite.  The following additional
+    Perl modules will be used by the test suite if present:
+
+    * Test::Pod
+    * Test::Spelling
+
+sections:
+  - title: Thanks
+    body: |
+      To Navid Golpayegani, for contributing the initial implementation of the
+      `-b` option to background after the initial authentication and the `-p`
+      option to save the PID in a file.
+
+      To Buck Huppmann, for contributing an RPM spec file and suggesting
+      krenew.
+
+      To Adam Megacz, for pointing out that checking the executability of the
+      aklog program isn't necessary and for contributing the code to propagate
+      signals to a child process.
+
+      To Quanah Gibson-Mount, for pointing out various build system issues and
+      missing documentation.
+
+      To Sidney Cammeresi, for catching a missing include in krenew and for
+      providing information and suggestions about Mac OS X's default ticket
+      cache and its effects on the `-b` option of k5start and krenew.
+
+      To Thomas Kula, for pointing out that `k_hasafs` has to be called before
+      `k_setpag` when using the kafs functions.
+
+      To Thomas Weiss, for noticing that code restructuring caused the
+      argument to `-H` to be ignored in k5start and that `-H` and `-K` should
+      be diagnosed as mutually exclusive.
+
+      To Howard Wilkinson, for the initial version of the `-o`, `-g`, and `-m`
+      support and further debugging of it.
+
+      To Sascha Tandel, for the initial version of `-c` support and reports of
+      build problems when the AFS libauthent and libafsrpc libraries didn't
+      work.
+
+      To Gautam Iyer, for the initial version of `-H` support in krenew.
+
+      To Mike Horansky, for the idea of copying the current ticket cache when
+      running krenew with a command, thereby saving the ticket cache from
+      destruction when the user logs out.
