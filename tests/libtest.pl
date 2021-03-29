@@ -5,7 +5,8 @@
 # than in a separate namespace.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2007, 2008, 2009
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2007-2009
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -93,5 +94,5 @@ sub klist {
 sub tokens {
     my $output = `tokens 2>&1`;
     return unless $? == 0;
-    return ($output =~ /^(User\'s \([^\)]+\) )?[Tt]okens for /m) ? 1 : 0;
+    return ($output =~ /^(User\'s \([^\)]+\) )?(\S+ )?[Tt]okens for /m) ? 1 : 0;
 }

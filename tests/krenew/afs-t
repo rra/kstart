@@ -3,7 +3,8 @@
 # Tests for krenew with AFS.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2009
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -50,7 +51,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
 # Now, see if we can renew tickets and get a token.
 is ($status, 0, 'krenew -t succeeds');
 is ($err, '', ' with no errors');
-like ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+like ($out, qr/^(User\'s \([^\)]+\) )?(\S+ )?[Tt]okens for /m,
       ' and the right output');
 
 # Set the token program to something that doesn't obtain tokens.  Everything
@@ -59,7 +60,7 @@ $ENV{AKLOG} = '/bin/true';
 ($out, $err, $status) = command ($KRENEW, '-t', '--', 'tokens');
 is ($status, 0, 'krenew -t succeeds with no aklog');
 is ($err, '', ' with no errors');
-unlike ($out, qr/^(User\'s \([^\)]+\) )?[Tt]okens for /m,
+unlike ($out, qr/^(User\'s \([^\)]+\) )?(\S+ )?[Tt]okens for /m,
         ' and we have no tokens');
 delete $ENV{AKLOG};
 
