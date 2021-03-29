@@ -22,7 +22,6 @@ portable/daemon
 portable/mkstemp
 portable/reallocarray
 portable/setenv
-portable/snprintf
 util/messages
 util/messages-krb5
 util/xmalloc

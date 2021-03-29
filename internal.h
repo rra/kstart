@@ -7,7 +7,8 @@
  * interface to run_framework.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2011, 2012, 2014
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2011-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -36,8 +37,8 @@ struct config {
     bool verbose;               /* Whether to do verbose logging. */
 
     char **command;             /* NULL-terminated command to run, if any. */
-    int happy_ticket;           /* Remaining life of ticket required. */
-    int keep_ticket;            /* How often to wake up to check ticket. */
+    long happy_ticket;          /* Remaining life of ticket required. */
+    long keep_ticket;           /* How often to wake up to check ticket. */
 
     const char *aklog;          /* Path to aklog. */
 

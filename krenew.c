@@ -8,7 +8,8 @@
  * any longer.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -35,7 +36,7 @@ struct krenew_private {
 };
 
 /* The usage message. */
-const char usage_message[] = "\
+static const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
    -a                   Renew on each wakeup when running as a daemon\n\
    -b                   Fork and run in the background\n\
@@ -60,10 +61,12 @@ is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
 /* Included in the usage message if AFS support is compiled in. */
-const char usage_message_kafs[] = "\n\
+#ifdef HAVE_KAFS
+static const char usage_message_kafs[] = "\n\
 When invoked with -t and a command, krenew will create a new AFS PAG for\n\
 the command before running the AKLOG program to keep its AFS credentials\n\
 isolated from other processes.\n";
+#endif
 
 
 /*
@@ -71,7 +74,7 @@ isolated from other processes.\n";
  * only argument.  If status is zero, the message is printed to standard
  * output; otherwise, it is sent to standard error.
  */
-static void
+__attribute__((__noreturn__)) static void
 usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
@@ -270,7 +273,6 @@ main(int argc, char *argv[])
         case 'a': config.always_renew = true;   break;
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
-        case 'h': usage(0);                     break;
         case 'i': config.ignore_errors = true;  break;
         case 'k': config.cache = optarg;        break;
         case 'p': config.pidfile = optarg;      break;
@@ -284,6 +286,8 @@ main(int argc, char *argv[])
             if (config.happy_ticket <= 0)
                 die("-H limit argument %s invalid", optarg);
             break;
+        case 'h':
+            usage(0);
         case 'K':
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
@@ -301,7 +305,6 @@ main(int argc, char *argv[])
 
         default:
             usage(1);
-            break;
         }
 
     /* Parse arguments.  If any are given, they will be the command to run. */

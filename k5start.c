@@ -11,8 +11,8 @@
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <eagle@eyrie.org>
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 1995-1997, 1999-2002, 2004-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -59,7 +59,7 @@ struct k5start_private {
 };
 
 /* The usage message. */
-const char usage_message[] = "\
+static const char usage_message[] = "\
 Usage: k5start [options] [name [command]]\n\
    -u <client principal>        (default: local username)\n\
    -i <client instance>         (default: null)\n\
@@ -100,18 +100,19 @@ is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
 /* Included in the usage message if AFS support is compiled in. */
-const char usage_message_kafs[] = "\n\
+#ifdef HAVE_KAFS
+static const char usage_message_kafs[] = "\n\
 When invoked with -t and a command, k5start will create a new AFS PAG for\n\
 the command before running the AKLOG program to keep its AFS credentials\n\
 isolated from other processes.\n";
-
+#endif
 
 /*
  * Print out the usage message and then exit with the status given as the
  * only argument.  If status is zero, the message is printed to standard
  * output; otherwise, it is sent to standard error.
  */
-static void
+__attribute__((__noreturn__)) static void
 usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
@@ -409,7 +410,6 @@ main(int argc, char *argv[])
         case 'b': config.background = true;     break;
         case 'c': config.childfile = optarg;    break;
         case 'F': nonforwardable = true;        break;
-        case 'h': usage(0);                     break;
         case 'I': sinst = optarg;               break;
         case 'i': inst = optarg;                break;
         case 'k': config.cache = optarg;        break;
@@ -429,7 +429,7 @@ main(int argc, char *argv[])
             private.keytab = optarg;
             break;
         case 'g':
-            private.group = convert_number(optarg, 10);
+            private.group = (gid_t) convert_number(optarg, 10);
             if (private.group == (gid_t) -1) {
                 gr = getgrnam(optarg);
                 if (gr == NULL)
@@ -443,6 +443,8 @@ main(int argc, char *argv[])
             if (config.happy_ticket <= 0)
                 die("-H limit argument %s invalid", optarg);
             break;
+        case 'h':
+            usage(0);
         case 'K':
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
@@ -462,16 +464,16 @@ main(int argc, char *argv[])
             code = krb5_string_to_deltat(optarg, &life_secs);
             if (code != 0 || life_secs == 0)
                 die("bad lifetime value %s, use 10h 10m format", optarg);
-            lifetime = life_secs / 60;
+            lifetime = (int) life_secs / 60;
             break;
         case 'm':
-            private.mode = convert_number(optarg, 8);
+            private.mode = (mode_t) convert_number(optarg, 8);
             if (private.mode <= 0)
                 die("-m mode argument %s invalid", optarg);
             private.set_perms = true;
             break;
         case 'o':
-            private.owner = convert_number(optarg, 10);
+            private.owner = (uid_t) convert_number(optarg, 10);
             if (private.owner == (uid_t) -1) {
                 pw = getpwnam(optarg);
                 if (pw == NULL)
@@ -486,7 +488,6 @@ main(int argc, char *argv[])
 
         default:
             usage(1);
-            break;
         }
 
     /*
@@ -532,7 +533,7 @@ main(int argc, char *argv[])
     if (config.command != NULL && private.keytab == NULL)
         die("running a command requires a keytab be specified with -f");
     if (lifetime > 0 && config.keep_ticket > lifetime)
-        die("-K limit %d must be smaller than lifetime %d",
+        die("-K limit %ld must be smaller than lifetime %d",
             config.keep_ticket, lifetime);
     if (principal != NULL && strchr(principal, '/') != NULL && inst != NULL)
         die("instance specified in the principal and with -i");
@@ -661,8 +662,9 @@ main(int argc, char *argv[])
     if (sinst == NULL)
         sinst = srealm;
     xasprintf(&private.service, "%s/%s@%s", sname, sinst, srealm);
-    code = krb5_build_principal(ctx, &private.ksprinc, strlen(srealm),
-                                srealm, sname, sinst, (const char *) NULL);
+    code = krb5_build_principal(ctx, &private.ksprinc,
+                                (unsigned int) strlen(srealm), srealm,
+                                sname, sinst, (const char *) NULL);
     if (code != 0)
         die_krb5(ctx, code, "error creating service principal name");
 

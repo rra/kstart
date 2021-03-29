@@ -1,9 +1,8 @@
 dnl Autoconf configuration for kstart.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2015 Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-dnl     2010, 2011, 2014
+dnl Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+dnl Copyright 2000-2011, 2014
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy
@@ -24,7 +23,7 @@ m4_pattern_forbid([^_?RRA_])
 
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
-RRA_PROG_CC_CLANG
+RRA_PROG_CC_WARNINGS_FLAGS
 AC_SYS_LARGEFILE
 AM_PROG_CC_C_O
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -71,8 +70,8 @@ AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
 
 dnl Other portability checks.
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([sys/bitypes.h sys/select.h sys/time.h syslog.h])
-AC_CHECK_DECLS([snprintf, vsnprintf])
+AC_CHECK_HEADERS([strings.h sys/bitypes.h sys/select.h sys/time.h syslog.h])
+AC_CHECK_DECLS([reallocarray])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
 AC_TYPE_LONG_LONG_INT
@@ -82,13 +81,8 @@ AC_CHECK_TYPES([sig_atomic_t], [], [],
      #include <signal.h>])
 AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
-RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit setsid])
 AC_REPLACE_FUNCS([asprintf daemon mkstemp reallocarray setenv])
-
-dnl Enable appropriate warnings.
-AM_CONDITIONAL([WARNINGS_GCC], [test x"$GCC" = xyes && test x"$CLANG" != xyes])
-AM_CONDITIONAL([WARNINGS_CLANG], [test x"$CLANG" = xyes])
 
 dnl Create the tests/data directory.
 AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])

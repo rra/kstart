@@ -20,8 +20,8 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2015 Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -120,8 +120,8 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
     realm = krb5_principal_get_realm(ctx, user);
     if (realm == NULL)
         return KRB5_CONFIG_NODEFREALM;
-    return krb5_build_principal(ctx, princ, strlen(realm), realm, "krbtgt",
-                                realm, (const char *) NULL);
+    return krb5_build_principal(ctx, princ, (unsigned int) strlen(realm),
+                                realm, "krbtgt", realm, (const char *) NULL);
 }
 
 
