@@ -166,31 +166,29 @@ ticket_expired(krb5_context ctx, struct config *config)
     increds_valid = true;
 
     /* Check the expiration time and renewal limit. */
-    if (code == 0) {
-        now = time(NULL);
-        then = outcreds->times.endtime;
-        if (config->happy_ticket > 0)
-            offset = 60 * (config->keep_ticket + config->happy_ticket);
-        else
-            offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
-        if (then < now + offset)
-            code = KRB5KRB_AP_ERR_TKT_EXPIRED;
+    now = time(NULL);
+    then = outcreds->times.endtime;
+    if (config->happy_ticket > 0)
+        offset = 60 * (config->keep_ticket + config->happy_ticket);
+    else
+        offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
+    if (then < now + offset)
+        code = KRB5KRB_AP_ERR_TKT_EXPIRED;
 
-        /*
-         * The error code for an inability to renew the ticket for long enough
-         * is arbitrary.  It just needs to be different than the error code
-         * that indicates we can renew the ticket and coordinated with the
-         * check in krenew's authentication callback.
-         *
-         * If the ticket is not going to expire, we skip this check.
-         * Otherwise, krenew -H 1 would fail even if the ticket had plenty of
-         * remaining lifespan if it was not renewable.
-         */
-        if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
-            then = outcreds->times.renew_till;
-            if (then < now + offset)
-                code = KRB5KDC_ERR_KEY_EXP;
-        }
+    /*
+     * The error code for an inability to renew the ticket for long enough is
+     * arbitrary.  It just needs to be different than the error code that
+     * indicates we can renew the ticket and coordinated with the check in
+     * krenew's authentication callback.
+     *
+     * If the ticket is not going to expire, we skip this check.  Otherwise,
+     * krenew -H 1 would fail even if the ticket had plenty of remaining
+     * lifespan if it was not renewable.
+     */
+    if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+        then = outcreds->times.renew_till;
+        if (then < now + offset)
+            code = KRB5KDC_ERR_KEY_EXP;
     }
 
 done:

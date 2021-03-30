@@ -503,7 +503,6 @@ main(int argc, char *argv[])
         argv++;
     }
     if (argc >= 1 && strcmp(argv[0], "--") == 0) {
-        argc--;
         argv++;
     }
     if (argv[0] != NULL)

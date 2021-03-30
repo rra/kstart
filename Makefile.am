@@ -151,3 +151,11 @@ tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
 check-local: $(check_PROGRAMS)
 	tests/runtests -l '$(abs_top_srcdir)/tests/TESTS'
+
+# Used by maintainers to check the source code with cppcheck.
+check-cppcheck:
+	cd $(abs_top_srcdir) &&						\
+	    find . -name .git -prune -o -name '*.[ch]' -print		\
+	    | cppcheck -q --force --error-exitcode=2 --file-list=-	\
+		--suppressions-list=tests/data/cppcheck.supp		\
+		--enable=warning,performance,portability,style
