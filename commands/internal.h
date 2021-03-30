@@ -60,11 +60,11 @@ struct config {
      */
     pid_t child;
 
-    /* Private data for the two programs. */
+    /* Internal configuration for the two programs. */
     union {
-        struct k5start_private *k5start;
-        struct krenew_private *krenew;
-    } private;
+        struct k5start_internal *k5start;
+        struct krenew_internal *krenew;
+    } internal;
 
     /* Callbacks. */
     krb5_error_code (*auth)(krb5_context, struct config *, krb5_error_code);
