@@ -39,7 +39,7 @@
 #endif
 #include <time.h>
 
-#include <internal.h>
+#include <commands/internal.h>
 #include <util/command.h>
 #include <util/macros.h>
 #include <util/messages-krb5.h>

@@ -3,6 +3,7 @@
 # Tests for error handling in k5start.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
 # Copyright 2011
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -11,10 +12,10 @@
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Don't overwrite the user's ticket cache.
 $ENV{KRB5CCNAME} = 'krb5cc_test';

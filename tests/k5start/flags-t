@@ -3,7 +3,8 @@
 # Tests for basic k5start functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009, 2010
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2010
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -11,13 +12,13 @@
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
@@ -33,7 +34,7 @@ my $principal = contents ("$DATA/test.principal");
 # we're supposed to use and bail if we can't find one.
 my $krb5conf = $ENV{KRB5_CONFIG};
 unless ($krb5conf) {
-    for my $path ('/etc', '/usr/local/etc', "$ENV{BUILD}/data") {
+    for my $path ('/etc', '/usr/local/etc', "$ENV{C_TAP_BUILD}/data") {
         if (-r "$path/krb5.conf") {
             $krb5conf = "$path/krb5.conf";
             last;

@@ -12,16 +12,16 @@
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # The path to a shell script that just prints something out.
-our $FAKE_AKLOG = "$ENV{SOURCE}/data/fake-aklog";
+our $FAKE_AKLOG = "$ENV{C_TAP_SOURCE}/data/fake-aklog";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Don't overwrite the user's ticket cache.
 $ENV{KRB5CCNAME} = 'krb5cc_test';

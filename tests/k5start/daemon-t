@@ -3,8 +3,8 @@
 # Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2015 Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009, 2011, 2012, 2014
+# Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2009, 2011-2012, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -15,20 +15,20 @@ use File::Copy qw(copy);
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # The path to our temporary directory used for test ticket caches and the
 # like.
-our $TMP = "$ENV{BUILD}/tmp";
+our $TMP = "$ENV{C_TAP_BUILD}/tmp";
 unless (-d $TMP) {
     mkdir $TMP or BAIL_OUT ("cannot create $TMP: $!");
 }
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
@@ -205,7 +205,7 @@ unlink "$TMP/krb5cc_test", "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$DATA/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 is ($err, '', ' with no error output');
@@ -257,7 +257,7 @@ unlink "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$DATA/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 is ($err, '', ' with no error output');
@@ -303,7 +303,7 @@ unlink "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$TMP/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 like ($err, qr/^k5start: error getting credentials: /, ' with error output');

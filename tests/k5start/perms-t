@@ -3,6 +3,7 @@
 # Tests for k5start handling of ticket permissions.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
 # Copyright 2011
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -11,13 +12,13 @@
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # This test requires running under fakeroot, and therefore can't run unless
 # fakeroot is available (or it's run as root, although that's a bad idea).
@@ -27,7 +28,7 @@ if ($> != 0) {
         exit 0;
     }
     $ENV{TRY_FAKEROOT} = 'trying';
-    unless (exec ('fakeroot', "$ENV{SOURCE}/k5start/perms-t")) {
+    unless (exec ('fakeroot', "$ENV{C_TAP_SOURCE}/k5start/perms-t")) {
         plan skip_all => 'fakeroot not available';
         exit 0;
     }

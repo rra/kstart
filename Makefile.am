@@ -65,14 +65,16 @@ if NEED_KAFS
     LIBKAFS = kafs/libkafs.a
 endif
 
-bin_PROGRAMS = k5start krenew
-k5start_SOURCES = framework.c internal.h k5start.c
-k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+bin_PROGRAMS = commands/k5start commands/krenew
+commands_k5start_SOURCES = commands/framework.c commands/internal.h \
+	commands/k5start.c
+commands_k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+commands_k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
-krenew_SOURCES = framework.c internal.h krenew.c
-krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+commands_krenew_SOURCES = commands/framework.c commands/internal.h \
+	commands/krenew.c
+commands_krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+commands_krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
 	$(K5START_LIBS)
 dist_man_MANS = docs/k5start.1 docs/krenew.1
 
