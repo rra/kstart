@@ -1,5 +1,7 @@
 # kstart
 
+[![Build
+status](https://github.com/rra/kstart/workflows/build/badge.svg)](https://github.com/rra/kstart/actions)
 [![Debian
 package](https://img.shields.io/debian/v/kstart/unstable)](https://tracker.debian.org/pkg/kstart)
 

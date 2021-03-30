@@ -79,6 +79,8 @@ support:
 vcs:
   browse: https://git.eyrie.org/?p=kerberos/kstart.git
   github: rra/kstart
+  status:
+    workflow: build
   openhub: kstart
   type: Git
   url: https://git.eyrie.org/git/kerberos/kstart.git
