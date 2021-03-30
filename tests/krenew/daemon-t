@@ -56,7 +56,7 @@ if (!defined $pid) {
         or BAIL_OUT ("can't run $KRENEW: $!");
 }
 my $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -88,7 +88,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -107,7 +107,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -147,7 +147,7 @@ if (!defined $pid) {
         or BAIL_OUT ("can't run $KRENEW: $!");
 }
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -179,7 +179,7 @@ is ($status, 0, 'krenew -xb works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and no regular output');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -205,7 +205,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -254,7 +254,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -300,7 +300,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -344,7 +344,7 @@ is ($status, 0, 'Backgrounding krenew -s works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
