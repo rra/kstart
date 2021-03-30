@@ -324,10 +324,10 @@ k4start code written by Robert Morgan.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2015 Russ Allbery <eagle@eyrie.org>
+Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
 
-Copyright 2006, 2008, 2009, 2010, 2011, 2012, 2014 The Board of Trustees
-of the Leland Stanford Junior University
+Copyright 2006, 2008-2012, 2014 The Board of Trustees of the Leland
+Stanford Junior University
 
 Copying and distribution of this file, with or without modification, are
 permitted in any medium without royalty provided the copyright notice and
@@ -338,7 +338,7 @@ warranty.
 
 k5start(1), kinit(1)
 
-The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<krenew>.
+This program is part of kstart.  The current version is available from its
+web site at L<https://www.eyrie.org/~eagle/software/kstart/>.
 
 =cut

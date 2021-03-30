@@ -23,8 +23,8 @@ EXTRA_DIST = .gitignore .github LICENSE bootstrap ci/README.md		    \
 	tests/k5start/sigchld-t tests/kafs/basic-t tests/krenew/afs-t	    \
 	tests/krenew/basic-t tests/krenew/daemon-t tests/krenew/errors-t    \
 	tests/krenew/keyring-t tests/krenew/non-renewable-t		    \
-	tests/libtest.pl tests/tap/libtap.sh tests/tap/perl/Test/RRA.pm	    \
-	tests/tap/perl/Test/RRA/Automake.pm				    \
+	tests/libtest.pl tests/style/obsolete-strings-t tests/tap/libtap.sh \
+	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	    \
 	tests/tap/perl/Test/RRA/Config.pm tests/util/xmalloc-t
 
 # Enable AFS support when running distcheck.
