@@ -67,13 +67,15 @@ is ($status, 0, 'k5start -o 42 -g 42 -m 440 succeeds');
 is ($err, '', ' with no errors');
 like ($out, qr/^Kerberos initialization for \Q$principal\E(\@\S+)?\n\z/,
       ' and the right output');
-my ($default, $service) = klist ();
-like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
-like ($service, qr%^krbtgt/%, ' and the right service');
 ($mode, $uid, $gid) = (stat 'krb5cc_test')[2, 4, 5];
 is (($mode & 0777), 0440, ' mode is correct');
 is ($uid, 42, ' owner is correct');
 is ($gid, 42, ' group is correct');
+chown (0, 0, 'krb5cc_test');
+chmod (0600, 'krb5cc_test');
+my ($default, $service) = klist ();
+like ($default, qr/^\Q$principal\E(\@\S+)?\z/, ' for the right principal');
+like ($service, qr%^krbtgt/%, ' and the right service');
 
 # Just -o.
 unlink 'krb5cc_test';
