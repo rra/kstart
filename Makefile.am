@@ -5,7 +5,7 @@
 # Copyright 2000-2011
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore .github LICENSE bootstrap ci/README.md		    \

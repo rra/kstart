@@ -1,6 +1,7 @@
 =for stopwords
 -abhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew Ctrl-C SIGHUP backoff
+Allbery Bense designator krenew Ctrl-C SIGHUP backoff FSFAP
+SPDX-License-Identifier
 
 =head1 NAME
 
@@ -333,6 +334,8 @@ Copying and distribution of this file, with or without modification, are
 permitted in any medium without royalty provided the copyright notice and
 this notice are preserved.  This file is offered as-is, without any
 warranty.
+
+SPDX-License-Identifier: FSFAP
 
 =head1 SEE ALSO
 

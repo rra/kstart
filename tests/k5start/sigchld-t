@@ -7,7 +7,7 @@
 # Copyright 2010, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use POSIX qw(SIGCHLD SIGCONT SIGSTOP SIGTERM);
 use Test::More;

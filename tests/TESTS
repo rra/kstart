@@ -1,5 +1,6 @@
 docs/pod
 docs/pod-spelling
+docs/spdx-license
 k5start/afs
 k5start/basic
 k5start/daemon

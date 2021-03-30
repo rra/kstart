@@ -8,6 +8,8 @@ dnl
 dnl This file is free software; the authors give unlimited permission to copy
 dnl and/or distribute it, with or without modifications, as long as this
 dnl notice is preserved.
+dnl
+dnl SPDX-License-Identifier: FSFULLR
 
 AC_PREREQ([2.64])
 AC_INIT([kstart], [4.2], [eagle@eyrie.org])
