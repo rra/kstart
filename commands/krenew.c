@@ -26,13 +26,13 @@
 
 #include <commands/internal.h>
 #include <util/macros.h>
-#include <util/messages.h>
 #include <util/messages-krb5.h>
+#include <util/messages.h>
 #include <util/xmalloc.h>
 
 /* Holds the command-line options we need to pass to our callbacks. */
 struct krenew_internal {
-    bool signal_child;          /* Kill child on abnormal exit. */
+    bool signal_child; /* Kill child on abnormal exit. */
 };
 
 /* The usage message. */
@@ -79,8 +79,8 @@ usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
-             ? "using -t is an error"
-             : "the program executed will be\n" PATH_AKLOG));
+                 ? "using -t is an error"
+                 : "the program executed will be\n" PATH_AKLOG));
 #ifdef HAVE_KAFS
     fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
 #endif
@@ -204,7 +204,7 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
         warn_krb5(ctx, code, "error renewing credentials");
         goto done;
     }
-    
+
     /*
      * In theory, we don't want to reinitialize the cache and instead want to
      * just store the new credentials.  By reinitializing the cache, we create
@@ -270,16 +270,36 @@ main(int argc, char *argv[])
     config.cleanup = cleanup;
     while ((option = getopt(argc, argv, "abc:H:hiK:k:Lp:qstvx")) != EOF)
         switch (option) {
-        case 'a': config.always_renew = true;   break;
-        case 'b': config.background = true;     break;
-        case 'c': config.childfile = optarg;    break;
-        case 'i': config.ignore_errors = true;  break;
-        case 'k': config.cache = optarg;        break;
-        case 'p': config.pidfile = optarg;      break;
-        case 's': internal.signal_child = true; break;
-        case 't': config.do_aklog = true;       break;
-        case 'v': config.verbose = true;        break;
-        case 'x': config.exit_errors = true;    break;
+        case 'a':
+            config.always_renew = true;
+            break;
+        case 'b':
+            config.background = true;
+            break;
+        case 'c':
+            config.childfile = optarg;
+            break;
+        case 'i':
+            config.ignore_errors = true;
+            break;
+        case 'k':
+            config.cache = optarg;
+            break;
+        case 'p':
+            config.pidfile = optarg;
+            break;
+        case 's':
+            internal.signal_child = true;
+            break;
+        case 't':
+            config.do_aklog = true;
+            break;
+        case 'v':
+            config.verbose = true;
+            break;
+        case 'x':
+            config.exit_errors = true;
+            break;
 
         case 'H':
             config.happy_ticket = convert_number(optarg, 10);

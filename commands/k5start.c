@@ -32,8 +32,8 @@
 
 #include <commands/internal.h>
 #include <util/macros.h>
-#include <util/messages.h>
 #include <util/messages-krb5.h>
+#include <util/messages.h>
 #include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -45,16 +45,16 @@
  * structures where appropriate.
  */
 struct k5start_internal {
-    char *service;              /* Service for which to get credentials. */
-    krb5_principal ksprinc;     /* Service principal. */
-    const char *keytab;         /* Keytab to use to authenticate. */
-    bool quiet;                 /* Whether to silence even normal output. */
-    bool stdin_passwd;          /* Whether to get the password from stdin. */
-    uid_t owner;                /* Owner of created ticket cache. */
-    uid_t group;                /* Group of created ticket cache. */
-    mode_t mode;                /* Mode of created ticket cache. */
-    bool set_perms;             /* Whether to set owner and perms on cache. */
-    const char *cache;          /* Path to destination cache. */
+    char *service;          /* Service for which to get credentials. */
+    krb5_principal ksprinc; /* Service principal. */
+    const char *keytab;     /* Keytab to use to authenticate. */
+    bool quiet;             /* Whether to silence even normal output. */
+    bool stdin_passwd;      /* Whether to get the password from stdin. */
+    uid_t owner;            /* Owner of created ticket cache. */
+    uid_t group;            /* Group of created ticket cache. */
+    mode_t mode;            /* Mode of created ticket cache. */
+    bool set_perms;         /* Whether to set owner and perms on cache. */
+    const char *cache;      /* Path to destination cache. */
     krb5_get_init_creds_opt *kopts;
 };
 
@@ -117,8 +117,8 @@ usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
-             ? "using -t is an error"
-             : "the program executed will be\n" PATH_AKLOG));
+                 ? "using -t is an error"
+                 : "the program executed will be\n" PATH_AKLOG));
 #ifdef HAVE_KAFS
     fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
 #endif
@@ -218,14 +218,13 @@ authenticate(krb5_context ctx, struct config *config,
                       internal->keytab);
             goto done;
         }
-        code = krb5_get_init_creds_keytab(ctx, &creds, config->client,
-                                          keytab, 0, internal->service,
-                                          internal->kopts);
+        code =
+            krb5_get_init_creds_keytab(ctx, &creds, config->client, keytab, 0,
+                                       internal->service, internal->kopts);
     } else if (!internal->stdin_passwd) {
-        code = krb5_get_init_creds_password(ctx, &creds, config->client,
-                                            NULL, krb5_prompter_posix, NULL,
-                                            0, internal->service,
-                                            internal->kopts);
+        code = krb5_get_init_creds_password(
+            ctx, &creds, config->client, NULL, krb5_prompter_posix, NULL, 0,
+            internal->service, internal->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
@@ -244,10 +243,9 @@ authenticate(krb5_context ctx, struct config *config,
             code = KRB5_LIBOS_CANTREADPWD;
             goto done;
         }
-        code = krb5_get_init_creds_password(ctx, &creds, config->client,
-                                            buffer, NULL, NULL, 0,
-                                            internal->service,
-                                            internal->kopts);
+        code = krb5_get_init_creds_password(
+            ctx, &creds, config->client, buffer, NULL, NULL, 0,
+            internal->service, internal->kopts);
     }
     if (code != 0) {
         warn_krb5(ctx, code, "error getting credentials");
@@ -391,8 +389,8 @@ main(int argc, char *argv[])
     krb5_deltat life_secs;
     bool run_as_daemon;
     bool search_keytab = false;
-    static const char optstring[]
-        = "abc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
+    static const char optstring[] =
+        "abc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
 
     /* Initialize logging. */
     message_program_name = "k5start";
@@ -406,24 +404,59 @@ main(int argc, char *argv[])
     internal.group = (gid_t) -1;
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'a': config.always_renew = true;   break;
-        case 'b': config.background = true;     break;
-        case 'c': config.childfile = optarg;    break;
-        case 'F': nonforwardable = true;        break;
-        case 'I': sinst = optarg;               break;
-        case 'i': inst = optarg;                break;
-        case 'k': config.cache = optarg;        break;
-        case 'n': /* Ignored */                 break;
-        case 'P': nonproxiable = true;          break;
-        case 'p': config.pidfile = optarg;      break;
-        case 'q': internal.quiet = true;        break;
-        case 'r': srealm = optarg;              break;
-        case 'S': sname = optarg;               break;
-        case 't': config.do_aklog = true;       break;
-        case 'v': config.verbose = true;        break;
-        case 'U': search_keytab = true;         break;
-        case 'u': principal = optarg;           break;
-        case 'x': config.exit_errors = true;    break;
+        case 'a':
+            config.always_renew = true;
+            break;
+        case 'b':
+            config.background = true;
+            break;
+        case 'c':
+            config.childfile = optarg;
+            break;
+        case 'F':
+            nonforwardable = true;
+            break;
+        case 'I':
+            sinst = optarg;
+            break;
+        case 'i':
+            inst = optarg;
+            break;
+        case 'k':
+            config.cache = optarg;
+            break;
+        case 'n': /* Ignored */
+            break;
+        case 'P':
+            nonproxiable = true;
+            break;
+        case 'p':
+            config.pidfile = optarg;
+            break;
+        case 'q':
+            internal.quiet = true;
+            break;
+        case 'r':
+            srealm = optarg;
+            break;
+        case 'S':
+            sname = optarg;
+            break;
+        case 't':
+            config.do_aklog = true;
+            break;
+        case 'v':
+            config.verbose = true;
+            break;
+        case 'U':
+            search_keytab = true;
+            break;
+        case 'u':
+            principal = optarg;
+            break;
+        case 'x':
+            config.exit_errors = true;
+            break;
 
         case 'f':
             internal.keytab = optarg;
@@ -491,7 +524,7 @@ main(int argc, char *argv[])
         }
 
     /*
-     * Parse arguments.  The first argument will be taken to be the 
+     * Parse arguments.  The first argument will be taken to be the
      * username if the -u or -U options weren't given.  Anything else is
      * a command.
      */
@@ -662,8 +695,8 @@ main(int argc, char *argv[])
         sinst = srealm;
     xasprintf(&internal.service, "%s/%s@%s", sname, sinst, srealm);
     code = krb5_build_principal(ctx, &internal.ksprinc,
-                                (unsigned int) strlen(srealm), srealm,
-                                sname, sinst, (const char *) NULL);
+                                (unsigned int) strlen(srealm), srealm, sname,
+                                sinst, (const char *) NULL);
     if (code != 0)
         die_krb5(ctx, code, "error creating service principal name");
 
@@ -672,9 +705,8 @@ main(int argc, char *argv[])
     code = krb5_get_init_creds_opt_alloc(ctx, &internal.kopts);
     if (code != 0)
         die_krb5(ctx, code, "error allocating credential options");
-    krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
-                                              config.client->realm,
-                                              internal.kopts);
+    krb5_get_init_creds_opt_set_default_flags(
+        ctx, "k5start", config.client->realm, internal.kopts);
     krb5_get_init_creds_opt_set_tkt_life(internal.kopts, life_secs);
     if (nonforwardable)
         krb5_get_init_creds_opt_set_forwardable(internal.kopts, 0);

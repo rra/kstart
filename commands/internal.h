@@ -28,24 +28,24 @@ struct krenew_private;
 
 /* The struct used to pass configuration details to run_framework. */
 struct config {
-    bool always_renew;          /* Whether to renew on every wakeup. */
-    bool background;            /* Whether to run in the background. */
-    bool clean_cache;           /* Whether to destroy ticket cache at exit. */
-    bool do_aklog;              /* Whether to run aklog. */
-    bool exit_errors;           /* Whether to exit on error as a daemon. */
-    bool ignore_errors;         /* Ignore errors on initial authentication. */
-    bool verbose;               /* Whether to do verbose logging. */
+    bool always_renew;  /* Whether to renew on every wakeup. */
+    bool background;    /* Whether to run in the background. */
+    bool clean_cache;   /* Whether to destroy ticket cache at exit. */
+    bool do_aklog;      /* Whether to run aklog. */
+    bool exit_errors;   /* Whether to exit on error as a daemon. */
+    bool ignore_errors; /* Ignore errors on initial authentication. */
+    bool verbose;       /* Whether to do verbose logging. */
 
-    char **command;             /* NULL-terminated command to run, if any. */
-    long happy_ticket;          /* Remaining life of ticket required. */
-    long keep_ticket;           /* How often to wake up to check ticket. */
+    char **command;    /* NULL-terminated command to run, if any. */
+    long happy_ticket; /* Remaining life of ticket required. */
+    long keep_ticket;  /* How often to wake up to check ticket. */
 
-    const char *aklog;          /* Path to aklog. */
+    const char *aklog; /* Path to aklog. */
 
-    const char *childfile;      /* Path to child PID file to write out. */
-    const char *pidfile;        /* Path to PID file to write out. */
+    const char *childfile; /* Path to child PID file to write out. */
+    const char *pidfile;   /* Path to PID file to write out. */
 
-    const char *cache;          /* Ticket cache to maintain. */
+    const char *cache; /* Ticket cache to maintain. */
 
     /*
      * Desired principal.  If set, checks ticket cache for that principal in
@@ -90,8 +90,7 @@ void exit_cleanup(krb5_context, struct config *, int status)
     __attribute__((__nonnull__, __noreturn__));
 
 /* A small helper routine for parsing command-line options. */
-long convert_number(const char *string, int base)
-    __attribute__((__nonnull__));
+long convert_number(const char *string, int base) __attribute__((__nonnull__));
 
 END_DECLS
 

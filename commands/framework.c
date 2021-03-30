@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <signal.h>
 #ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
+#    include <sys/time.h>
 #endif
 #include <time.h>
 
@@ -317,7 +317,7 @@ run_framework(krb5_context ctx, struct config *config)
         }
     }
 
-    /* 
+    /*
      * Do the authentication once even if not necessary so that we can check
      * for any problems while we still have standard error.  If -H wasn't set,
      * always authenticate.  If -H was set, authenticate only if the ticket
