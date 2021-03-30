@@ -46,7 +46,7 @@ jobs:
           perl -e 'print "::set-output name=version::", $^V, "\n"'
 
       - name: Cache Perl modules
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ~/perl5
           key: ${{ runner.os }}-perl-${{ steps.get-perl.outputs.version }}-${{ hashFiles('ci/cpanfile') }}
