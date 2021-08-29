@@ -130,6 +130,14 @@ command_finish(pid_t child, int *status)
         return -1;
     if (result == 0)
         return 0;
-    *status = WEXITSTATUS(*status);
+
+    if (status) {
+        if (WIFEXITED(*status))
+            *status = WEXITSTATUS(*status);
+        else if (WIFSIGNALED(*status))
+            // +128 to match exit status set by bash when process is signaled
+            *status = WTERMSIG(*status) + 128;
+    }
+
     return 1;
 }

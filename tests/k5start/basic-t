@@ -22,7 +22,7 @@ require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 89;
+    plan tests => 92;
 } else {
     plan skip_all => 'no keytab configuration';
     exit 0;
@@ -286,6 +286,15 @@ unlink 'krb5cc_test';
     = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
                'exit 3');
 is ($status, 3, 'k5start of exit 3 returns correct exit status');
+is ($err, '', ' with no errors');
+ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+
+# Test propagation of exit status from a command which is killed by signal.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
+               'kill $$');
+is ($status, 143, 'k5start of kill $$ returns correct exit status');
 is ($err, '', ' with no errors');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 
