@@ -360,11 +360,14 @@ With this option, B<k5start> will instead exit.
 
 =back
 
-=head1 RETURN VALUES
+=head1 EXIT STATUS
 
 The program exits with status 0 if it successfully gets a ticket or has a
 happy ticket (see B<-H>).  If B<k5start> runs aklog or some other program
-B<k5start> returns the exit status of that program.
+B<k5start> returns the exit status of that program if it exits normally.
+If the program exits abnormally due to a signal, B<k5start> will exit with
+a status of 128 plus the signal number.  (This matches the behavior of
+B<bash>.)
 
 =head1 EXAMPLE
 
