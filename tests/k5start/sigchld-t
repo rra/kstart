@@ -65,6 +65,6 @@ kill (SIGCONT, $child) or BAIL_OUT ("cannot send SIGCONT to child $child\n");
 sleep 1;
 kill (SIGTERM, $child) or BAIL_OUT ("cannot send SIGTERM to child $child\n");
 waitpid ($pid, 0);
-is ($? >> 8, 0, 'command succeeded');
+is ($? >> 8, 128 + SIGTERM, 'command killed with SIGTERM');
 ok (time < $start + 5, 'k5start got SIGCHLD and woke up properly');
 unlink 'child-pid';

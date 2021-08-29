@@ -135,7 +135,10 @@ command_finish(pid_t child, int *status)
         if (WIFEXITED(*status))
             *status = WEXITSTATUS(*status);
         else if (WIFSIGNALED(*status))
-            // +128 to match exit status set by bash when process is signaled
+            /*
+             * Use the adjusted process signal as the exit status.  This
+             * duplicates the exit status behavior of bash.
+             */
             *status = WTERMSIG(*status) + 128;
     }
 

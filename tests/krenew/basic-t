@@ -10,6 +10,7 @@
 # SPDX-License-Identifier: MIT
 
 use IPC::Open3 qw(open3);
+use POSIX qw(SIGTERM);
 use Test::More;
 
 # The full path to the newly-built krenew client.
@@ -34,7 +35,7 @@ if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
         plan skip_all => 'cannot get renewable tickets';
         exit 0;
     }
-    plan tests => 36;
+    plan tests => 39;
 }
 
 # We should be okay for five minute tickets without doing anything.
@@ -97,6 +98,12 @@ like ($out, qr,^\s*(Ticket|Credentials)\ cache:
       ' and the right output');
 ($cache) = ($out =~ /cache: (?:FILE:)?(\S+)/);
 ok (!$cache || !-f $cache, ' and the new cache file was deleted');
+ok (-f 'krb5cc_test', ' and the default cache file was unaffected');
+
+# Test propagation of exit status from a command which is killed by signal.
+($out, $err, $status) = command ($KRENEW, '--', 'sh', '-c', 'kill $$');
+is ($status, 128 + SIGTERM, 'krenew of kill $$ returns correct exit status');
+is ($err, '', ' with no errors');
 ok (-f 'krb5cc_test', ' and the default cache file was unaffected');
 
 # Check exit status if the ticket cache doesn't exist.

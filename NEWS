@@ -2,6 +2,12 @@
 
 kstart 4.3 (unreleased)
 
+    If the process run by k5start or krenew is killed by a signal, k5start
+    or krenew now exits with status 128 plus the killing signal rather
+    than zero.  This avoids the caller of k5start or krenew thinking the
+    command succeeded when it was killed, and matches the return status
+    behavior of bash.  Patch from Aasif Versi.
+
     Rename the script to bootstrap from a Git checkout to bootstrap,
     matching the emerging consensus in the Autoconf world.
 

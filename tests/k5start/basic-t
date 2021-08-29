@@ -9,6 +9,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+use POSIX qw(SIGTERM);
 use Test::More;
 
 # The full path to the newly-built k5start client.
@@ -294,7 +295,7 @@ unlink 'krb5cc_test';
 ($out, $err, $status)
     = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
                'kill $$');
-is ($status, 143, 'k5start of kill $$ returns correct exit status');
+is ($status, 128 + SIGTERM, 'k5start of kill $$ returns correct exit status');
 is ($err, '', ' with no errors');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 
