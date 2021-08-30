@@ -74,14 +74,18 @@ endif
 bin_PROGRAMS = commands/k5start commands/krenew
 commands_k5start_SOURCES = commands/framework.c commands/internal.h \
 	commands/k5start.c
-commands_k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+commands_k5start_CPPFLAGS = $(LIBKEYUTILS_CPPFLAGS) $(AM_CPPFLAGS)
+commands_k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS) \
+	$(LIBKEYUTILS_LDFLAGS)
 commands_k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
-	$(K5START_LIBS)
+	$(K5START_LIBS) $(LIBKEYUTILS_LIBS)
 commands_krenew_SOURCES = commands/framework.c commands/internal.h \
 	commands/krenew.c
-commands_krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
+commands_krenew_CPPFLAGS = $(LIBKEYUTILS_CPPFLAGS) $(AM_CPPFLAGS)
+commands_krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS) \
+	$(LIBKEYUTILS_LDFLAGS)
 commands_krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
-	$(K5START_LIBS)
+	$(K5START_LIBS) $(LIBKEYUTILS_LIBS)
 dist_man_MANS = docs/k5start.1 docs/krenew.1
 
 DISTCLEANFILES = config.h.in~ tests/data/.placeholder

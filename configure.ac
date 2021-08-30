@@ -21,6 +21,7 @@ AM_INIT_AUTOMAKE([1.11 check-news foreign silent-rules subdir-objects
 AM_MAINTAINER_MODE
 
 dnl Detect unexpanded macros.
+m4_pattern_forbid([^PKG_])
 m4_pattern_forbid([^_?RRA_])
 
 AC_PROG_CC
@@ -69,6 +70,9 @@ AC_ARG_ENABLE([setpag],
     [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
+
+dnl Check if libkeyutils is available, used for kafs support.
+RRA_LIB_KEYUTILS_OPTIONAL
 
 dnl Other portability checks.
 AC_HEADER_STDBOOL

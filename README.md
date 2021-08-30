@@ -120,6 +120,14 @@ When enabled, k5start and krenew will always create a new PAG before
 authentication when running a specific command and when aklog is being
 run.
 
+When using the Linux kafs module, the correct way to isolate kafs
+credentials is to create a new session keyring rather than a new PAG.
+This requires the libkeyutils library.  `configure` will attempt to
+discover that library automatically and link with it by default.  Pass the
+`--with-libkeyutils`, `--with-libkeyutils-include`, or
+`--with-libkeyutils-lib` options to `configure` to specify a different
+path to that library, or set the `LIBKEYUTILS_*` environment variables.
+
 Normally, configure will use `krb5-config` to determine the flags to use
 to compile with your Kerberos libraries.  To specify a particular
 `krb5-config` script to use, either set the `PATH_KRB5_CONFIG` environment

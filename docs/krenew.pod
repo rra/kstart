@@ -1,7 +1,7 @@
 =for stopwords
 -abhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
 Allbery Bense designator krenew Ctrl-C SIGHUP backoff FSFAP
-SPDX-License-Identifier
+SPDX-License-Identifier kafs keyring libkeyutils
 
 =head1 NAME
 
@@ -228,14 +228,28 @@ command to keep running without Kerberos tickets.
 
 =item B<-t>
 
-Run an external program after getting a ticket.  The default use of this
-is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
-is set, it overrides the compiled-in default.
+Run an external program after getting a ticket.  The intended use of this
+is to run B<aklog> to get a token.  If the environment variable AKLOG (or
+KINIT_PROG for backward compatibility) is set, it overrides the
+compiled-in default.
 
-If B<krenew> has been built with AFS setpag() support and a command was
-given on the command line, B<krenew> will create a new PAG before
-obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
-PAG.
+If a command was given on the command line, B<krenew> will attempt to
+isolate the AFS credentials for that command from the invoking process.
+There are two possible ways in which this is done.
+
+First, if B<krenew> has been built with AFS setpag() support and AFS is
+available, B<krenew> will create a new PAG before running the external
+program.
+
+Otherwise, if either B<krenew> was not built with AFS setpag() support or
+AFS is not available, but the Linux kafs module is available and B<krenew>
+was built with libkeyutils support, it will create a new session keyring
+and link it to the current user keyring before running the external
+program.
+
+If neither of these conditions are true, B<krenew> will run the external
+program without doing any credential isolation, which may also affect the
+credentials of the invoking process.
 
 =item B<-v>
 

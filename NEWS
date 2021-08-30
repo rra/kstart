@@ -2,6 +2,16 @@
 
 kstart 4.3 (unreleased)
 
+    Add support for kafs to the -t options of k5start and krenew.  If AFS
+    setpag support is not compiled in or AFS is not available, but the
+    Linux kafs kernel module is available, do not error out when -t is
+    specified and continue to run the external program.  If libkeyutils is
+    found at compile time and a command was specified on the command line,
+    create a new session keyring before running the external command to
+    isolate its AFS credentials from the calling process.  Thanks to Bill
+    MacAllister, David Howells, and Jeffrey Altman for proposed code and
+    implementation discussion.
+
     If the process run by k5start or krenew is killed by a signal, k5start
     or krenew now exits with status 128 plus the killing signal rather
     than zero.  This avoids the caller of k5start or krenew thinking the
