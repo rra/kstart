@@ -35,7 +35,7 @@ dnl The canonical version of this file is maintained in the rra-c-util
 dnl package, available at <https://www.eyrie.org/~eagle/software/rra-c-util/>.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2020 Russ Allbery <eagle@eyrie.org>
+dnl Copyright 2020-2021 Russ Allbery <eagle@eyrie.org>
 dnl Copyright 2008-2010
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
@@ -133,7 +133,7 @@ AC_DEFUN([RRA_LIB_KAFS],
  dnl In addition to the normal path-finding options, support --without-libkafs
  dnl to force always using the internal AFS syscall code.
  AC_ARG_WITH([libkafs],
-    AC_HELP_STRING([--with-libkafs=DIR],
+    AS_HELP_STRING([--with-libkafs=DIR],
         [Location of kafs headers and libraries]),
     [AS_IF([test x"$withval" = xno],
         [rra_libkafs=false],
@@ -153,7 +153,7 @@ AC_DEFUN([RRA_LIB_KAFS],
  dnl results, but configure always includes the prompt, so always handle them.
  dnl This should probably be in a separate macro file.
  AC_ARG_WITH([afs],
-    [AC_HELP_STRING([--with-afs=DIR],
+    [AS_HELP_STRING([--with-afs=DIR],
         [Location of AFS headers and libraries])],
     [AS_IF([test x"$withval" != xno && test x"$withval" != xyes],
         [rra_afs_root="$withval"])])

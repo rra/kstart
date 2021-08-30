@@ -38,7 +38,7 @@ dnl tickets.  afslog is the name of the utility that comes with Heimdal.  By
 dnl default, we build in support for calling it if we find either on the
 dnl user's path or if the user specifies a default path.
 AC_ARG_WITH([aklog],
-    AC_HELP_STRING([--with-aklog=PATH],
+    AS_HELP_STRING([--with-aklog=PATH],
         [Path to aklog or other AFS token program]),
     [AS_IF([test x"$withval" != xno], [PATH_AKLOG=$withval])],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
@@ -67,7 +67,7 @@ RRA_LIB_KRB5_RESTORE
 dnl See if AFS setpag support is desired.
 rra_build_kafs=false
 AC_ARG_ENABLE([setpag],
-    [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
+    [AS_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
 
@@ -94,6 +94,6 @@ dnl Create the tests/data directory.
 AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])
 
 dnl Output the results.
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
