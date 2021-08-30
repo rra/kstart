@@ -11,6 +11,7 @@
 /config.log
 /config.status
 /configure
+/configure~
 /kstart-*
 /stamp-h1
 /tests/data/.placeholder
