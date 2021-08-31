@@ -1,25 +1,31 @@
 # Automake makefile for kstart.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2015 Russ Allbery <eagle@eyrie.org>
-# Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-#    2011 The Board of Trustees of the Leland Stanford Junior University
+# Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2000-2011
+#     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = .gitignore LICENSE autogen docs/k5start.pod docs/krenew.pod  \
-	examples/krenew-agent kstart.spec tests/README tests/TESTS	  \
-	tests/data/README tests/data/command tests/data/fake-aklog	  \
-	tests/data/perl.conf tests/docs/pod-spelling-t tests/docs/pod-t	  \
-	tests/k5start/afs-t tests/k5start/basic-t tests/k5start/daemon-t  \
-	tests/k5start/errors-t tests/k5start/flags-t			  \
-	tests/k5start/keyring-t tests/k5start/non-renewable-t		  \
-	tests/k5start/perms-t tests/k5start/sigchld-t tests/kafs/basic-t  \
-	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	  \
-	tests/krenew/errors-t tests/krenew/keyring-t			  \
-	tests/krenew/non-renewable-t tests/libtest.pl tests/tap/libtap.sh \
-	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	  \
+EXTRA_DIST = .clang-format .gitignore .github LICENSE bootstrap		    \
+	ci/README.md ci/apt-packages ci/cpanfile			    \
+	ci/files/heimdal/heimdal-kdc ci/files/heimdal/kdc.conf		    \
+	ci/files/heimdal/krb5.conf ci/files/mit/kdc.conf		    \
+	ci/files/mit/krb5.conf ci/install ci/kdc-setup-heimdal		    \
+	ci/kdc-setup-mit ci/test docs/k5start.pod docs/krenew.pod	    \
+	examples/krenew-agent kstart.spec tests/README tests/TESTS	    \
+	tests/data/README tests/data/command tests/data/fake-aklog	    \
+	tests/data/perl.conf tests/docs/pod-spelling-t tests/docs/pod-t	    \
+	tests/docs/spdx-license-t tests/k5start/afs-t tests/k5start/basic-t \
+	tests/k5start/daemon-t tests/k5start/errors-t tests/k5start/flags-t \
+	tests/k5start/keyring-t tests/k5start/non-renewable-t		    \
+	tests/k5start/perms-t tests/k5start/sigchld-t tests/kafs/basic-t    \
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	    \
+	tests/krenew/errors-t tests/krenew/keyring-t			    \
+	tests/krenew/non-renewable-t tests/libtest.pl			    \
+	tests/style/obsolete-strings-t tests/tap/libtap.sh		    \
+	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	    \
 	tests/tap/perl/Test/RRA/Config.pm tests/util/xmalloc-t
 
 # Enable AFS support when running distcheck.
@@ -65,15 +71,21 @@ if NEED_KAFS
     LIBKAFS = kafs/libkafs.a
 endif
 
-bin_PROGRAMS = k5start krenew
-k5start_SOURCES = framework.c internal.h k5start.c
-k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
-	$(K5START_LIBS)
-krenew_SOURCES = framework.c internal.h krenew.c
-krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS)
-krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
-	$(K5START_LIBS)
+bin_PROGRAMS = commands/k5start commands/krenew
+commands_k5start_SOURCES = commands/framework.c commands/internal.h \
+	commands/k5start.c
+commands_k5start_CPPFLAGS = $(LIBKEYUTILS_CPPFLAGS) $(AM_CPPFLAGS)
+commands_k5start_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS) \
+	$(LIBKEYUTILS_LDFLAGS)
+commands_k5start_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+	$(K5START_LIBS) $(LIBKEYUTILS_LIBS)
+commands_krenew_SOURCES = commands/framework.c commands/internal.h \
+	commands/krenew.c
+commands_krenew_CPPFLAGS = $(LIBKEYUTILS_CPPFLAGS) $(AM_CPPFLAGS)
+commands_krenew_LDFLAGS = $(KRB5_LDFLAGS) $(KAFS_LDFLAGS) \
+	$(LIBKEYUTILS_LDFLAGS)
+commands_krenew_LDADD = $(LIBKAFS) util/libutil.a portable/libportable.a \
+	$(K5START_LIBS) $(LIBKEYUTILS_LIBS)
 dist_man_MANS = docs/k5start.1 docs/krenew.1
 
 DISTCLEANFILES = config.h.in~ tests/data/.placeholder
@@ -86,42 +98,20 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		\
 distclean-local:
 	rm -rf autom4te.cache
 
-# A set of flags for warnings.  Add -O because gcc won't find some warnings
-# without optimization turned on.  Desirable warnings that can't be turned
-# on due to other problems:
-#
-#     -Wconversion      http://bugs.debian.org/488884 (htons warnings)
-#
-# Last checked against gcc 4.8.2 (2014-04-12).  -D_FORTIFY_SOURCE=2 enables
-# warn_unused_result attribute markings on glibc functions on Linux, which
-# catches a few more issues.
-if WARNINGS_GCC
-    WARNINGS = -g -O -fstrict-overflow -fstrict-aliasing -D_FORTIFY_SOURCE=2 \
-	-Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self -Wswitch-enum    \
-	-Wstrict-overflow=5 -Wmissing-format-attribute -Wfloat-equal	     \
-	-Wdeclaration-after-statement -Wshadow -Wpointer-arith		     \
-	-Wbad-function-cast -Wcast-align -Wwrite-strings -Wjump-misses-init  \
-	-Wlogical-op -Wstrict-prototypes -Wold-style-definition		     \
-	-Wmissing-prototypes -Wnormalized=nfc -Wpacked -Wredundant-decls     \
-	-Wnested-externs -Winline -Wvla -Werror
-endif
-if WARNINGS_CLANG
-    WARNINGS = -Weverything -Wno-padded
-endif
-
 warnings:
-	$(MAKE) V=0 CFLAGS='$(WARNINGS)' KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_GCC)'
-	$(MAKE) V=0 CFLAGS='$(WARNINGS)' \
-	    KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_GCC)' $(check_PROGRAMS)
+	$(MAKE) V=0 CFLAGS='$(WARNINGS_CFLAGS) $(AM_CFLAGS)' \
+	    KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_WARNINGS)'
+	$(MAKE) V=0 CFLAGS='$(WARNINGS_CFLAGS) $(AM_CFLAGS)' \
+	    KRB5_CPPFLAGS='$(KRB5_CPPFLAGS_WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	    \
-	tests/portable/asprintf-t tests/portable/daemon-t		    \
-	tests/portable/mkstemp-t tests/portable/reallocarray-t		    \
-	tests/portable/setenv-t tests/portable/snprintf-t		    \
-	tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
-tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
-	-DBUILD='"$(abs_top_builddir)/tests"'
+check_PROGRAMS = tests/runtests tests/kafs/basic tests/kafs/haspag-t	\
+	tests/portable/asprintf-t tests/portable/daemon-t		\
+	tests/portable/mkstemp-t tests/portable/reallocarray-t		\
+	tests/portable/setenv-t tests/util/messages-krb5-t		\
+	tests/util/messages-t tests/util/xmalloc
+tests_runtests_CPPFLAGS = -DC_TAP_SOURCE='"$(abs_top_srcdir)/tests"' \
+	-DC_TAP_BUILD='"$(abs_top_builddir)/tests"'
 check_LIBRARIES = tests/tap/libtap.a
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
@@ -162,9 +152,6 @@ tests_portable_reallocarray_t_LDADD = tests/tap/libtap.a \
 tests_portable_setenv_t_SOURCES = tests/portable/setenv-t.c \
 	tests/portable/setenv.c
 tests_portable_setenv_t_LDADD = tests/tap/libtap.a portable/libportable.a
-tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
-	tests/portable/snprintf.c
-tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.a
 tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
 tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.a \
 	portable/libportable.a $(KRB5_LIBS)
@@ -173,4 +160,16 @@ tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.a \
 tests_util_xmalloc_LDADD = util/libutil.a portable/libportable.a
 
 check-local: $(check_PROGRAMS)
-	cd tests && ./runtests -l $(abs_top_srcdir)/tests/TESTS
+	tests/runtests -l '$(abs_top_srcdir)/tests/TESTS'
+
+# Used by maintainers to check the source code with cppcheck.
+check-cppcheck:
+	cd $(abs_top_srcdir) &&						\
+	    find . -name .git -prune -o -name '*.[ch]' -print		\
+	    | cppcheck -q --force --error-exitcode=2 --file-list=-	\
+		--suppressions-list=tests/data/cppcheck.supp		\
+		--enable=warning,performance,portability,style
+
+# Used by maintainers to reformat all source code using clang-format.
+reformat:
+	find . -name '*.[ch]' -print | xargs clang-format -style=file -i

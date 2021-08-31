@@ -1,20 +1,20 @@
 # RPM spec file for kstart.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2015 Russ Allbery <eagle@eyrie.org>
-# Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+# Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2005-2012
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
 Version: 4.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: MIT
 Group: System Environment/Base
-URL: http://www.eyrie.org/~eagle/software/kstart/
-Source: http://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
+URL: https://www.eyrie.org/~eagle/software/kstart/
+Source: https://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
 Requires: krb5
@@ -51,6 +51,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Tue Mar 20 2021 Russ Allbery <eagle@eyrie.org> 4.2-2
+- Update upstream URL.
+
 * Fri Dec 25 2015 Russ Allbery <eagle@eyrie.org> 4.2-1
 - New version for 4.2 release.
 

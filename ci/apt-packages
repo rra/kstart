@@ -1,0 +1,19 @@
+# Debian packages to install for testing.  -*- conf -*-
+#
+# This file is read by ci/install and used as a list of packages, one per
+# line, to install for testing.
+#
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+#
+# SPDX-License-Identifier: MIT
+
+aspell
+cpanminus
+cppcheck
+fakeroot
+heimdal-multidev
+krb5-config
+libkeyutils-dev
+libkrb5-dev
+liblocal-lib-perl
+perl

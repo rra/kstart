@@ -6,28 +6,29 @@
 # attempt to reauthenticate.  Ensure that bug doesn't recur.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
 # Copyright 2012
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # We have to generate a local krb5.conf that disables any attempt to get
 # renewable tickets.  Try to locate the local krb5.conf that we're supposed to
 # use and skip if we can't find one.
 my $krb5conf = $ENV{KRB5_CONFIG};
 unless ($krb5conf) {
-    for my $path ('/etc', '/usr/local/etc', "$ENV{BUILD}/data") {
+    for my $path ('/etc', '/usr/local/etc', "$ENV{C_TAP_BUILD}/data") {
         if (-r "$path/krb5.conf") {
             $krb5conf = "$path/krb5.conf";
             last;

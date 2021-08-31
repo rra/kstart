@@ -14,10 +14,11 @@
  * hard-coded here.
  *
  * The canonical version of this file is maintained in the rra-c-util package,
- * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+ * which can be found at <https://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2009
+ * Copyright 2018 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006-2007, 2009
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,6 +38,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include <config.h>
@@ -47,7 +50,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #ifdef HAVE_SYS_IOCCOM_H
-# include <sys/ioccom.h>
+#    include <sys/ioccom.h>
 #endif
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -66,17 +69,17 @@ static int k_syscall(long, long, long, long, long, int *);
  * The included file must provide a k_syscall implementation.
  */
 #if defined(HAVE_KAFS_DARWIN8)
-# include <kafs/sys-darwin8.c>
+#    include <kafs/sys-darwin8.c>
 #elif defined(HAVE_KAFS_DARWIN10)
-# include <kafs/sys-darwin10.c>
+#    include <kafs/sys-darwin10.c>
 #elif defined(HAVE_KAFS_LINUX)
-# include <kafs/sys-linux.c>
+#    include <kafs/sys-linux.c>
 #elif defined(HAVE_KAFS_SOLARIS)
-# include <kafs/sys-solaris.c>
+#    include <kafs/sys-solaris.c>
 #elif defined(HAVE_KAFS_SYSCALL)
-# include <kafs/sys-syscall.c>
+#    include <kafs/sys-syscall.c>
 #else
-# error "Unknown AFS system call implementation"
+#    error "Unknown AFS system call implementation"
 #endif
 
 /*
@@ -138,7 +141,9 @@ k_hasafs(void)
 {
     struct ViceIoctl iob;
     int rval, saved_errno, okay;
+#ifdef SIGSYS
     void (*saved_func)(int);
+#endif
 
     saved_errno = errno;
 

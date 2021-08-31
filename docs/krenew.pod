@@ -1,6 +1,7 @@
 =for stopwords
 -abhiLstvx aklog AFS OpenSSH PAG HUP ALRM KRB5CCNAME AKLOG kstart afslog
-Allbery Bense designator krenew Ctrl-C SIGHUP backoff
+Allbery Bense designator krenew Ctrl-C SIGHUP backoff FSFAP
+SPDX-License-Identifier kafs keyring libkeyutils
 
 =head1 NAME
 
@@ -227,14 +228,28 @@ command to keep running without Kerberos tickets.
 
 =item B<-t>
 
-Run an external program after getting a ticket.  The default use of this
-is to run B<aklog> to get a token.  If the environment variable KINIT_PROG
-is set, it overrides the compiled-in default.
+Run an external program after getting a ticket.  The intended use of this
+is to run B<aklog> to get a token.  If the environment variable AKLOG (or
+KINIT_PROG for backward compatibility) is set, it overrides the
+compiled-in default.
 
-If B<krenew> has been built with AFS setpag() support and a command was
-given on the command line, B<krenew> will create a new PAG before
-obtaining AFS tokens.  Otherwise, it will obtain tokens in the current
-PAG.
+If a command was given on the command line, B<krenew> will attempt to
+isolate the AFS credentials for that command from the invoking process.
+There are two possible ways in which this is done.
+
+First, if B<krenew> has been built with AFS setpag() support and AFS is
+available, B<krenew> will create a new PAG before running the external
+program.
+
+Otherwise, if either B<krenew> was not built with AFS setpag() support or
+AFS is not available, but the Linux kafs module is available and B<krenew>
+was built with libkeyutils support, it will create a new session keyring
+and link it to the current user keyring before running the external
+program.
+
+If neither of these conditions are true, B<krenew> will run the external
+program without doing any credential isolation, which may also affect the
+credentials of the invoking process.
 
 =item B<-v>
 
@@ -251,11 +266,13 @@ this option, B<krenew> will instead exit.
 
 =back
 
-=head1 RETURN VALUES
+=head1 EXIT STATUS
 
 The program normally exits with status 0 if it successfully renews a
 ticket.  If B<krenew> runs aklog or some other program B<krenew> returns
-the exit status of that program.
+the exit status of that program if it exits normally.  If the program
+exits abnormally due to a signal, B<krenew> will exit with a status of 128
+plus the signal number.  (This matches the behavior of B<bash>.).
 
 =head1 EXAMPLES
 
@@ -324,21 +341,23 @@ k4start code written by Robert Morgan.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2015 Russ Allbery <eagle@eyrie.org>
+Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
 
-Copyright 2006, 2008, 2009, 2010, 2011, 2012, 2014 The Board of Trustees
-of the Leland Stanford Junior University
+Copyright 2006, 2008-2012, 2014 The Board of Trustees of the Leland
+Stanford Junior University
 
 Copying and distribution of this file, with or without modification, are
 permitted in any medium without royalty provided the copyright notice and
 this notice are preserved.  This file is offered as-is, without any
 warranty.
 
+SPDX-License-Identifier: FSFAP
+
 =head1 SEE ALSO
 
 k5start(1), kinit(1)
 
-The kstart web page at L<http://www.eyrie.org/~eagle/software/kstart/>
-will have the current version of B<krenew>.
+This program is part of kstart.  The current version is available from its
+web site at L<https://www.eyrie.org/~eagle/software/kstart/>.
 
 =cut

@@ -39,6 +39,14 @@ k5start:
    use that to set the wakeup time if -K was not provided, rather than
    always using a default of one hour.
 
+ * Add anonymous authentication support.
+
+ * Add a mode of operation that only runs the aklog program and doesn't
+   attempt to refresh the ticket cache unless it's about to expire.  This
+   would allow multiple k5start daemons to use the same ticket cache
+   without putting a lot of load on the Kerberos KDC for constant renewals
+   from each daemon.
+
 krenew:
 
  * Add an option to send SIGHUP to the child process when krenew exits

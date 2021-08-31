@@ -9,7 +9,7 @@ dnl specify paths at a more granular level; and --with-afs,
 dnl --with-afs-include, and --with-afs-lib configure options to specify the
 dnl location of the AFS libraries.
 dnl
-dnl Provides the macro RRA_LIB_KAFS and sets the substition variables
+dnl Provides the macro RRA_LIB_KAFS and sets the substitution variables
 dnl KAFS_CPPFLAGS, KAFS_LDFLAGS, and KAFS_LIBS.  If Kerberos libraries may be
 dnl needed, LIBS and LDFLAGS must already be set appropriately before calling
 dnl this.  Also provides RRA_LIB_KAFS_SWITCH to set CPPFLAGS, LDFLAGS, and
@@ -32,15 +32,18 @@ dnl
 dnl Depends on RRA_SET_LDFLAGS.
 dnl
 dnl The canonical version of this file is maintained in the rra-c-util
-dnl package, available at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+dnl package, available at <https://www.eyrie.org/~eagle/software/rra-c-util/>.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2008, 2009, 2010
+dnl Copyright 2020-2021 Russ Allbery <eagle@eyrie.org>
+dnl Copyright 2008-2010
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy
 dnl and/or distribute it, with or without modifications, as long as this
 dnl notice is preserved.
+dnl
+dnl SPDX-License-Identifier: FSFULLR
 
 dnl Save the current CPPFLAGS, LDFLAGS, and LIBS settings and switch to
 dnl versions that include the libkafs flags.  Used as a wrapper, with
@@ -130,7 +133,7 @@ AC_DEFUN([RRA_LIB_KAFS],
  dnl In addition to the normal path-finding options, support --without-libkafs
  dnl to force always using the internal AFS syscall code.
  AC_ARG_WITH([libkafs],
-    AC_HELP_STRING([--with-libkafs=DIR],
+    AS_HELP_STRING([--with-libkafs=DIR],
         [Location of kafs headers and libraries]),
     [AS_IF([test x"$withval" = xno],
         [rra_libkafs=false],
@@ -150,7 +153,7 @@ AC_DEFUN([RRA_LIB_KAFS],
  dnl results, but configure always includes the prompt, so always handle them.
  dnl This should probably be in a separate macro file.
  AC_ARG_WITH([afs],
-    [AC_HELP_STRING([--with-afs=DIR],
+    [AS_HELP_STRING([--with-afs=DIR],
         [Location of AFS headers and libraries])],
     [AS_IF([test x"$withval" != xno && test x"$withval" != xyes],
         [rra_afs_root="$withval"])])

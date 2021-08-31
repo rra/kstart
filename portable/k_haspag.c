@@ -9,17 +9,19 @@
  * groups if the system call isn't supported or if k_pioctl isn't available.
  *
  * The canonical version of this file is maintained in the rra-c-util package,
- * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+ * which can be found at <https://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2020-2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2010-2011, 2014
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
- * The authors hereby relinquish any claim to any copyright that they may have
- * in this work, whether granted under contract or by operation of law or
- * international treaty, and hereby commit to the public, at large, that they
- * shall not, at any time in the future, seek to enforce any copyright in this
- * work against any person or entity, or prevent any person or entity from
- * copying, publishing, distributing or creating derivative works of this
- * work.
+ * Copying and distribution of this file, with or without modification, are
+ * permitted in any medium without royalty provided the copyright notice and
+ * this notice are preserved.  This file is offered as-is, without any
+ * warranty.
+ *
+ * SPDX-License-Identifier: FSFAP
  */
 
 #include <config.h>
@@ -27,7 +29,7 @@
 #include <portable/system.h>
 
 #ifdef HAVE_SYS_IOCCOM_H
-# include <sys/ioccom.h>
+#    include <sys/ioccom.h>
 #endif
 #include <sys/ioctl.h>
 
@@ -49,6 +51,7 @@ k_haspag(void)
     int result;
     struct ViceIoctl iob;
 
+    pag = (uint32_t) -1;
     iob.in = NULL;
     iob.in_size = 0;
     iob.out = (void *) &pag;
@@ -63,10 +66,16 @@ k_haspag(void)
      * system call.  Fall back on analyzing the groups.
      */
     ngroups = getgroups(0, NULL);
+    if (ngroups < 1)
+        return 0;
     groups = calloc(ngroups, sizeof(*groups));
     if (groups == NULL)
         return 0;
     ngroups = getgroups(ngroups, groups);
+    if (ngroups < 1) {
+        free(groups);
+        return 0;
+    }
 
     /*
      * Strictly speaking, the single group PAG is only used on Linux, but

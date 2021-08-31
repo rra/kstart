@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Build a Kerberos test realm for MIT Kerberos
+#
+# This script automates the process of setting up a Kerberos test realm from
+# scratch.  It is primarily intended to be run from inside CI in a VM or
+# container from the top of the source tree, and must be run as root.  It
+# expects to be operating on the Debian MIT Kerberos package.
+#
+# Copyright 2014, 2020-2021 Russ Allbery <eagle@eyrie.org>
+#
+# SPDX-License-Identifier: MIT
+
+set -eux
+
+# Install the KDC.
+apt-get install krb5-admin-server krb5-kdc
+
+# Install its configuration files.
+cp ci/files/mit/kdc.conf /etc/krb5kdc/kdc.conf
+cp ci/files/mit/krb5.conf /etc/krb5.conf
+touch /etc/krb5kdc/kadm5.acl
+
+# Add domain-realm mappings for the local host, since otherwise Heimdal and
+# MIT Kerberos may attempt to discover the realm of the local domain, and the
+# DNS server for GitHub Actions has a habit of just not responding and causing
+# the test to hang.
+cat <<EOF >>/etc/krb5.conf
+[domain_realm]
+    $(hostname -f) = MIT.TEST
+EOF
+
+# Create the basic KDC.
+kdb5_util create -s -P 'this is a test master database password'
+
+# Create and store the keytab.
+kadmin.local -q 'add_principal +requires_preauth -randkey test/keytab@MIT.TEST'
+kadmin.local -q 'ktadd -k tests/data/test.keytab test/keytab@MIT.TEST'
+echo 'test/keytab@MIT.TEST' >tests/data/test.principal
+
+# Fix permissions on all the newly-created files.
+chmod 644 tests/data/test.*
+
+# Restart the MIT Kerberos KDC and services.
+systemctl stop krb5-kdc krb5-admin-server
+systemctl start krb5-kdc krb5-admin-server

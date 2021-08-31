@@ -3,11 +3,11 @@
 # Tests for k5start daemon functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2015 Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009, 2011, 2012, 2014
+# Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2009, 2011-2012, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use Cwd;
 use File::Copy qw(copy);
@@ -15,20 +15,20 @@ use File::Copy qw(copy);
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # The path to our temporary directory used for test ticket caches and the
 # like.
-our $TMP = "$ENV{BUILD}/tmp";
+our $TMP = "$ENV{C_TAP_BUILD}/tmp";
 unless (-d $TMP) {
     mkdir $TMP or BAIL_OUT ("cannot create $TMP: $!");
 }
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
@@ -54,7 +54,7 @@ if (!defined $pid) {
           $principal) or BAIL_OUT ("can't run $K5START: $!");
 }
 my $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -97,7 +97,7 @@ is ($status, 0, 'Backgrounding k5start works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -121,6 +121,10 @@ unlink "$TMP/krb5cc_test";
 is ($status, 0, 'Backgrounding k5start with bad keytab works');
 like ($err, qr/^k5start: error getting credentials: /, ' with error output');
 is ($out, '', ' and -q was added implicitly');
+while (not -s "$TMP/pid" and $tries < 100) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
 $pid = contents ("$TMP/pid");
 ok (kill (0, $pid), ' and the PID file is correct');
 kill (15, $pid) or warn "Can't kill $pid: $!\n";
@@ -138,6 +142,10 @@ is ($status, 1, 'Backgrounding k5start -x with bad keytab fails');
 like ($err, qr/^k5start: error getting credentials: /, ' with error output');
 is ($out, '', ' and -q was added implicitly');
 if ($status == 0) {
+    while (not -s "$TMP/pid" and $tries < 100) {
+        select (undef, undef, undef, 0.1);
+        $tries++;
+    }
     $pid = contents ("$TMP/pid");
     kill (15, $pid) or warn "Can't kill $pid: $!\n";
 }
@@ -154,7 +162,7 @@ if (!defined $pid) {
         or BAIL_OUT ("can't run $K5START: $!");
 }
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -187,6 +195,11 @@ ok (!-f "$TMP/pid", ' and the PID file was removed');
 is ($status, 0, 'k5start -xb works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
+$tries = 0;
+while (not -s "$TMP/pid" and $tries < 100) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
 $pid = contents ("$TMP/pid");
 ok (kill (0, $pid), 'k5start -xb started');
 chmod 0555, $TMP or BAIL_OUT ("cannot chmod $TMP: $!");
@@ -205,13 +218,13 @@ unlink "$TMP/krb5cc_test", "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$DATA/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -257,13 +270,13 @@ unlink "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$DATA/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -303,11 +316,15 @@ unlink "$TMP/krb5cc_child", "$TMP/child-out";
 ($out, $err, $status)
     = command ($K5START, '-bK', 1, '-k', "$TMP/krb5cc_child", '-f',
                "$TMP/test.keytab", '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               $principal, '--', "$ENV{SOURCE}/data/command",
+               $principal, '--', "$ENV{C_TAP_SOURCE}/data/command",
                "$TMP/child-out");
 is ($status, 0, 'Backgrounding k5start works');
 like ($err, qr/^k5start: error getting credentials: /, ' with error output');
 is ($out, '', ' and output was redirected properly');
+while (not -s "$TMP/pid" and $tries < 100) {
+    select (undef, undef, undef, 0.1);
+    $tries++;
+}
 $pid = contents ("$TMP/pid");
 ok (kill (0, $pid), 'k5start is running');
 select (undef, undef, undef, 1);
@@ -315,7 +332,7 @@ ok (!-f "$TMP/child-pid", ' child did not start');
 ok (!-f "$TMP/child-out", ' and has no output');
 copy ("$DATA/test.keytab", "$TMP/test.keytab");
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -342,4 +359,5 @@ ok (!-f "$TMP/child-pid", 'Child PID file cleaned up');
 
 # Clean up.
 unlink "$TMP/krb5cc_child", "$TMP/child-out", "$TMP/test.keytab";
+unlink "$TMP/pid", "$TMP/child-pid";
 rmdir $TMP;

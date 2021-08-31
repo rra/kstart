@@ -4,11 +4,11 @@
  * Run a command, possibly a long-running one for which we need to wait.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2007,
- *     2008, 2009
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 1995-1997, 1999-2002, 2004-2005, 2007-2009
  *     The Board of Trustees of the Leland Stanford Junior University
  *
- * See LICENSE for licensing terms.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <config.h>
@@ -130,6 +130,17 @@ command_finish(pid_t child, int *status)
         return -1;
     if (result == 0)
         return 0;
-    *status = WEXITSTATUS(*status);
+
+    if (status) {
+        if (WIFEXITED(*status))
+            *status = WEXITSTATUS(*status);
+        else if (WIFSIGNALED(*status))
+            /*
+             * Use the adjusted process signal as the exit status.  This
+             * duplicates the exit status behavior of bash.
+             */
+            *status = WTERMSIG(*status) + 128;
+    }
+
     return 1;
 }

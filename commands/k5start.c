@@ -11,11 +11,11 @@
  *
  * Originally written by Robert Morgan and Booker C. Bense.
  * Substantial updates by Russ Allbery <eagle@eyrie.org>
- * Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007,
- *     2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 1995-1997, 1999-2002, 2004-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
- * See LICENSE for licensing terms.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <config.h>
@@ -30,10 +30,10 @@
 #include <syslog.h>
 #include <time.h>
 
-#include <internal.h>
+#include <commands/internal.h>
 #include <util/macros.h>
-#include <util/messages.h>
 #include <util/messages-krb5.h>
+#include <util/messages.h>
 #include <util/xmalloc.h>
 
 /* The default ticket lifetime in minutes.  Default to 10 hours. */
@@ -44,22 +44,22 @@
  * processing in the main routine and conversion to internal Kerberos data
  * structures where appropriate.
  */
-struct k5start_private {
-    char *service;              /* Service for which to get credentials. */
-    krb5_principal ksprinc;     /* Service principal. */
-    const char *keytab;         /* Keytab to use to authenticate. */
-    bool quiet;                 /* Whether to silence even normal output. */
-    bool stdin_passwd;          /* Whether to get the password from stdin. */
-    uid_t owner;                /* Owner of created ticket cache. */
-    uid_t group;                /* Group of created ticket cache. */
-    mode_t mode;                /* Mode of created ticket cache. */
-    bool set_perms;             /* Whether to set owner and perms on cache. */
-    const char *cache;          /* Path to destination cache. */
+struct k5start_internal {
+    char *service;          /* Service for which to get credentials. */
+    krb5_principal ksprinc; /* Service principal. */
+    const char *keytab;     /* Keytab to use to authenticate. */
+    bool quiet;             /* Whether to silence even normal output. */
+    bool stdin_passwd;      /* Whether to get the password from stdin. */
+    uid_t owner;            /* Owner of created ticket cache. */
+    uid_t group;            /* Group of created ticket cache. */
+    mode_t mode;            /* Mode of created ticket cache. */
+    bool set_perms;         /* Whether to set owner and perms on cache. */
+    const char *cache;      /* Path to destination cache. */
     krb5_get_init_creds_opt *kopts;
 };
 
 /* The usage message. */
-const char usage_message[] = "\
+static const char usage_message[] = "\
 Usage: k5start [options] [name [command]]\n\
    -u <client principal>        (default: local username)\n\
    -i <client instance>         (default: null)\n\
@@ -100,24 +100,25 @@ is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
 /* Included in the usage message if AFS support is compiled in. */
-const char usage_message_kafs[] = "\n\
+#ifdef HAVE_KAFS
+static const char usage_message_kafs[] = "\n\
 When invoked with -t and a command, k5start will create a new AFS PAG for\n\
 the command before running the AKLOG program to keep its AFS credentials\n\
 isolated from other processes.\n";
-
+#endif
 
 /*
  * Print out the usage message and then exit with the status given as the
  * only argument.  If status is zero, the message is printed to standard
  * output; otherwise, it is sent to standard error.
  */
-static void
+__attribute__((__noreturn__)) static void
 usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
-             ? "using -t is an error"
-             : "the program executed will be\n" PATH_AKLOG));
+                 ? "using -t is an error"
+                 : "the program executed will be\n" PATH_AKLOG));
 #ifdef HAVE_KAFS
     fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
 #endif
@@ -126,7 +127,7 @@ usage(int status)
 
 
 /*
- * Given the path to a file and the private configuration information, set the
+ * Given the path to a file and the internal configuration information, set the
  * owner, group, or mode.  Owner and group may be either the name of a user or
  * group or a numeric UID or GID (as a string).  If the owner is specified as
  * a username (but not if it is specified as a UID), set the GID, if
@@ -135,18 +136,18 @@ usage(int status)
  * Returns an errno on failure and zero on success.
  */
 static krb5_error_code
-set_permissions(const char *file, const struct k5start_private *private)
+set_permissions(const char *file, const struct k5start_internal *internal)
 {
-    if (private->owner != (uid_t) -1 || private->group != (gid_t) -1)
-        if (chown(file, private->owner, private->group) < 0) {
-            syswarn("cannot chown %s to %ld:%ld", file, (long) private->owner,
-                    (long) private->group);
+    if (internal->owner != (uid_t) -1 || internal->group != (gid_t) -1)
+        if (chown(file, internal->owner, internal->group) < 0) {
+            syswarn("cannot chown %s to %ld:%ld", file, (long) internal->owner,
+                    (long) internal->group);
             return errno;
         }
-    if (private->mode != 0)
-        if (chmod(file, private->mode) < 0) {
+    if (internal->mode != 0)
+        if (chmod(file, internal->mode) < 0) {
             syswarn("cannot chmod %s to %o", file,
-                    (unsigned int) private->mode);
+                    (unsigned int) internal->mode);
             return errno;
         }
     return 0;
@@ -161,7 +162,7 @@ static krb5_error_code
 authenticate(krb5_context ctx, struct config *config,
              krb5_error_code status UNUSED)
 {
-    struct k5start_private *private = config->private.k5start;
+    struct k5start_internal *internal = config->internal.k5start;
     krb5_error_code code;
     krb5_keytab keytab = NULL;
     krb5_creds creds;
@@ -174,7 +175,7 @@ authenticate(krb5_context ctx, struct config *config,
      * separate temporary ticket cache, change its ownership, and then rename
      * it.
      */
-    if (private->set_perms) {
+    if (internal->set_perms) {
         int fd;
         char *tmp;
 
@@ -205,30 +206,29 @@ authenticate(krb5_context ctx, struct config *config,
             notice("authenticating as %s", p);
             krb5_free_unparsed_name(ctx, p);
         }
-        notice("getting tickets for %s", private->service);
+        notice("getting tickets for %s", internal->service);
     }
 
     /* Obtain new credentials. */
     memset(&creds, 0, sizeof(creds));
-    if (private->keytab != NULL) {
-        code = krb5_kt_resolve(ctx, private->keytab, &keytab);
+    if (internal->keytab != NULL) {
+        code = krb5_kt_resolve(ctx, internal->keytab, &keytab);
         if (code != 0) {
             warn_krb5(ctx, code, "error resolving keytab %s",
-                      private->keytab);
+                      internal->keytab);
             goto done;
         }
-        code = krb5_get_init_creds_keytab(ctx, &creds, config->client,
-                                          keytab, 0, private->service,
-                                          private->kopts);
-    } else if (!private->stdin_passwd) {
-        code = krb5_get_init_creds_password(ctx, &creds, config->client,
-                                            NULL, krb5_prompter_posix, NULL,
-                                            0, private->service,
-                                            private->kopts);
+        code =
+            krb5_get_init_creds_keytab(ctx, &creds, config->client, keytab, 0,
+                                       internal->service, internal->kopts);
+    } else if (!internal->stdin_passwd) {
+        code = krb5_get_init_creds_password(
+            ctx, &creds, config->client, NULL, krb5_prompter_posix, NULL, 0,
+            internal->service, internal->kopts);
     } else {
         char *p, buffer[BUFSIZ];
 
-        if (!private->quiet)
+        if (!internal->quiet)
             printf("Password: ");
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
             syswarn("cannot read password");
@@ -240,13 +240,14 @@ authenticate(krb5_context ctx, struct config *config,
             *p = '\0';
         else {
             warn("password too long");
+            explicit_bzero(buffer, sizeof(buffer));
             code = KRB5_LIBOS_CANTREADPWD;
             goto done;
         }
-        code = krb5_get_init_creds_password(ctx, &creds, config->client,
-                                            buffer, NULL, NULL, 0,
-                                            private->service,
-                                            private->kopts);
+        code = krb5_get_init_creds_password(
+            ctx, &creds, config->client, buffer, NULL, NULL, 0,
+            internal->service, internal->kopts);
+        explicit_bzero(buffer, sizeof(buffer));
     }
     if (code != 0) {
         warn_krb5(ctx, code, "error getting credentials");
@@ -277,8 +278,8 @@ authenticate(krb5_context ctx, struct config *config,
      * set the owner, group, and mode of the resulting cache, and then rename
      * it into place.
      */
-    if (private->set_perms) {
-        code = set_permissions(cache, private);
+    if (internal->set_perms) {
+        code = set_permissions(cache, internal);
         if (code != 0)
             goto done;
         if (rename(cache, config->cache) < 0) {
@@ -289,7 +290,7 @@ authenticate(krb5_context ctx, struct config *config,
 
 done:
     /* If we failed and were generating a separate cache, unlink it. */
-    if (private->set_perms)
+    if (internal->set_perms)
         unlink(cache);
 
     /* Make sure that we don't free princ; we use it later. */
@@ -373,7 +374,7 @@ int
 main(int argc, char *argv[])
 {
     struct config config;
-    struct k5start_private private;
+    struct k5start_internal internal;
     int opt;
     const char *inst = NULL;
     const char *sname = NULL;
@@ -390,59 +391,95 @@ main(int argc, char *argv[])
     krb5_deltat life_secs;
     bool run_as_daemon;
     bool search_keytab = false;
-    static const char optstring[]
-        = "abc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
+    static const char optstring[] =
+        "abc:Ff:g:H:hI:i:K:k:Ll:m:no:Pp:qr:S:stUu:vx";
 
     /* Initialize logging. */
     message_program_name = "k5start";
 
     /* Set up confguration and parse command-line options. */
     memset(&config, 0, sizeof(config));
-    memset(&private, 0, sizeof(private));
-    config.private.k5start = &private;
+    memset(&internal, 0, sizeof(internal));
+    config.internal.k5start = &internal;
     config.auth = authenticate;
-    private.owner = (uid_t) -1;
-    private.group = (gid_t) -1;
+    internal.owner = (uid_t) -1;
+    internal.group = (gid_t) -1;
     while ((opt = getopt(argc, argv, optstring)) != EOF)
         switch (opt) {
-        case 'a': config.always_renew = true;   break;
-        case 'b': config.background = true;     break;
-        case 'c': config.childfile = optarg;    break;
-        case 'F': nonforwardable = true;        break;
-        case 'h': usage(0);                     break;
-        case 'I': sinst = optarg;               break;
-        case 'i': inst = optarg;                break;
-        case 'k': config.cache = optarg;        break;
-        case 'n': /* Ignored */                 break;
-        case 'P': nonproxiable = true;          break;
-        case 'p': config.pidfile = optarg;      break;
-        case 'q': private.quiet = true;         break;
-        case 'r': srealm = optarg;              break;
-        case 'S': sname = optarg;               break;
-        case 't': config.do_aklog = true;       break;
-        case 'v': config.verbose = true;        break;
-        case 'U': search_keytab = true;         break;
-        case 'u': principal = optarg;           break;
-        case 'x': config.exit_errors = true;    break;
+        case 'a':
+            config.always_renew = true;
+            break;
+        case 'b':
+            config.background = true;
+            break;
+        case 'c':
+            config.childfile = optarg;
+            break;
+        case 'F':
+            nonforwardable = true;
+            break;
+        case 'I':
+            sinst = optarg;
+            break;
+        case 'i':
+            inst = optarg;
+            break;
+        case 'k':
+            config.cache = optarg;
+            break;
+        case 'n': /* Ignored */
+            break;
+        case 'P':
+            nonproxiable = true;
+            break;
+        case 'p':
+            config.pidfile = optarg;
+            break;
+        case 'q':
+            internal.quiet = true;
+            break;
+        case 'r':
+            srealm = optarg;
+            break;
+        case 'S':
+            sname = optarg;
+            break;
+        case 't':
+            config.do_aklog = true;
+            break;
+        case 'v':
+            config.verbose = true;
+            break;
+        case 'U':
+            search_keytab = true;
+            break;
+        case 'u':
+            principal = optarg;
+            break;
+        case 'x':
+            config.exit_errors = true;
+            break;
 
         case 'f':
-            private.keytab = optarg;
+            internal.keytab = optarg;
             break;
         case 'g':
-            private.group = convert_number(optarg, 10);
-            if (private.group == (gid_t) -1) {
+            internal.group = (gid_t) convert_number(optarg, 10);
+            if (internal.group == (gid_t) -1) {
                 gr = getgrnam(optarg);
                 if (gr == NULL)
                     die("unknown group %s", optarg);
-                private.group = gr->gr_gid;
+                internal.group = gr->gr_gid;
             }
-            private.set_perms = true;
+            internal.set_perms = true;
             break;
         case 'H':
             config.happy_ticket = convert_number(optarg, 10);
             if (config.happy_ticket <= 0)
                 die("-H limit argument %s invalid", optarg);
             break;
+        case 'h':
+            usage(0);
         case 'K':
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
@@ -462,35 +499,34 @@ main(int argc, char *argv[])
             code = krb5_string_to_deltat(optarg, &life_secs);
             if (code != 0 || life_secs == 0)
                 die("bad lifetime value %s, use 10h 10m format", optarg);
-            lifetime = life_secs / 60;
+            lifetime = (int) life_secs / 60;
             break;
         case 'm':
-            private.mode = convert_number(optarg, 8);
-            if (private.mode <= 0)
+            internal.mode = (mode_t) convert_number(optarg, 8);
+            if (internal.mode <= 0)
                 die("-m mode argument %s invalid", optarg);
-            private.set_perms = true;
+            internal.set_perms = true;
             break;
         case 'o':
-            private.owner = convert_number(optarg, 10);
-            if (private.owner == (uid_t) -1) {
+            internal.owner = (uid_t) convert_number(optarg, 10);
+            if (internal.owner == (uid_t) -1) {
                 pw = getpwnam(optarg);
                 if (pw == NULL)
                     die("unknown user %s", optarg);
-                private.owner = pw->pw_uid;
+                internal.owner = pw->pw_uid;
             }
-            private.set_perms = true;
+            internal.set_perms = true;
             break;
         case 's':
-            private.stdin_passwd = true;
+            internal.stdin_passwd = true;
             break;
 
         default:
             usage(1);
-            break;
         }
 
     /*
-     * Parse arguments.  The first argument will be taken to be the 
+     * Parse arguments.  The first argument will be taken to be the
      * username if the -u or -U options weren't given.  Anything else is
      * a command.
      */
@@ -502,7 +538,6 @@ main(int argc, char *argv[])
         argv++;
     }
     if (argc >= 1 && strcmp(argv[0], "--") == 0) {
-        argc--;
         argv++;
     }
     if (argv[0] != NULL)
@@ -516,27 +551,27 @@ main(int argc, char *argv[])
      * If an owner was provided but no group, and the owner was given as a
      * username, set the group to the primary group of that user.
      */
-    if (private.group == (gid_t) -1 && pw != NULL)
-        private.group = pw->pw_gid;
+    if (internal.group == (gid_t) -1 && pw != NULL)
+        internal.group = pw->pw_gid;
 
     /* Check the arguments for consistency. */
     run_as_daemon = (config.keep_ticket != 0 || config.command != NULL);
     if (config.always_renew && !run_as_daemon)
         die("-a only makes sense with -K or a command to run");
-    if (config.background && private.keytab == NULL)
+    if (config.background && internal.keytab == NULL)
         die("-b option requires a keytab be specified with -f");
     if (config.background && !run_as_daemon)
         die("-b only makes sense with -K or a command to run");
-    if (config.keep_ticket > 0 && private.keytab == NULL)
+    if (config.keep_ticket > 0 && internal.keytab == NULL)
         die("-K option requires a keytab be specified with -f");
-    if (config.command != NULL && private.keytab == NULL)
+    if (config.command != NULL && internal.keytab == NULL)
         die("running a command requires a keytab be specified with -f");
     if (lifetime > 0 && config.keep_ticket > lifetime)
-        die("-K limit %d must be smaller than lifetime %d",
+        die("-K limit %ld must be smaller than lifetime %d",
             config.keep_ticket, lifetime);
     if (principal != NULL && strchr(principal, '/') != NULL && inst != NULL)
         die("instance specified in the principal and with -i");
-    if (search_keytab && private.keytab == NULL)
+    if (search_keytab && internal.keytab == NULL)
         die("-U option requires a keytab be specified with -f");
     if (search_keytab && (principal != NULL || inst != NULL))
         die("-U option cannot be used with -u or -i options");
@@ -544,7 +579,7 @@ main(int argc, char *argv[])
         die("-H option cannot be used with a command");
     if (config.childfile != NULL && config.command == NULL)
         die("-c option only makes sense with a command to run");
-    if (private.keytab != NULL && private.stdin_passwd)
+    if (internal.keytab != NULL && internal.stdin_passwd)
         die("cannot use both -s and -f flags");
 
     /* Establish a Kerberos context. */
@@ -554,7 +589,7 @@ main(int argc, char *argv[])
 
     /* If the -U option was given, figure out the principal from the keytab. */
     if (search_keytab)
-        principal = first_principal(ctx, private.keytab);
+        principal = first_principal(ctx, internal.keytab);
 
     /* The default principal is the name of the local user. */
     if (principal == NULL) {
@@ -602,7 +637,7 @@ main(int argc, char *argv[])
     }
     if (setenv("KRB5CCNAME", config.cache, 1) != 0)
         die("cannot set KRB5CCNAME environment variable");
-    if (private.set_perms)
+    if (internal.set_perms)
         config.cache = strip_cache_prefix(config.cache);
 
     /*
@@ -611,7 +646,7 @@ main(int argc, char *argv[])
      */
     if (config.keep_ticket > 0 || config.happy_ticket > 0 || config.background)
         if (!config.verbose)
-            private.quiet = true;
+            internal.quiet = true;
 
     /*
      * The easiest thing for us is if the user just specifies the full
@@ -633,7 +668,7 @@ main(int argc, char *argv[])
      *
      * We intentionally don't use notice() here to avoid prepending k5start.
      */
-    if (!private.quiet) {
+    if (!internal.quiet) {
         char *p;
 
         code = krb5_unparse_name(ctx, config.client, &p);
@@ -660,25 +695,25 @@ main(int argc, char *argv[])
         sname = "krbtgt";
     if (sinst == NULL)
         sinst = srealm;
-    xasprintf(&private.service, "%s/%s@%s", sname, sinst, srealm);
-    code = krb5_build_principal(ctx, &private.ksprinc, strlen(srealm),
-                                srealm, sname, sinst, (const char *) NULL);
+    xasprintf(&internal.service, "%s/%s@%s", sname, sinst, srealm);
+    code = krb5_build_principal(ctx, &internal.ksprinc,
+                                (unsigned int) strlen(srealm), srealm, sname,
+                                sinst, (const char *) NULL);
     if (code != 0)
         die_krb5(ctx, code, "error creating service principal name");
 
     /* Figure out our ticket lifetime and initialize the options. */
     life_secs = lifetime * 60;
-    code = krb5_get_init_creds_opt_alloc(ctx, &private.kopts);
+    code = krb5_get_init_creds_opt_alloc(ctx, &internal.kopts);
     if (code != 0)
         die_krb5(ctx, code, "error allocating credential options");
-    krb5_get_init_creds_opt_set_default_flags(ctx, "k5start",
-                                              config.client->realm,
-                                              private.kopts);
-    krb5_get_init_creds_opt_set_tkt_life(private.kopts, life_secs);
+    krb5_get_init_creds_opt_set_default_flags(
+        ctx, "k5start", config.client->realm, internal.kopts);
+    krb5_get_init_creds_opt_set_tkt_life(internal.kopts, life_secs);
     if (nonforwardable)
-        krb5_get_init_creds_opt_set_forwardable(private.kopts, 0);
+        krb5_get_init_creds_opt_set_forwardable(internal.kopts, 0);
     if (nonproxiable)
-        krb5_get_init_creds_opt_set_proxiable(private.kopts, 0);
+        krb5_get_init_creds_opt_set_proxiable(internal.kopts, 0);
 
     /* Do the actual work. */
     run_framework(ctx, &config);

@@ -1,17 +1,18 @@
 dnl Autoconf configuration for kstart.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2015 Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-dnl     2010, 2011, 2014
+dnl Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+dnl Copyright 2000-2011, 2014
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy
 dnl and/or distribute it, with or without modifications, as long as this
 dnl notice is preserved.
+dnl
+dnl SPDX-License-Identifier: FSFULLR
 
 AC_PREREQ([2.64])
-AC_INIT([kstart], [4.2], [eagle@eyrie.org])
+AC_INIT([kstart], [4.3], [eagle@eyrie.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
@@ -20,11 +21,12 @@ AM_INIT_AUTOMAKE([1.11 check-news foreign silent-rules subdir-objects
 AM_MAINTAINER_MODE
 
 dnl Detect unexpanded macros.
+m4_pattern_forbid([^PKG_])
 m4_pattern_forbid([^_?RRA_])
 
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
-RRA_PROG_CC_CLANG
+RRA_PROG_CC_WARNINGS_FLAGS
 AC_SYS_LARGEFILE
 AM_PROG_CC_C_O
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -36,7 +38,7 @@ dnl tickets.  afslog is the name of the utility that comes with Heimdal.  By
 dnl default, we build in support for calling it if we find either on the
 dnl user's path or if the user specifies a default path.
 AC_ARG_WITH([aklog],
-    AC_HELP_STRING([--with-aklog=PATH],
+    AS_HELP_STRING([--with-aklog=PATH],
         [Path to aklog or other AFS token program]),
     [AS_IF([test x"$withval" != xno], [PATH_AKLOG=$withval])],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
@@ -65,14 +67,17 @@ RRA_LIB_KRB5_RESTORE
 dnl See if AFS setpag support is desired.
 rra_build_kafs=false
 AC_ARG_ENABLE([setpag],
-    [AC_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
+    [AS_HELP_STRING([--enable-setpag], [Enable AFS setpag support])],
     [AS_IF([test x"$enableval" != xno], [RRA_LIB_KAFS])])
 AM_CONDITIONAL([NEED_KAFS], [test x"$rra_build_kafs" = xtrue])
 
+dnl Check if libkeyutils is available, used for kafs support.
+RRA_LIB_KEYUTILS_OPTIONAL
+
 dnl Other portability checks.
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([sys/bitypes.h sys/select.h sys/time.h syslog.h])
-AC_CHECK_DECLS([snprintf, vsnprintf])
+AC_CHECK_HEADERS([strings.h sys/bitypes.h sys/select.h sys/time.h syslog.h])
+AC_CHECK_DECLS([reallocarray])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
 AC_TYPE_LONG_LONG_INT
@@ -82,18 +87,13 @@ AC_CHECK_TYPES([sig_atomic_t], [], [],
      #include <signal.h>])
 AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
-RRA_FUNC_SNPRINTF
-AC_CHECK_FUNCS([setrlimit setsid])
+AC_CHECK_FUNCS([explicit_bzero setrlimit setsid])
 AC_REPLACE_FUNCS([asprintf daemon mkstemp reallocarray setenv])
-
-dnl Enable appropriate warnings.
-AM_CONDITIONAL([WARNINGS_GCC], [test x"$GCC" = xyes && test x"$CLANG" != xyes])
-AM_CONDITIONAL([WARNINGS_CLANG], [test x"$CLANG" = xyes])
 
 dnl Create the tests/data directory.
 AC_CONFIG_COMMANDS([tests/data/.placeholder], [touch tests/data/.placeholder])
 
 dnl Output the results.
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
