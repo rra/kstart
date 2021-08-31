@@ -8,24 +8,25 @@
 # SPDX-License-Identifier: MIT
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = .clang-format .gitignore .github LICENSE bootstrap		 \
-	ci/README.md ci/apt-packages ci/cpanfile			 \
-	ci/files/heimdal/heimdal-kdc ci/files/heimdal/kdc.conf		 \
-	ci/files/heimdal/krb5.conf ci/files/mit/kdc.conf		 \
-	ci/files/mit/krb5.conf ci/install ci/kdc-setup-heimdal		 \
-	ci/kdc-setup-mit ci/test docs/k5start.pod docs/krenew.pod	 \
-	examples/krenew-agent kstart.spec tests/README tests/TESTS	 \
-	tests/data/README tests/data/command tests/data/fake-aklog	 \
-	tests/data/perl.conf tests/docs/pod-spelling-t tests/docs/pod-t	 \
-	tests/k5start/afs-t tests/k5start/basic-t tests/k5start/daemon-t \
-	tests/k5start/errors-t tests/k5start/flags-t			 \
-	tests/k5start/keyring-t tests/k5start/non-renewable-t		 \
-	tests/k5start/perms-t tests/k5start/sigchld-t tests/kafs/basic-t \
-	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	 \
-	tests/krenew/errors-t tests/krenew/keyring-t			 \
-	tests/krenew/non-renewable-t tests/libtest.pl			 \
-	tests/style/obsolete-strings-t tests/tap/libtap.sh		 \
-	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	 \
+EXTRA_DIST = .clang-format .gitignore .github LICENSE README.md bootstrap   \
+	ci/README.md ci/apt-packages ci/cpanfile			    \
+	ci/files/heimdal/heimdal-kdc ci/files/heimdal/kdc.conf		    \
+	ci/files/heimdal/krb5.conf ci/files/mit/kdc.conf		    \
+	ci/files/mit/krb5.conf ci/install ci/kdc-setup-heimdal		    \
+	ci/kdc-setup-mit ci/test docs/docknot.yaml docs/k5start.pod	    \
+	docs/krenew.pod examples/krenew-agent kstart.spec tests/README	    \
+	tests/TESTS tests/data/README tests/data/command		    \
+	tests/data/cppcheck.supp tests/data/fake-aklog tests/data/perl.conf \
+	tests/docs/pod-spelling-t tests/docs/pod-t			    \
+	tests/docs/spdx-license-t tests/k5start/afs-t tests/k5start/basic-t \
+	tests/k5start/daemon-t tests/k5start/errors-t tests/k5start/flags-t \
+	tests/k5start/keyring-t tests/k5start/non-renewable-t		    \
+	tests/k5start/perms-t tests/k5start/sigchld-t tests/kafs/basic-t    \
+	tests/krenew/afs-t tests/krenew/basic-t tests/krenew/daemon-t	    \
+	tests/krenew/errors-t tests/krenew/keyring-t			    \
+	tests/krenew/non-renewable-t tests/libtest.pl			    \
+	tests/style/obsolete-strings-t tests/tap/libtap.sh		    \
+	tests/tap/perl/Test/RRA.pm tests/tap/perl/Test/RRA/Automake.pm	    \
 	tests/tap/perl/Test/RRA/Config.pm tests/util/xmalloc-t
 
 # Enable AFS support when running distcheck.

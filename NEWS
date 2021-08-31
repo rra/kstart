@@ -1,6 +1,6 @@
                        User-Visible kstart Changes
 
-kstart 4.3 (unreleased)
+kstart 4.3 (2021-08-30)
 
     Add support for kafs to the -t options of k5start and krenew.  If AFS
     setpag support is not compiled in or AFS is not available, but the
