@@ -8,6 +8,7 @@ Build-Depends:
  libkrb5-dev,
  libtest-pod-perl,
  perl,
+ pkg-config,
 Rules-Requires-Root: no
 Standards-Version: 4.6.0
 Homepage: https://www.eyrie.org/~eagle/software/kstart/
