@@ -1,4 +1,4 @@
-kstart (4.3-1) UNRELEASED; urgency=medium
+kstart (4.3-1) unstable; urgency=medium
 
   * New upstream release.
     - Add support for kafs.  If AFS is not available but the -t option is
@@ -11,7 +11,7 @@ kstart (4.3-1) UNRELEASED; urgency=medium
     - Use explicit_bzero to clear the password for k5start -s.
   * Update standards version to 4.6.0 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 30 Aug 2021 20:49:39 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 30 Aug 2021 21:10:40 -0700
 
 kstart (4.2-3) unstable; urgency=medium
 
