@@ -9,7 +9,7 @@
 
 Name: kstart
 Summary: Kerberos kinit variants supporting ticket refreshing
-Version: 4.2
+Version: 4.3
 Release: 2%{?dist}
 License: MIT
 Group: System Environment/Base
@@ -18,7 +18,7 @@ Source: https://archives.eyrie.org/software/kerberos/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: krb5-devel
 Requires: krb5
-Vendor: Stanford University
+Vendor: Russ Allbery
 
 %description
 k5start and krenew are modified versions of kinit which add support for
@@ -51,6 +51,9 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:$PATH" \
 %{_mandir}/*/*
 
 %changelog
+* Mon Aug 30 2021 Russ Allbery <eagle@eyrie.org> 4.3-1
+- New version for 4.3 release.
+
 * Tue Mar 20 2021 Russ Allbery <eagle@eyrie.org> 4.2-2
 - Update upstream URL.
 
