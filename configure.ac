@@ -87,7 +87,7 @@ AC_CHECK_TYPES([sig_atomic_t], [], [],
      #include <signal.h>])
 AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
-AC_CHECK_FUNCS([setrlimit setsid])
+AC_CHECK_FUNCS([explicit_bzero setrlimit setsid])
 AC_REPLACE_FUNCS([asprintf daemon mkstemp reallocarray setenv])
 
 dnl Create the tests/data directory.

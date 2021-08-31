@@ -18,6 +18,9 @@ kstart 4.3 (unreleased)
     command succeeded when it was killed, and matches the return status
     behavior of bash.  Patch from Aasif Versi.
 
+    Use explicit_bzero, where available, to overwrite the memory used for
+    the user's password when k5start is run with the -s option.
+
     Rename the script to bootstrap from a Git checkout to bootstrap,
     matching the emerging consensus in the Autoconf world.
 

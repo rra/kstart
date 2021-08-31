@@ -240,12 +240,14 @@ authenticate(krb5_context ctx, struct config *config,
             *p = '\0';
         else {
             warn("password too long");
+            explicit_bzero(buffer, sizeof(buffer));
             code = KRB5_LIBOS_CANTREADPWD;
             goto done;
         }
         code = krb5_get_init_creds_password(
             ctx, &creds, config->client, buffer, NULL, NULL, 0,
             internal->service, internal->kopts);
+        explicit_bzero(buffer, sizeof(buffer));
     }
     if (code != 0) {
         warn_krb5(ctx, code, "error getting credentials");
