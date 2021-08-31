@@ -13,6 +13,7 @@ cppcheck
 fakeroot
 heimdal-multidev
 krb5-config
+libkeyutils-dev
 libkrb5-dev
 liblocal-lib-perl
 perl
