@@ -1,3 +1,17 @@
+kstart (4.3-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    - Add support for kafs.  If AFS is not available but the -t option is
+      provided, create a new session keyring, link it to the user keyring,
+      and then run the configured program (via the AKLOG environment
+      variable).  This can be set to aklog-kafs (from kafs-client) and
+      k5start and krenew should then work correctly with kafs.
+    - If a program run by k5start or krenew is killed by a signal, exit
+      with status signal number plus 128, not 0.
+    - Use explicit_bzero to clear the password for k5start -s.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 30 Aug 2021 20:49:39 -0700
+
 kstart (4.2-3) unstable; urgency=medium
 
   * Add debian/upstream/metadata file.
