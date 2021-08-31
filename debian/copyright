@@ -5,26 +5,46 @@ Source: https://www.eyrie.org/~eagle/software/kstart/
 Files: *
 Copyright: 1995-1997, 1999-2014
     The Board of Trustees of the Leland Stanford Junior University
-  2000-2002, 2004-2015 Russ Allbery <eagle@eyrie.org>
+  2000-2002, 2004-2021 Russ Allbery <eagle@eyrie.org>
 License: Expat
 
+Files: .clang-format docs/k5start.1 docs/k5start.pod docs/krenew.1
+ docs/krenew.pod kafs/sys-syscall.c portable/asprintf.c portable/daemon.c
+ portable/dummy.c portable/k_haspag.c portable/krb5-extra.c portable/krb5.h
+ portable/macros.h portable/mkstemp.c portable/reallocarray.c
+ portable/setenv.c portable/stdbool.h portable/system.h tests/README
+ tests/portable/asprintf-t.c tests/portable/daemon-t.c
+ tests/portable/mkstemp-t.c tests/portable/reallocarray-t.c
+ tests/portable/setenv-t.c util/macros.h
+Copyright: 2000-2006, 2010, 2014-2018, 2020-2021
+    Russ Allbery <eagle@eyrie.org>
+  2002, 2004-2014
+    The Board of Trustees of the Leland Stanford Junior University
+License: all-permissive
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice and
+ this notice are preserved.  This file is offered as-is, without any
+ warranty.
+
 Files: Makefile.in
-Copyright: 1994-2014 Free Software Foundation, Inc.
+Copyright: 1994-2021 Free Software Foundation, Inc.
   2000-2011 The Board of Trustees of the Leland Stanford Junior University
-  2015 Russ Allbery <eagle@eyrie.org>
+  2015, 2021 Russ Allbery <eagle@eyrie.org>
 License: FSF-unlimited and Expat
 
 Files: aclocal.m4
-Copyright: 1996-2015 Free Software Foundation, Inc.
-License: FSF-unlimited
+Copyright: 1996-2021 Free Software Foundation, Inc.
+  2004 Scott James Remnant <scott@netsplit.com>
+  2012-2015 Dan Nicholson <dbn.lists@gmail.com>
+License: FSF-unlimited, and GPL-2+ with Autoconf exception or Expat
 
 Files: build-aux/ar-lib build-aux/compile build-aux/depcomp
  build-aux/missing
-Copyright: 1996-2014 Free Software Foundation, Inc.
+Copyright: 1996-2021 Free Software Foundation, Inc.
 License: GPL-2+ with Autoconf exception or Expat
 
 Files: build-aux/config.guess build-aux/config.sub
-Copyright: 1992-2015 Free Software Foundation, Inc.
+Copyright: 1992-2018 Free Software Foundation, Inc.
 License: GPL-3+ with Autoconf exception or Expat
 
 Files: build-aux/install-sh
@@ -55,65 +75,29 @@ License: X11
  Consortium.
 
 Files: configure
-Copyright: 1992-1996, 1998-2012 Free Software Foundation, Inc.
+Copyright: 1992-1996, 1998-2017, 2020-2021 Free Software Foundation, Inc.
 License: FSF-configure
  This script is free software; the Free Software Foundation gives unlimited
  permission to copy, distribute and modify it.
 
-Files: configure.ac m4/clang.m4 m4/kafs.m4 m4/krb5-config.m4 m4/krb5.m4
- m4/lib-depends.m4 m4/lib-pathname.m4 m4/snprintf.m4 m4/vamacros.m4
+Files: configure.ac m4/clang.m4 m4/kafs.m4 m4/keyutils.m4 m4/krb5-config.m4
+ m4/krb5.m4 m4/lib-depends.m4 m4/lib-helper.m4 m4/lib-pathname.m4
+ m4/vamacros.m4
 Copyright: 2000-2014
     The Board of Trustees of the Leland Stanford Junior University
-  2015 Russ Allbery <eagle@eyrie.org>
+  2015, 2018, 2020-2021 Russ Allbery <eagle@eyrie.org>
 License: unlimited
  This file is free software; the authors give unlimited permission to copy
  and/or distribute it, with or without modifications, as long as this
  notice is preserved.
 
-Files: docs/k5start.1 docs/k5start.pod docs/krenew.1 docs/krenew.pod
- tests/README
-Copyright: 2002, 2004-2012, 2014
-    The Board of Trustees of the Leland Stanford Junior University
-  2010, 2015 Russ Allbery <eagle@eyrie.org>
-License: all-permissive
- Copying and distribution of this file, with or without modification, are
- permitted in any medium without royalty provided the copyright notice and
- this notice are preserved.  This file is offered as-is, without any
- warranty.
-
-Files: kafs/sys-syscall.c portable/asprintf.c portable/daemon.c
- portable/dummy.c portable/k_haspag.c portable/krb5-extra.c portable/krb5.h
- portable/macros.h portable/mkstemp.c portable/reallocarray.c
- portable/setenv.c portable/stdbool.h portable/system.h
- tests/portable/asprintf-t.c tests/portable/daemon-t.c
- tests/portable/mkstemp-t.c tests/portable/reallocarray-t.c
- tests/portable/setenv-t.c util/macros.h
-Copyright: no copyright notice, see License
-License: rra-public-domain
- The authors hereby relinquish any claim to any copyright that they may
- have in this work, whether granted under contract or by operation of law
- or international treaty, and hereby commit to the public, at large, that
- they shall not, at any time in the future, seek to enforce any copyright
- in this work against any person or entity, or prevent any person or
- entity from copying, publishing, distributing or creating derivative
- works of this work.
-
-Files: portable/snprintf.c tests/portable/snprintf-t.c
-Copyright: 1995 Patrick Powell
-  2000-2006 Russ Allbery <eagle@eyrie.org>
-  2001 Hrvoje Niksic
-  2009-2010 The Board of Trustees of the Leland Stanford Junior University
-License: Powell-snprintf
- This code is based on code written by Patrick Powell (papowell@astart.com)
- It may be used for any purpose as long as this notice remains intact
- on all source code distributions
-
-Files: util/messages.c util/messages.h util/xmalloc.c util/xmalloc.h
+Files: m4/cc-flags.m4 util/messages.c util/messages.h util/xmalloc.c
+ util/xmalloc.h
 Copyright: 1991, 1994-2003 The Internet Software Consortium and Rich Salz
-  2004-2006 Internet Systems Consortium, Inc.
+  2004-2006, 2009, 2016 Internet Systems Consortium, Inc.
   2008-2010, 2012-2014
     The Board of Trustees of the Leland Stanford Junior University
-  2015 Russ Allbery <eagle@eyrie.org>
+  2015-2021 Russ Allbery <eagle@eyrie.org>
 License: ISC
  Permission to use, copy, modify, and distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
