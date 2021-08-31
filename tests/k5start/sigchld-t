@@ -3,22 +3,23 @@
 # Test for proper SIGCHLD handling in k5start.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
 # Copyright 2010, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use POSIX qw(SIGCHLD SIGCONT SIGSTOP SIGTERM);
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
@@ -64,6 +65,6 @@ kill (SIGCONT, $child) or BAIL_OUT ("cannot send SIGCONT to child $child\n");
 sleep 1;
 kill (SIGTERM, $child) or BAIL_OUT ("cannot send SIGTERM to child $child\n");
 waitpid ($pid, 0);
-is ($?, 0, 'command succeeded');
+is ($? >> 8, 128 + SIGTERM, 'command killed with SIGTERM');
 ok (time < $start + 5, 'k5start got SIGCHLD and woke up properly');
 unlink 'child-pid';

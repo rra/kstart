@@ -3,30 +3,31 @@
 # Tests for krenew daemon functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009, 2011, 2012, 2014
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2009, 2011-2012, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use Cwd;
 
 use Test::More;
 
 # The full path to the newly-built krenew client.
-our $KRENEW = "$ENV{BUILD}/../krenew";
+our $KRENEW = "$ENV{C_TAP_BUILD}/../commands/krenew";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # The path to our temporary directory used for test ticket caches and the
 # like.
-our $TMP = "$ENV{BUILD}/tmp";
+our $TMP = "$ENV{C_TAP_BUILD}/tmp";
 unless (-d $TMP) {
     mkdir $TMP or BAIL_OUT ("cannot create $TMP: $!");
 }
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 my ($cwd, $principal);
@@ -55,7 +56,7 @@ if (!defined $pid) {
         or BAIL_OUT ("can't run $KRENEW: $!");
 }
 my $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -87,7 +88,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -106,7 +107,7 @@ is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and -q was added implicitly');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -146,7 +147,7 @@ if (!defined $pid) {
         or BAIL_OUT ("can't run $KRENEW: $!");
 }
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -178,7 +179,7 @@ is ($status, 0, 'krenew -xb works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and no regular output');
 $tries = 0;
-while (not -f "$TMP/pid" and $tries < 100) {
+while (not -s "$TMP/pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -199,12 +200,12 @@ unlink "$TMP/pid";
 unlink 'child-out';
 ($out, $err, $status)
     = command ($KRENEW, '-bK', 30, '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               '--', "$ENV{SOURCE}/data/command", "$TMP/child-out");
+               '--', "$ENV{C_TAP_SOURCE}/data/command", "$TMP/child-out");
 is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -248,12 +249,12 @@ unlink "$TMP/child-out";
 # One more time to test propagation of QUIT signals.
 ($out, $err, $status)
     = command ($KRENEW, '-bK', 30, '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               '--', "$ENV{SOURCE}/data/command", "$TMP/child-out");
+               '--', "$ENV{C_TAP_SOURCE}/data/command", "$TMP/child-out");
 is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -294,12 +295,12 @@ unlink "$TMP/child-out";
 # running.
 ($out, $err, $status)
     = command ($KRENEW, '-bK', 30, '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               '--', "$ENV{SOURCE}/data/command", "$TMP/child-out");
+               '--', "$ENV{C_TAP_SOURCE}/data/command", "$TMP/child-out");
 is ($status, 0, 'Backgrounding krenew works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }
@@ -338,12 +339,12 @@ unlink "$TMP/child-out";
 # failure to renew the ticket.
 ($out, $err, $status)
     = command ($KRENEW, '-bsK', 30, '-p', "$TMP/pid", '-c', "$TMP/child-pid",
-               '--', "$ENV{SOURCE}/data/command", "$TMP/child-out");
+               '--', "$ENV{C_TAP_SOURCE}/data/command", "$TMP/child-out");
 is ($status, 0, 'Backgrounding krenew -s works');
 is ($err, '', ' with no error output');
 is ($out, '', ' and output was redirected properly');
 $tries = 0;
-while (not -f "$TMP/child-pid" and $tries < 100) {
+while (not -s "$TMP/child-pid" and $tries < 100) {
     select (undef, undef, undef, 0.1);
     $tries++;
 }

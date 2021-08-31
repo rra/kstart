@@ -1,0 +1,13 @@
+# Perl dependencies for CI tests.   -*- perl -*-
+#
+# This file is used by cpanm to install dependencies used by the remctl test
+# suite.
+#
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+#
+# SPDX-License-Identifier: MIT
+
+on 'test' => sub {
+    suggests 'Test::Pod';
+    suggests 'Test::Spelling';
+}

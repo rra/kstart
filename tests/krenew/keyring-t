@@ -3,37 +3,40 @@
 # Tests for krenew support of keyrings.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
 # Copyright 2011, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
 use Test::More;
 
-# The full path to the newly-built k5start client.
-our $KRENEW = "$ENV{BUILD}/../krenew";
+# The full path to the newly-built k5start and krenew clients.
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
+our $KRENEW = "$ENV{C_TAP_BUILD}/../commands/krenew";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 my $principal;
 if (not -f "$DATA/test.keytab" or not -f "$DATA/test.principal") {
     plan skip_all => 'no keytab configuration';
-    exit 0;
 } else {
     $principal = contents ("$DATA/test.principal");
     $ENV{KRB5CCNAME} = 'KEYRING:test';
     unless (kinit ("$DATA/test.keytab", $principal, '-r', '2h', '-l', '10m')) {
         plan skip_all => 'cannot get renewable tickets in keyring';
-        exit 0;
     }
     unless (!-f 'KEYRING:test' && klist ()) {
         plan skip_all => 'cannot use keyring caches';
-        exit 0;
+    }
+    my ($out, $err, $status) = command ($K5START, '-k', 'KEYRING:test', '-H1');
+    if ($status != 0 && $err =~ /unknown ccache type/) {
+        plan skip_all => 'Heimdal does not support keyring caches';
     }
     plan tests => 5;
 }

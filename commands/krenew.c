@@ -8,10 +8,11 @@
  * any longer.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
- * See LICENSE for licensing terms.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <config.h>
@@ -23,19 +24,19 @@
 #include <syslog.h>
 #include <time.h>
 
-#include <internal.h>
+#include <commands/internal.h>
 #include <util/macros.h>
-#include <util/messages.h>
 #include <util/messages-krb5.h>
+#include <util/messages.h>
 #include <util/xmalloc.h>
 
 /* Holds the command-line options we need to pass to our callbacks. */
-struct krenew_private {
-    bool signal_child;          /* Kill child on abnormal exit. */
+struct krenew_internal {
+    bool signal_child; /* Kill child on abnormal exit. */
 };
 
 /* The usage message. */
-const char usage_message[] = "\
+static const char usage_message[] = "\
 Usage: krenew [options] [command]\n\
    -a                   Renew on each wakeup when running as a daemon\n\
    -b                   Fork and run in the background\n\
@@ -60,10 +61,12 @@ is set to a program (such as aklog) then this program will be executed when\n\
 requested by the -t flag.  Otherwise, %s.\n";
 
 /* Included in the usage message if AFS support is compiled in. */
-const char usage_message_kafs[] = "\n\
+#ifdef HAVE_KAFS
+static const char usage_message_kafs[] = "\n\
 When invoked with -t and a command, krenew will create a new AFS PAG for\n\
 the command before running the AKLOG program to keep its AFS credentials\n\
 isolated from other processes.\n";
+#endif
 
 
 /*
@@ -71,13 +74,13 @@ isolated from other processes.\n";
  * only argument.  If status is zero, the message is printed to standard
  * output; otherwise, it is sent to standard error.
  */
-static void
+__attribute__((__noreturn__)) static void
 usage(int status)
 {
     fprintf((status == 0) ? stdout : stderr, usage_message,
             ((PATH_AKLOG[0] == '\0')
-             ? "using -t is an error"
-             : "the program executed will be\n" PATH_AKLOG));
+                 ? "using -t is an error"
+                 : "the program executed will be\n" PATH_AKLOG));
 #ifdef HAVE_KAFS
     fprintf((status == 0) ? stdout : stderr, usage_message_kafs);
 #endif
@@ -201,7 +204,7 @@ renew(krb5_context ctx, struct config *config, krb5_error_code status)
         warn_krb5(ctx, code, "error renewing credentials");
         goto done;
     }
-    
+
     /*
      * In theory, we don't want to reinitialize the cache and instead want to
      * just store the new credentials.  By reinitializing the cache, we create
@@ -240,7 +243,7 @@ static void
 cleanup(krb5_context ctx UNUSED, struct config *config,
         krb5_error_code status UNUSED)
 {
-    if (config->child != 0 && config->private.krenew->signal_child)
+    if (config->child != 0 && config->internal.krenew->signal_child)
         kill(config->child, SIGHUP);
 }
 
@@ -252,7 +255,7 @@ main(int argc, char *argv[])
     krb5_context ctx;
     krb5_error_code code;
     struct config config;
-    struct krenew_private private;
+    struct krenew_internal internal;
     krb5_ccache ccache;
     bool run_as_daemon;
 
@@ -261,29 +264,50 @@ main(int argc, char *argv[])
 
     /* Set up configuration and parse command-line options. */
     memset(&config, 0, sizeof(config));
-    memset(&private, 0, sizeof(private));
-    config.private.krenew = &private;
+    memset(&internal, 0, sizeof(internal));
+    config.internal.krenew = &internal;
     config.auth = renew;
     config.cleanup = cleanup;
     while ((option = getopt(argc, argv, "abc:H:hiK:k:Lp:qstvx")) != EOF)
         switch (option) {
-        case 'a': config.always_renew = true;   break;
-        case 'b': config.background = true;     break;
-        case 'c': config.childfile = optarg;    break;
-        case 'h': usage(0);                     break;
-        case 'i': config.ignore_errors = true;  break;
-        case 'k': config.cache = optarg;        break;
-        case 'p': config.pidfile = optarg;      break;
-        case 's': private.signal_child = true;  break;
-        case 't': config.do_aklog = true;       break;
-        case 'v': config.verbose = true;        break;
-        case 'x': config.exit_errors = true;    break;
+        case 'a':
+            config.always_renew = true;
+            break;
+        case 'b':
+            config.background = true;
+            break;
+        case 'c':
+            config.childfile = optarg;
+            break;
+        case 'i':
+            config.ignore_errors = true;
+            break;
+        case 'k':
+            config.cache = optarg;
+            break;
+        case 'p':
+            config.pidfile = optarg;
+            break;
+        case 's':
+            internal.signal_child = true;
+            break;
+        case 't':
+            config.do_aklog = true;
+            break;
+        case 'v':
+            config.verbose = true;
+            break;
+        case 'x':
+            config.exit_errors = true;
+            break;
 
         case 'H':
             config.happy_ticket = convert_number(optarg, 10);
             if (config.happy_ticket <= 0)
                 die("-H limit argument %s invalid", optarg);
             break;
+        case 'h':
+            usage(0);
         case 'K':
             config.keep_ticket = convert_number(optarg, 10);
             if (config.keep_ticket <= 0)
@@ -301,7 +325,6 @@ main(int argc, char *argv[])
 
         default:
             usage(1);
-            break;
         }
 
     /* Parse arguments.  If any are given, they will be the command to run. */
@@ -320,7 +343,7 @@ main(int argc, char *argv[])
         die("-H option cannot be used with a command");
     if (config.childfile != NULL && config.command == NULL)
         die("-c option only makes sense with a command to run");
-    if (private.signal_child && config.command == NULL)
+    if (internal.signal_child && config.command == NULL)
         die("-s option only makes sense with a command to run");
 
     /* Establish a Kerberos context and set the ticket cache. */

@@ -20,11 +20,11 @@
  * other is handled via callbacks.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2015 Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2014
+ * Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2006-2012, 2014
  *     The Board of Trustees of the Leland Stanford Junior University
  *
- * See LICENSE for licensing terms.
+ * SPDX-License-Identifier: MIT
  */
 
 #include <config.h>
@@ -33,13 +33,17 @@
 #include <portable/system.h>
 
 #include <errno.h>
+#ifdef HAVE_LIBKEYUTILS
+#    include <keyutils.h>
+#endif
 #include <signal.h>
+#include <sys/stat.h>
 #ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
+#    include <sys/time.h>
 #endif
 #include <time.h>
 
-#include <internal.h>
+#include <commands/internal.h>
 #include <util/command.h>
 #include <util/macros.h>
 #include <util/messages-krb5.h>
@@ -120,8 +124,8 @@ get_krbtgt_princ(krb5_context ctx, krb5_principal user, krb5_principal *princ)
     realm = krb5_principal_get_realm(ctx, user);
     if (realm == NULL)
         return KRB5_CONFIG_NODEFREALM;
-    return krb5_build_principal(ctx, princ, strlen(realm), realm, "krbtgt",
-                                realm, (const char *) NULL);
+    return krb5_build_principal(ctx, princ, (unsigned int) strlen(realm),
+                                realm, "krbtgt", realm, (const char *) NULL);
 }
 
 
@@ -166,31 +170,29 @@ ticket_expired(krb5_context ctx, struct config *config)
     increds_valid = true;
 
     /* Check the expiration time and renewal limit. */
-    if (code == 0) {
-        now = time(NULL);
-        then = outcreds->times.endtime;
-        if (config->happy_ticket > 0)
-            offset = 60 * (config->keep_ticket + config->happy_ticket);
-        else
-            offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
-        if (then < now + offset)
-            code = KRB5KRB_AP_ERR_TKT_EXPIRED;
+    now = time(NULL);
+    then = outcreds->times.endtime;
+    if (config->happy_ticket > 0)
+        offset = 60 * (config->keep_ticket + config->happy_ticket);
+    else
+        offset = 60 * config->keep_ticket + EXPIRE_FUDGE;
+    if (then < now + offset)
+        code = KRB5KRB_AP_ERR_TKT_EXPIRED;
 
-        /*
-         * The error code for an inability to renew the ticket for long enough
-         * is arbitrary.  It just needs to be different than the error code
-         * that indicates we can renew the ticket and coordinated with the
-         * check in krenew's authentication callback.
-         *
-         * If the ticket is not going to expire, we skip this check.
-         * Otherwise, krenew -H 1 would fail even if the ticket had plenty of
-         * remaining lifespan if it was not renewable.
-         */
-        if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
-            then = outcreds->times.renew_till;
-            if (then < now + offset)
-                code = KRB5KDC_ERR_KEY_EXP;
-        }
+    /*
+     * The error code for an inability to renew the ticket for long enough is
+     * arbitrary.  It just needs to be different than the error code that
+     * indicates we can renew the ticket and coordinated with the check in
+     * krenew's authentication callback.
+     *
+     * If the ticket is not going to expire, we skip this check.  Otherwise,
+     * krenew -H 1 would fail even if the ticket had plenty of remaining
+     * lifespan if it was not renewable.
+     */
+    if (code == KRB5KRB_AP_ERR_TKT_EXPIRED) {
+        then = outcreds->times.renew_till;
+        if (then < now + offset)
+            code = KRB5KDC_ERR_KEY_EXP;
     }
 
 done:
@@ -279,6 +281,54 @@ add_handler(krb5_context ctx, struct config *config, void (*handler)(int),
 
 
 /*
+ * Probe to see if the Linux kafs subsystem is available.
+ */
+static bool
+has_kafs(void)
+{
+    struct stat st;
+    int rval, saved_errno;
+
+    saved_errno = errno;
+    rval = stat("/proc/fs/afs", &st);
+    errno = saved_errno;
+    return rval == 0;
+}
+
+
+/*
+ * Create a session keyring and link it to the user keyring.  This is done
+ * when using kafs since running aklog will change the current session
+ * keyring, and we don't want to clobber the keyring of our caller because we
+ * may be using different credentials.
+ *
+ * If libkeyutils is not available, do nothing silently and the caller's
+ * keyring will get clobbered.
+ */
+#ifdef HAVE_LIBKEYUTILS
+static void
+create_keyring(krb5_context ctx, struct config *config)
+{
+    key_serial_t key;
+
+    key = keyctl_join_session_keyring(NULL);
+    if (key < 0) {
+        syswarn("cannot create new session keyring");
+        exit_cleanup(ctx, config, 1);
+    }
+    if (keyctl_link(KEY_SPEC_USER_KEYRING, key) < 0)
+        syswarn("cannot link session keyring to user keyring");
+}
+#else
+static void
+create_keyring(krb5_context ctx UNUSED, struct config *config UNUSED)
+{
+    return;
+}
+#endif
+
+
+/*
  * The primary entry point of the framework.  Both k5start and krenew call
  * this function after setting up the options and configuration to do the real
  * work.  This function never returns.
@@ -304,8 +354,10 @@ run_framework(krb5_context ctx, struct config *config)
     }
 
     /*
-     * If built with setpag support and we're running a command, create the
-     * new PAG now before the first authentication.
+     * If built with setpag support, or if kafs is available, and we're
+     * running a command, create the new PAG now before the first
+     * authentication.  This prevents us from clobbering our caller's AFS
+     * credentials.
      */
     if (config->command != NULL && config->do_aklog) {
         if (k_hasafs()) {
@@ -313,13 +365,15 @@ run_framework(krb5_context ctx, struct config *config)
                 syswarn("unable to create PAG");
                 exit_cleanup(ctx, config, 1);
             }
+        } else if (has_kafs()) {
+            create_keyring(ctx, config);
         } else {
             warn("cannot create PAG: AFS support is not available");
             exit_cleanup(ctx, config, 1);
         }
     }
 
-    /* 
+    /*
      * Do the authentication once even if not necessary so that we can check
      * for any problems while we still have standard error.  If -H wasn't set,
      * always authenticate.  If -H was set, authenticate only if the ticket

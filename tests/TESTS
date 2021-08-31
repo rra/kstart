@@ -1,5 +1,6 @@
 docs/pod
 docs/pod-spelling
+docs/spdx-license
 k5start/afs
 k5start/basic
 k5start/daemon
@@ -22,7 +23,7 @@ portable/daemon
 portable/mkstemp
 portable/reallocarray
 portable/setenv
-portable/snprintf
+style/obsolete-strings
 util/messages
 util/messages-krb5
 util/xmalloc

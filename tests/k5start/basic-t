@@ -3,25 +3,27 @@
 # Tests for basic k5start functionality.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2008, 2009
+# Copyright 2021 Russ Allbery <eagle@eyrie.org>
+# Copyright 2008-2009
 #     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# SPDX-License-Identifier: MIT
 
+use POSIX qw(SIGTERM);
 use Test::More;
 
 # The full path to the newly-built k5start client.
-our $K5START = "$ENV{BUILD}/../k5start";
+our $K5START = "$ENV{C_TAP_BUILD}/../commands/k5start";
 
 # The path to our data directory, which contains the keytab to use to test.
-our $DATA = "$ENV{BUILD}/data";
+our $DATA = "$ENV{C_TAP_BUILD}/data";
 
 # Load our test utility programs.
-require "$ENV{SOURCE}/libtest.pl";
+require "$ENV{C_TAP_SOURCE}/libtest.pl";
 
 # Decide whether we have the configuration to run the tests.
 if (-f "$DATA/test.keytab" and -f "$DATA/test.principal") {
-    plan tests => 89;
+    plan tests => 92;
 } else {
     plan skip_all => 'no keytab configuration';
     exit 0;
@@ -285,6 +287,15 @@ unlink 'krb5cc_test';
     = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
                'exit 3');
 is ($status, 3, 'k5start of exit 3 returns correct exit status');
+is ($err, '', ' with no errors');
+ok (!-f 'krb5cc_test', ' and the default cache file was not created');
+
+# Test propagation of exit status from a command which is killed by signal.
+unlink 'krb5cc_test';
+($out, $err, $status)
+    = command ($K5START, '-Uqf', "$DATA/test.keytab", '--', 'sh', '-c',
+               'kill $$');
+is ($status, 128 + SIGTERM, 'k5start of kill $$ returns correct exit status');
 is ($err, '', ' with no errors');
 ok (!-f 'krb5cc_test', ' and the default cache file was not created');
 

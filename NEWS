@@ -1,5 +1,46 @@
                        User-Visible kstart Changes
 
+kstart 4.3 (2021-08-30)
+
+    Add support for kafs to the -t options of k5start and krenew.  If AFS
+    setpag support is not compiled in or AFS is not available, but the
+    Linux kafs kernel module is available, do not error out when -t is
+    specified and continue to run the external program.  If libkeyutils is
+    found at compile time and a command was specified on the command line,
+    create a new session keyring before running the external command to
+    isolate its AFS credentials from the calling process.  Thanks to Bill
+    MacAllister, David Howells, and Jeffrey Altman for proposed code and
+    implementation discussion.
+
+    If the process run by k5start or krenew is killed by a signal, k5start
+    or krenew now exits with status 128 plus the killing signal rather
+    than zero.  This avoids the caller of k5start or krenew thinking the
+    command succeeded when it was killed, and matches the return status
+    behavior of bash.  Patch from Aasif Versi.
+
+    Use explicit_bzero, where available, to overwrite the memory used for
+    the user's password when k5start is run with the -s option.
+
+    Rename the script to bootstrap from a Git checkout to bootstrap,
+    matching the emerging consensus in the Autoconf world.
+
+    Update to rra-c-util 9.1:
+
+    * Fix getgroups error handling in k_haspag replacement.
+    * Check for a working Kerberos header file during configure.
+    * Use AS_ECHO in all Autoconf macros for better portability.
+    * Fix reallocarray portability on NetBSD.
+    * Stop providing a replacement for a broken snprintf.
+    * Don't check for krb5-config when using explicit paths.
+    * Fix new warnings with current versions of GCC and Clang.
+    * Probe for the warning flags supported by the compiler.
+
+    Update to C TAP Harness 4.7:
+
+    * Report test failures as left and right instead of wanted and seen.
+    * Fix string comparisons against NULL pointers.
+    * Honor C_TAP_SOURCE and C_TAP_BUILD along with SOURCE and BUILD.
+
 kstart 4.2 (2015-12-25)
 
     k5start, when run with the -K option to run as a daemon, no longer

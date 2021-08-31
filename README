@@ -1,14 +1,12 @@
-                            kstart release 4.2
+                                kstart 4.3
            (kinit daemon with keytab, renewal, and AFS support)
+               Maintained by Russ Allbery <eagle@eyrie.org>
 
-         Originally written by Robert Morgan and Booker C. Bense
-          Currently maintained by Russ Allbery <eagle@eyrie.org>
-
-  Copyright 2015 Russ Allbery <eagle@eyrie.org>.  Copyright 1995, 1996,
-  1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-  2011, 2012, 2014 The Board of Trustees of the Leland Stanford Junior
-  University.  This software is distributed under a BSD-style license.
-  Please see the section LICENSE below for more information.
+  Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>.  Copyright
+  1995-1997, 1999-2002, 2004-2012, 2014 The Board of Trustees of the
+  Leland Stanford Junior University.  This software is distributed under a
+  BSD-style license.  Please see the section LICENSE below for more
+  information.
 
 BLURB
 
@@ -74,78 +72,26 @@ REQUIREMENTS
   that do not have an AFS client installed due to how AIX handles system
   calls.
 
-  To run the test suite, you must have the Perl 5.006 or later and the
-  modules Test::More and Test::Pod installed.  Test::More comes with Perl
-  5.8 or later and Test::Pod is available from CPAN.  You will also need
-  the kinit and klist commands to be from MIT Kerberos, not Heimdal.
-
-  To check spelling in the POD documentation, Pod::Spell (available from
-  CPAN) and either aspell or ispell with the american dictionary are also
-  required.  The user's path is searched for aspell or ispell and aspell
-  is preferred.  Spelling tests are disabled by default since spelling
-  dictionaries differ too much between systems.
-
-  To enable tests that may be sensitive to the local environment or that
-  produce a lot of false positives without uncovering many problems,
-  including the spelling tests, set RRA_MAINTAINER_TESTS to a true value.
-
   To bootstrap from a Git checkout, or if you change the Automake files
   and need to regenerate Makefile.in, you will need Automake 1.11 or
   later.  For bootstrap or if you change configure.ac or any of the m4
   files it includes and need to regenerate configure or config.h.in, you
   will need Autoconf 2.64 or later.  Perl is also required to generate
-  the manual pages from a fresh Git checkout.
+  manual pages from a fresh Git checkout.
 
-INSTALLATION
+BUILDING AND INSTALLATION
 
-  Basic installation is simple.  Just run:
+  You can build and install kstart with the standard commands:
 
       ./configure
       make
       make install
 
-  Pass --enable-silent-rules to configure for a quieter build (similar to
-  the Linux kernel).  Use make warnings instead of make to build with full
-  GCC compiler warnings (requires a relatively current version of GCC).
-
-  This will build k5start and krenew and install them in /usr/local/bin
-  with man pages in /usr/local/man/man1.  You may need to be root to run
-  make install.  To install in a different location, specify a different
-  location with the --prefix option to configure, as in:
-
-      ./configure --prefix=/opt/sw
-
-  Binaries would then be installed in /opt/sw/bin and man pages in
-  /opt/sw/man/man1.  Alternately, --bindir and --mandir can be given to
-  change the installation locations of the binaries and manual pages
-  separately.
-
-  Normally, configure will use krb5-config to determine the flags to use
-  to compile with your Kerberos libraries.  If krb5-config isn't found, it
-  will look for the standard Kerberos libraries in locations already
-  searched by your compiler.  If the the krb5-config script first in your
-  path is not the one corresponding to the Kerberos libraries you want to
-  use or if your Kerberos libraries and includes aren't in a location
-  searched by default by your compiler, you need to specify
-  --with-krb5=PATH:
-
-      ./configure --with-krb5=/usr/pubsw
-
-  You can also individually set the paths to the include directory and the
-  library directory with --with-krb5-include and --with-krb5-lib.  You may
-  need to do this if Autoconf can't figure out whether to use lib, lib32,
-  or lib64 on your platform.
-
-  To specify a particular krb5-config script to use, either set the
-  PATH_KRB5_CONFIG environment variable or pass it to configure like:
-
-      ./configure PATH_KRB5_CONFIG=/path/to/krb5-config
-
-  To not use krb5-config and force library probing even if there is a
-  krb5-config script on your path, set PATH_KRB5_CONFIG to a nonexistent
-  path:
-
-      ./configure PATH_KRB5_CONFIG=/nonexistent
+  If you are building from a Git clone, first run ./bootstrap in the
+  source directory to generate the build files.  make install will
+  probably have to be done as root.  Building outside of the source
+  directory is also supported, if you wish, by creating an empty directory
+  and then running configure with the correct relative path.
 
   If you are using aklog, afslog, or some other program to obtain AFS
   tokens, give its path to configure with the --with-aklog option, as in:
@@ -167,44 +113,70 @@ INSTALLATION
   authentication when running a specific command and when aklog is being
   run.
 
-  You can build kstart in a different directory from the source if you
-  wish.  To do this, create a new empty directory, cd to that directory,
-  and then give the path to configure when running configure.  Everything
-  else should work as above.
+  When using the Linux kafs module, the correct way to isolate kafs
+  credentials is to create a new session keyring rather than a new PAG.
+  This requires the libkeyutils library.  configure will attempt to
+  discover that library automatically and link with it by default.  Pass
+  the --with-libkeyutils, --with-libkeyutils-include, or
+  --with-libkeyutils-lib options to configure to specify a different path
+  to that library, or set the LIBKEYUTILS_* environment variables.
+
+  Normally, configure will use krb5-config to determine the flags to use
+  to compile with your Kerberos libraries.  To specify a particular
+  krb5-config script to use, either set the PATH_KRB5_CONFIG environment
+  variable or pass it to configure like:
+
+      ./configure PATH_KRB5_CONFIG=/path/to/krb5-config
+
+  If krb5-config isn't found, configure will look for the standard
+  Kerberos libraries in locations already searched by your compiler.  If
+  the the krb5-config script first in your path is not the one
+  corresponding to the Kerberos libraries you want to use, or if your
+  Kerberos libraries and includes aren't in a location searched by default
+  by your compiler, you need to specify a different Kerberos installation
+  root via --with-krb5=PATH.  For example:
+
+      ./configure --with-krb5=/usr/pubsw
+
+  You can also individually set the paths to the include directory and the
+  library directory with --with-krb5-include and --with-krb5-lib.  You may
+  need to do this if Autoconf can't figure out whether to use lib, lib32,
+  or lib64 on your platform.
+
+  To not use krb5-config and force library probing even if there is a
+  krb5-config script on your path, set PATH_KRB5_CONFIG to a nonexistent
+  path:
+
+      ./configure PATH_KRB5_CONFIG=/nonexistent
+
+  krb5-config is not used and library probing is always done if either
+  --with-krb5-include or --with-krb5-lib are given.
+
+  Pass --enable-silent-rules to configure for a quieter build (similar to
+  the Linux kernel).  Use make warnings instead of make to build with full
+  compiler warnings (requires either GCC or Clang and may require a
+  relatively current version of the compiler).
 
   You can pass the --enable-reduced-depends flag to configure to try to
   minimize the shared library dependencies encoded in the binaries.  This
-  omits from the link line all the libraries included solely because the
-  Kerberos libraries depend on them and instead links the programs only
-  against libraries whose APIs are called directly.  This will only work
-  with shared Kerberos libraries and will only work on platforms where
-  shared libraries properly encode their own dependencies (such as Linux).
-  It is intended primarily for building packages for Linux distributions
-  to avoid encoding unnecessary shared library dependencies that make
-  shared library migrations more difficult.  If none of the above made any
-  sense to you, don't bother with this flag.
+  omits from the link line all the libraries included solely because other
+  libraries depend on them and instead links the programs only against
+  libraries whose APIs are called directly.  This will only work with
+  shared libraries and will only work on platforms where shared libraries
+  properly encode their own dependencies (this includes most modern
+  platforms such as all Linux).  It is intended primarily for building
+  packages for Linux distributions to avoid encoding unnecessary shared
+  library dependencies that make shared library migrations more difficult.
+  If none of the above made any sense to you, don't bother with this flag.
 
 TESTING
 
-  kstart comes with the beginnings of a test suite, which you can run
-  with:
+  In order to test the client in a meaningful way, you will need to do
+  some preparatory work before running the test suite.  Follow the
+  instructions in tests/data/README first.  Then, you can run the test
+  suite with:
 
       make check
-
-  In order to test the client in a meaningful way, you will need to do
-  some preparatory work before running the test suite.  Review the file:
-
-      tests/data/README
-
-  and follow the instructions in that file to enable the full test suite.
-
-  The test suite also requires some additional software be installed that
-  isn't otherwise used by kstart.  See REQUIREMENTS above for the full
-  list of requirements for the test suite.  The test driver attempts to
-  selectively skip those tests for which the necessary configuration is
-  not available, but this has not yet been fully tested in all of its
-  possible permutations (and the test suite cannot cope with a missing
-  Test::More module).
 
   If a test fails, you can run a single test with verbose output via:
 
@@ -213,23 +185,19 @@ TESTING
   Do this instead of running the test program directly since it will
   ensure that necessary environment variables are set up.
 
-HOMEPAGE AND SOURCE REPOSITORY
+  Perl 5.008 or later and the kinit and klist programs from MIT Kerberos,
+  not Heimdal, are required to run the test suite.  The following
+  additional Perl modules will be used by the test suite if present:
 
-  The kstart web page at:
+  * Test::Pod
+  * Test::Spelling
 
-      http://www.eyrie.org/~eagle/software/kstart/
-
-  will always have the current version of this package, the current
-  documentation, and pointers to any additional resources.
-
-  kstart is maintained using Git.  You can access the current source by
-  cloning the repository at:
-
-      git://git.eyrie.org/kerberos/kstart.git
-
-  or view the repository via the web at:
-
-      http://git.eyrie.org/?p=kerberos/kstart.git
+  To enable tests that don't detect functionality problems but are used to
+  sanity-check the release, set the environment variable RELEASE_TESTING
+  to a true value.  To enable tests that may be sensitive to the local
+  environment or that produce a lot of false positives without uncovering
+  many problems, set the environment variable AUTHOR_TESTING to a true
+  value.
 
 THANKS
 
@@ -271,15 +239,50 @@ THANKS
   running krenew with a command, thereby saving the ticket cache from
   destruction when the user logs out.
 
+SUPPORT
+
+  The kstart web page at:
+
+      https://www.eyrie.org/~eagle/software/kstart/
+
+  will always have the current version of this package, the current
+  documentation, and pointers to any additional resources.
+
+  For bug tracking, use the issue tracker on GitHub:
+
+      https://github.com/rra/kstart/issues
+
+  However, please be aware that I tend to be extremely busy and work
+  projects often take priority.  I'll save your report and get to it as
+  soon as I can, but it may take me a couple of months.
+
+SOURCE REPOSITORY
+
+  kstart is maintained using Git.  You can access the current source on
+  GitHub at:
+
+      https://github.com/rra/kstart
+
+  or by cloning the repository at:
+
+      https://git.eyrie.org/git/kerberos/kstart.git
+
+  or view the repository via the web at:
+
+      https://git.eyrie.org/?p=kerberos/kstart.git
+
+  The eyrie.org repository is the canonical one, maintained by the author,
+  but using GitHub is probably more convenient for most purposes.  Pull
+  requests are gratefully reviewed and normally accepted.
+
 LICENSE
 
-  The kstart package as a whole covered by the following copyright
+  The kstart package as a whole is covered by the following copyright
   statement and license:
 
-    Copyright 2015 Russ Allbery <eagle@eyrie.org>
-    Copyright 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2004, 2005, 2006,
-        2007, 2008, 2009, 2010, 2011, 2012, 2014 The Board of Trustees of
-        the Leland Stanford Junior University
+    Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+    Copyright 1995-1997, 1999-2002, 2004-2012, 2014
+        The Board of Trustees of the Leland Stanford Junior University
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -300,12 +303,16 @@ LICENSE
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  All individual files without an explicit exception below are released
-  under this license.  Some files may have additional copyright holders as
-  noted in those files.  There is detailed information about the licensing
-  of each file in the LICENSE file in this distribution.
-
   Some files in this distribution are individually released under
   different licenses, all of which are compatible with the above general
   package license but which may require preservation of additional
-  notices.  All required notices are preserved in the LICENSE file.
+  notices.  All required notices, and detailed information about the
+  licensing of each file, are recorded in the LICENSE file.
+
+  Files covered by a license with an assigned SPDX License Identifier
+  include SPDX-License-Identifier tags to enable automated processing of
+  license information.  See https://spdx.org/licenses/ for more
+  information.
+
+  For any copyright range specified by files in this package as YYYY-ZZZZ,
+  the range specifies every single year in that closed interval.
