@@ -407,14 +407,15 @@ up.
 Shows the permissions of the temporary cache file created by B<k5start>:
 
     k5start -f /etc/krb5.keytab host/example.com \
-        -- sh -c 'ls -l $KRB5CCNAME'
+        -- sh -c 'ls -l $(echo $KRB5CCNAME | sed "s/^FILE://")'
 
 Notice the C<--> before the command to keep B<k5start> from parsing the
 C<-c> as its own option.
 
 Do the same thing, but determine the principal from the keytab:
 
-    k5start -f /etc/krb5.keytab -U -- sh -c 'ls -l $KRB5CCNAME'
+    k5start -f /etc/krb5.keytab -U \
+        -- sh -c 'ls -l $(echo $KRB5CCNAME | sed "s/^FILE://")'
 
 Note that no principal is given before the command.
 
@@ -474,7 +475,7 @@ script are based on code contributed by Navid Golpayegani.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2015, 2021 Russ Allbery <eagle@eyrie.org>
+Copyright 2015, 2021-2022 Russ Allbery <eagle@eyrie.org>
 
 Copyright 2002, 2004-2012, 2014 The Board of Trustees of the Leland
 Stanford Junior University
