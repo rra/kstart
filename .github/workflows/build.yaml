@@ -53,7 +53,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-perl-${{ steps.get-perl.outputs.version }}-
 
-      - uses: perl-actions/install-with-cpanm@v1.3
+      - uses: perl-actions/install-with-cpanm@v1.4
         env:
           PERL5LIB: ${{ env.HOME }}/perl5
         with:
