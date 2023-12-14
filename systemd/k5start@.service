@@ -1,0 +1,13 @@
+[Unit]
+Description=Kerberos credentials maintainer for user %i
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/k5start-%i.conf
+User=%i
+ExecStart=/usr/bin/k5start $K5START_OPTS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

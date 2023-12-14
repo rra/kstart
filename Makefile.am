@@ -32,6 +32,11 @@ EXTRA_DIST = .clang-format .gitignore .github LICENSE README.md bootstrap   \
 # Enable AFS support when running distcheck.
 DISTCHECK_CONFIGURE_FLAGS = --enable-setpag
 
+if HAVE_SYSTEMD
+dist_systemdsystemunit_DATA = systemd/k5start@.service
+dist_systemduserunit_DATA = systemd/krenew.service
+endif
+
 # The following library order matters for annoying reasons.  Older
 # libafsauthent contains its own com_err implementation, which we do not
 # want to pick up.
