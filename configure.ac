@@ -32,6 +32,7 @@ AM_PROG_CC_C_O
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+PKG_PROG_PKG_CONFIG
 
 dnl aklog is the standard name for the utility to get AFS tokens from Kerberos
 dnl tickets.  afslog is the name of the utility that comes with Heimdal.  By
@@ -44,6 +45,36 @@ AC_ARG_WITH([aklog],
     [AC_PATH_PROGS([PATH_AKLOG], [aklog afslog])])
 AC_DEFINE_UNQUOTED([PATH_AKLOG], ["$PATH_AKLOG"],
     [Full path to aklog binary.])
+
+AC_ARG_WITH([systemdsystemunitdir],
+     [AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [systemd])],,
+     [with_systemdsystemunitdir=auto])
+AS_IF([test "x$with_systemdsystemunitdir" = "xyes" -o "x$with_systemdsystemunitdir" = "xauto"], [
+     def_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)
+
+     AS_IF([test "x$def_systemdsystemunitdir" = "x"],
+   [AS_IF([test "x$with_systemdsystemunitdir" = "xyes"],
+    [AC_MSG_ERROR([systemd support requested but pkg-config unable to query systemd package])])
+    with_systemdsystemunitdir=no],
+   [with_systemdsystemunitdir="$def_systemdsystemunitdir"])])
+AS_IF([test "x$with_systemdsystemunitdir" != "xno"],
+      [AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])])
+AM_CONDITIONAL([HAVE_SYSTEMD], [test "x$with_systemdsystemunitdir" != "xno"])
+
+AC_ARG_WITH([systemduserunitdir],
+     [AS_HELP_STRING([--with-systemduserunitdir=DIR], [systemd])],,
+     [with_systemduserunitdir=auto])
+AS_IF([test "x$with_systemduserunitdir" = "xyes" -o "x$with_systemduserunitdir" = "xauto"], [
+     def_systemduserunitdir=$($PKG_CONFIG --variable=systemduserunitdir systemd)
+
+     AS_IF([test "x$def_systemduserunitdir" = "x"],
+   [AS_IF([test "x$with_systemduserunitdir" = "xyes"],
+    [AC_MSG_ERROR([systemd support requested but pkg-config unable to query systemd package])])
+    with_systemduserunitdir=no],
+   [with_systemduserunitdir="$def_systemduserunitdir"])])
+AS_IF([test "x$with_systemduserunitdir" != "xno"],
+      [AC_SUBST([systemduserunitdir], [$with_systemduserunitdir])])
+AM_CONDITIONAL([HAVE_SYSTEMD], [test "x$with_systemduserunitdir" != "xno"])
 
 dnl Check for the Kerberos libraries and for portability between MIT and
 dnl Heimdal.

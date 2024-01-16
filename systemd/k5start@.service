@@ -1,0 +1,16 @@
+[Unit]
+Description=Kerberos credentials maintainer for user %i
+After=syslog.target network-online.target
+
+[Service]
+# Slow down starting of service and fail if k5start fails
+Type=exec
+EnvironmentFile=/etc/k5start-%i.conf
+User=%i
+ExecStart=/usr/bin/k5start $K5START_OPTS
+# Give a delay to hopefully retrieve the ticket before considering the service started
+ExecStartPost=/usr/bin/sleep 1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

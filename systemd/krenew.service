@@ -1,0 +1,19 @@
+
+# Run krenew as a systemd user unit
+# Enable globally for all users
+# systemctl --user --global enable krenew.service
+# Enable as an individual user.
+# systemctl --user enable krenew.service
+
+[Unit]
+Description=Renew Kerberos ticket
+Documentation=man:krenew(1)
+Before=dbus.service
+
+[Service]
+Type=simple
+PIDFile=${XDG_RUNTIME_DIR}/krenew.pid
+ExecStart=/usr/bin/krenew -K 30 -i -t -v -p ${XDG_RUNTIME_DIR}/krenew.pid
+
+[Install]
+WantedBy=default.target
